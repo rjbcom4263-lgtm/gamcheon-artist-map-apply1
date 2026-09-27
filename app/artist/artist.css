@@ -1,0 +1,842 @@
+.artist-shell {
+  --artist-blue: #6b7cff;
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  width: 100%;
+  min-height: 100svh;
+  padding: 0;
+  color: #171717;
+  background: #f3f3f0;
+}
+
+.artist-sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100svh;
+  flex-direction: column;
+  padding: 30px 25px;
+  color: #fff;
+  background: #171717;
+}
+
+.artist-brand {
+  display: inline-grid;
+  width: max-content;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 950;
+  line-height: .84;
+  letter-spacing: -.055em;
+  text-decoration: none;
+}
+
+.artist-brand small {
+  margin-top: 5px;
+  font-size: 6px;
+  letter-spacing: .1em;
+  text-align: center;
+}
+
+.artist-sidebar-user {
+  display: grid;
+  gap: 5px;
+  margin: 80px 0 35px;
+}
+
+.artist-sidebar-user span {
+  color: #9da8ff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.artist-sidebar-user strong {
+  margin-top: 7px;
+  font-size: 25px;
+  letter-spacing: -.045em;
+}
+
+.artist-sidebar-user small {
+  color: #777;
+  font-size: 10px;
+}
+
+.artist-sidebar nav {
+  display: grid;
+}
+
+.artist-sidebar nav a,
+.artist-sidebar nav button {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 4px;
+  border: 0;
+  border-top: 1px solid #343434;
+  color: #919191;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  transition: color .2s, padding-left .2s;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.artist-sidebar nav a:last-child,
+.artist-sidebar nav button:last-child {
+  border-bottom: 1px solid #343434;
+}
+
+.artist-sidebar nav a:hover,
+.artist-sidebar nav a.active,
+.artist-sidebar nav button:hover {
+  padding-left: 10px;
+  color: #fff;
+}
+
+.artist-sidebar nav b {
+  color: #8190ff;
+  font-size: 8px;
+}
+
+.artist-sidebar-foot {
+  display: grid;
+  gap: 9px;
+  margin-top: auto;
+}
+
+.artist-sidebar-foot a {
+  color: #999;
+  font-size: 10px;
+  text-decoration: none;
+}
+
+.artist-sidebar-foot a:hover {
+  color: #fff;
+}
+
+.artist-stage {
+  min-width: 0;
+}
+
+.artist-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  height: 70px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(24px, 4vw, 62px);
+  border-bottom: 1px solid #e1e1e1;
+  background: rgba(255, 255, 255, .95);
+  backdrop-filter: blur(12px);
+}
+
+.artist-topbar > div {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  color: #777;
+  font-size: 11px;
+}
+
+.artist-topbar > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.artist-topbar > div:first-child span {
+  color: var(--artist-blue);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.artist-topbar > div:first-child strong {
+  color: #171717;
+  font-size: 14px;
+}
+
+.artist-topbar a,
+.artist-topbar button {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  color: #333;
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.artist-account-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #36a36c;
+}
+
+.artist-main {
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 58px 0 100px;
+}
+
+.artist-welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  min-height: 330px;
+  margin-bottom: 18px;
+  color: #fff;
+  background: #171717;
+}
+
+.artist-welcome > div:first-child {
+  padding: 55px 58px;
+}
+
+.artist-welcome p,
+.artist-card-head p,
+.artist-password-copy p {
+  margin: 0 0 15px;
+  color: var(--artist-blue);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .15em;
+}
+
+.artist-welcome h1 {
+  margin: 0 0 22px;
+  color: #fff;
+  font-size: clamp(42px, 4.2vw, 66px);
+  line-height: 1.08;
+  letter-spacing: -.06em;
+}
+
+.artist-welcome > div:first-child > span {
+  color: #aaa;
+  font-size: 13px;
+}
+
+.artist-current-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 42px;
+  background: var(--artist-blue);
+}
+
+.artist-current-state span {
+  color: #dce0ff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.artist-current-state strong {
+  margin: 14px 0 8px;
+  font-size: 34px;
+  letter-spacing: -.05em;
+}
+
+.artist-current-state small {
+  color: #e4e7ff;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.artist-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 18px;
+  border-top: 1px solid #d9d9d9;
+  border-left: 1px solid #d9d9d9;
+}
+
+.artist-metrics article {
+  display: grid;
+  min-height: 155px;
+  align-content: space-between;
+  padding: 25px;
+  border-right: 1px solid #d9d9d9;
+  border-bottom: 1px solid #d9d9d9;
+  background: #fff;
+}
+
+.artist-metrics span {
+  color: #929292;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.artist-metrics strong {
+  color: #171717;
+  font-size: 30px;
+  letter-spacing: -.045em;
+}
+
+.artist-metrics strong em {
+  margin-left: 4px;
+  color: #888;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.artist-metrics .date-value {
+  font-size: 18px;
+}
+
+.artist-metrics small {
+  color: #999;
+  font-size: 10px;
+}
+
+.artist-dashboard-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.artist-card,
+.artist-empty-card {
+  padding: 38px;
+  border: 1px solid #dedede;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+  scroll-margin-top: 95px;
+}
+
+.artist-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.artist-card-head p {
+  margin-bottom: 8px;
+}
+
+.artist-card-head h2,
+.artist-password-copy h2 {
+  margin: 0;
+  color: #171717;
+  font-size: 30px;
+  letter-spacing: -.045em;
+}
+
+.artist-card-head > span {
+  max-width: 260px;
+  color: #999;
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.artist-card-action {
+  flex: none;
+  padding: 10px 15px;
+  border: 1px solid #cfd8d4;
+  border-radius: 999px;
+  color: #245247;
+  background: #f4f8f5;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.artist-card-action:hover,
+.artist-card-action:focus-visible {
+  color: #fff;
+  border-color: var(--artist-blue);
+  background: var(--artist-blue);
+}
+
+.artist-card-head .status {
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.artist-summary-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 40px;
+}
+
+.artist-profile-image,
+.artist-profile-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border: 0;
+  border-radius: 0;
+  object-fit: cover;
+  background: #ecece8;
+}
+
+.artist-profile-placeholder {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--artist-blue);
+  font-size: 80px;
+  font-weight: 900;
+}
+
+.artist-profile-copy > span {
+  color: var(--artist-blue);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.artist-profile-copy h3 {
+  margin: 12px 0 20px;
+  font-size: 42px;
+  letter-spacing: -.055em;
+}
+
+.artist-profile-copy blockquote {
+  margin: 0;
+  padding: 20px 0;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #ddd;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.55;
+  letter-spacing: -.025em;
+}
+
+.artist-profile-copy > p {
+  margin: 20px 0 28px;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.artist-card dl,
+.artist-profile-copy dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 28px;
+  margin: 0;
+}
+
+.artist-card dt {
+  color: #999;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.artist-card dd {
+  margin: 6px 0 0;
+  color: #222;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.artist-review-note {
+  margin-top: 28px;
+  padding: 18px 20px;
+  border: 0;
+  border-left: 3px solid var(--artist-blue);
+  border-radius: 0;
+  background: #f2f4ff;
+}
+
+.artist-review-note strong {
+  font-size: 11px;
+}
+
+.artist-review-note p {
+  margin: 7px 0 0;
+  color: #666;
+  font-size: 12px;
+}
+
+.artist-dashboard-work-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.artist-work-item {
+  overflow: hidden;
+  border: 1px solid #e2e2e2;
+  border-radius: 0;
+  background: #fff;
+}
+
+.artist-work-visual {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  background: #eee;
+}
+
+.artist-work-item img,
+.artist-missing-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .55s ease;
+}
+
+.artist-work-item:hover img {
+  transform: scale(1.04);
+}
+
+.artist-missing-image {
+  display: grid;
+  place-items: center;
+  color: #999;
+  font-size: 10px;
+}
+
+.artist-work-visual > span {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  color: #fff;
+  background: rgba(0, 0, 0, .78);
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.artist-work-item > div:last-child {
+  padding: 15px;
+}
+
+.artist-work-item em {
+  color: var(--artist-blue);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.artist-work-item strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 14px;
+}
+
+.artist-work-item p {
+  display: -webkit-box;
+  min-height: 48px;
+  margin: 8px 0 0;
+  overflow: hidden;
+  color: #777;
+  font-size: 10px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.artist-info-card dl {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.artist-info-card dl > div {
+  min-height: 100px;
+  padding: 20px;
+  border: 1px solid #e4e4e4;
+}
+
+.artist-password-form {
+  display: grid;
+  grid-template-columns: .75fr 1.25fr;
+  gap: 28px 50px;
+  align-items: end;
+}
+
+.artist-password-copy {
+  align-self: start;
+}
+
+.artist-password-copy p {
+  margin-bottom: 8px;
+}
+
+.artist-password-copy > span {
+  display: block;
+  margin-top: 14px;
+  color: #777;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.artist-password-fields {
+  display: grid;
+  gap: 15px;
+}
+
+.artist-password-fields label {
+  color: #555;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.artist-password-fields input {
+  display: block;
+  width: 100%;
+  height: 46px;
+  margin-top: 7px;
+  padding: 0 13px;
+  border: 1px solid #d7d7d7;
+  border-radius: 0;
+  outline: none;
+  color: #171717;
+  background: #fff;
+}
+
+.artist-password-fields input:focus {
+  border: 2px solid var(--artist-blue);
+  background: #f7f8ff;
+  box-shadow: 0 0 0 4px rgba(107, 124, 255, .12);
+}
+
+.artist-password-toggle {
+  grid-column: 2;
+  color: #777;
+  font-size: 10px;
+}
+
+.artist-password-toggle input {
+  accent-color: var(--artist-blue);
+}
+
+.artist-password-message {
+  grid-column: 2;
+  padding: 12px 14px;
+  color: #3c5e4d;
+  background: #edf6f0;
+  font-size: 10px;
+}
+
+.artist-password-submit {
+  grid-column: 2;
+  display: flex;
+  height: 50px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  border: 0;
+  color: #fff;
+  background: var(--artist-blue);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.artist-password-submit:hover {
+  background: #171717;
+}
+
+.artist-empty-card {
+  min-height: 360px;
+  padding: 60px;
+}
+
+.artist-empty-card > span {
+  color: var(--artist-blue);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.artist-empty-card h2 {
+  max-width: 600px;
+  margin: 20px 0 14px;
+  font-size: 38px;
+  letter-spacing: -.05em;
+}
+
+.artist-empty-card p {
+  max-width: 560px;
+  color: #777;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.artist-empty-card a {
+  display: flex;
+  width: min(330px, 100%);
+  height: 50px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 35px;
+  padding: 0 17px;
+  color: #fff;
+  background: var(--artist-blue);
+  font-size: 11px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+@media (max-width: 1100px) {
+  .artist-shell {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+
+  .artist-sidebar {
+    padding: 25px 18px;
+  }
+
+  .artist-main {
+    width: calc(100% - 32px);
+  }
+
+  .artist-welcome {
+    grid-template-columns: 1fr 250px;
+  }
+
+  .artist-dashboard-work-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .artist-info-card dl {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .artist-shell {
+    display: block;
+  }
+
+  .artist-sidebar {
+    position: relative;
+    height: auto;
+    padding: 20px;
+  }
+
+  .artist-sidebar-user {
+    margin: 35px 0 22px;
+  }
+
+  .artist-sidebar nav {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+  }
+
+  .artist-sidebar nav a,
+  .artist-sidebar nav a:last-child {
+    padding: 12px 16px 12px 0;
+    border: 0;
+  }
+
+  .artist-sidebar nav a:hover,
+  .artist-sidebar nav a.active {
+    padding-left: 0;
+  }
+
+  .artist-sidebar-foot {
+    display: none;
+  }
+
+  .artist-topbar {
+    height: 58px;
+    padding: 0 16px;
+  }
+
+  .artist-topbar > div:last-child {
+    font-size: 0;
+  }
+
+  .artist-account-dot {
+    display: none;
+  }
+
+  .artist-main {
+    width: calc(100% - 24px);
+    padding: 24px 0 70px;
+  }
+
+  .artist-welcome {
+    grid-template-columns: 1fr;
+  }
+
+  .artist-welcome > div:first-child {
+    padding: 40px 24px;
+  }
+
+  .artist-welcome h1 {
+    font-size: 40px;
+  }
+
+  .artist-current-state {
+    min-height: 170px;
+    padding: 25px;
+  }
+
+  .artist-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .artist-metrics article {
+    min-height: 125px;
+  }
+
+  .artist-card,
+  .artist-empty-card {
+    padding: 24px 20px;
+  }
+
+  .artist-card-head {
+    display: grid;
+  }
+
+  .artist-card-head > span {
+    text-align: left;
+  }
+
+  .artist-summary-layout,
+  .artist-card dl,
+  .artist-profile-copy dl,
+  .artist-info-card dl,
+  .artist-password-form {
+    grid-template-columns: 1fr;
+  }
+
+  .artist-profile-copy h3 {
+    font-size: 34px;
+  }
+
+  .artist-dashboard-work-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .artist-password-toggle,
+  .artist-password-message,
+  .artist-password-submit {
+    grid-column: 1;
+  }
+
+}
+
+@media (max-width: 430px) {
+  .artist-dashboard-work-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artist-shell * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
