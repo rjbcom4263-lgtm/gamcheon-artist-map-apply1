@@ -4,7 +4,7 @@ import { requireAdmin } from "../admin-auth";
 
 export const dynamic = "force-dynamic";
 
-// Bundled from https://github.com/InSeok211/art-map at 9cbbe63.
+// Bundled from https://github.com/InSeok211/art-map at 82a94ab.
 const mapDocument = `<!doctype html>
 <html lang="ko">
 <head>
