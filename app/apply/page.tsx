@@ -250,6 +250,6 @@ export default function Home() {
         </section>
       </div>
     </main>
-    <footer className="site-footer"><span>GAMCHEON ARTISTS · 작가와 지역의 다음 기회를 연결합니다.</span><div><a href="/">프로젝트 홈</a><a href="/login">작가 로그인</a></div></footer>
+    <footer className="site-footer"><span>GAMCHEON ARTISTS · 작가와 지역의 다음 기회를 연결합니다.</span><div><a href="/">프로젝트 홈</a><a href="/login">작가 로그인</a><a href="/third-party-notices.txt">오픈소스·지도 데이터 출처</a></div></footer>
   </div>;
 }

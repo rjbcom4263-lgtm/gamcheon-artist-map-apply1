@@ -75,7 +75,7 @@ export default function MobileArtMap({ initialPlaces, initialArtistId }: { initi
             </article>)}{!visiblePlaces.length && <p className="empty-state">현재 공개 중인 승인 작가가 없습니다.</p>}</div>
           </section>
 
-          <section className="walk-section"><div className="section-title"><div><span>CURATED WALK</span><h2>테마별 골목 산책</h2></div><button type="button" onClick={() => setTab("map")}>전체 보기</button></div><div className="walk-cards"><button type="button" onClick={() => setTab("map")}><img src="/assets/clone/hero-artist-studio.png" alt=""/><span>35분</span><strong>작가의 작업실을<br/>따라 걷기</strong></button><button type="button" onClick={() => setTab("map")}><img src="/assets/clone/artist-goods.png" alt=""/><span>50분</span><strong>작품과 골목을<br/>함께 만나기</strong></button></div></section>
+          <section className="walk-section"><div className="section-title"><div><span>CURATED WALK</span><h2>테마별 골목 산책</h2></div><button type="button" onClick={() => setTab("map")}>전체 보기</button></div><div className="walk-cards"><button type="button" onClick={() => setTab("map")}><img src="/assets/home/hero-artist-studio.png" alt=""/><span>35분</span><strong>작가의 작업실을<br/>따라 걷기</strong></button><button type="button" onClick={() => setTab("map")}><img src="/assets/home/artist-goods.png" alt=""/><span>50분</span><strong>작품과 골목을<br/>함께 만나기</strong></button></div></section>
         </>}
 
         {tab === "map" && <section className="map-page">

@@ -1,4 +1,4 @@
-import CloneHome from "./CloneHome";
+import AgencyHome from "./AgencyHome";
 import { env } from "cloudflare:workers";
 import { requireSession } from "../admin/admin-auth";
 import { statLabels } from "./content";
@@ -48,5 +48,5 @@ async function getHomeStats() {
 export default async function LandingSamplePage() {
   const user = await requireSession();
   const stats = await getHomeStats();
-  return <CloneHome user={user ? { role: user.role } : null} stats={stats} />;
+  return <AgencyHome user={user ? { role: user.role } : null} stats={stats} />;
 }

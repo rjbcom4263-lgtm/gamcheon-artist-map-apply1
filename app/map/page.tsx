@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import MobileArtMap from "./MobileArtMap";
+import FullArtistMap from "./FullArtistMap";
 import { artistRowsToPlaces } from "./map-artists";
 import type { ArtistRow } from "./map-artists";
 
@@ -18,5 +18,5 @@ async function getArtists() {
 
 export default async function MapPage({ searchParams }: { searchParams: Promise<{ artist?: string }> }) {
   const { artist } = await searchParams;
-  return <MobileArtMap initialPlaces={await getArtists()} initialArtistId={artist} />;
+  return <FullArtistMap initialPlaces={await getArtists()} initialArtistId={artist} />;
 }

@@ -40,3 +40,8 @@ next-env.d.ts
 /.sites-runtime/
 /outputs/
 /work/
+
+# 로컬 백업·검증 도구·빌드 캐시
+*.zip
+tsconfig.tsbuildinfo
+.verify-live.mjs

@@ -52,7 +52,7 @@ export function artistRowsToPlaces(rows: ArtistRow[]): ArtistPlace[] {
       address: exactAddress || "감천문화마을 일대",
       hours: text(values.hours) || "운영시간 확인 필요",
       visitType: text(values.visitType) || "방문 전 문의",
-      image: imageKey ? `/api/artists/images?key=${encodeURIComponent(imageKey)}` : index % 2 ? "/assets/clone/artist-goods.png" : "/assets/clone/hero-artist-studio.png",
+      image: imageKey ? `/api/artists/images?key=${encodeURIComponent(imageKey)}` : index % 2 ? "/assets/home/artist-goods.png" : "/assets/home/hero-artist-studio.png",
       detailHref: `/artists/${encodeURIComponent(row.id)}`,
       ...(position ? { position } : {}),
       ...(geoPosition ? { geoPosition } : {}),

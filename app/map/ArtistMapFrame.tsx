@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-export type MapPlace = { id: string; name: string; category: "shop" | "attraction"; latitude: number; longitude: number };
+export type MapPlace = { id: string; name: string; category: "shop" | "attraction"; latitude: number; longitude: number; address?: string; description?: string };
 
 type Props = {
   places: MapPlace[];
@@ -12,9 +12,11 @@ type Props = {
   onSelect?: (id: string) => void;
   title: string;
   className?: string;
+  // 패널(장소 목록·길찾기)까지 갖춘 감천 골목지도 전체 화면으로 엽니다.
+  full?: boolean;
 };
 
-export default function ArtistMapFrame({ places, selectedId = null, canPick = false, onPick, onSelect, title, className }: Props) {
+export default function ArtistMapFrame({ places, selectedId = null, canPick = false, onPick, onSelect, title, className, full = false }: Props) {
   const frame = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -30,5 +32,5 @@ export default function ArtistMapFrame({ places, selectedId = null, canPick = fa
     return () => window.removeEventListener("message", receive);
   }, [places, selectedId, canPick, onPick, onSelect]);
 
-  return <iframe ref={frame} className={className} title={title} src="/artist-map-embed/embed.html" />;
+  return <iframe ref={frame} className={className} title={title} src={full ? "/artist-map-embed/embed?mode=full" : "/artist-map-embed/embed.html"} allow="geolocation" />;
 }

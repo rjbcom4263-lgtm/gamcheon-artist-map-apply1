@@ -36,7 +36,7 @@ export function artistRowToProfile(row: PublicArtistRow, includeHidden = false):
     visitType: text(values.visitType) || "방문 전 문의",
     experience: text(values.experience),
     experienceDesc: text(values.experienceDesc),
-    profile: imageUrl(images.find((image) => image.type === "profile" && image.key)?.key) || "/assets/clone/hero-artist-studio.png",
+    profile: imageUrl(images.find((image) => image.type === "profile" && image.key)?.key) || "/assets/home/hero-artist-studio.png",
     instagram: publicUrl(values.instagram),
     website: publicUrl(values.website),
     shopUrl: publicUrl(values.shopUrl),
@@ -44,7 +44,7 @@ export function artistRowToProfile(row: PublicArtistRow, includeHidden = false):
       title: text(work.title) || `대표 작품 ${index + 1}`,
       description: text(work.description) || "작품에 대한 이야기를 준비하고 있습니다.",
       status: text(work.status),
-      image: imageUrl(images.find((image) => image.type === "work" && image.workIndex === index && image.key)?.key) || (index % 2 ? "/assets/clone/artist-goods.png" : "/assets/clone/hero-artist-studio.png"),
+      image: imageUrl(images.find((image) => image.type === "work" && image.workIndex === index && image.key)?.key) || (index % 2 ? "/assets/home/artist-goods.png" : "/assets/home/hero-artist-studio.png"),
     })),
   };
 }

@@ -25,10 +25,10 @@ async function getArtists() {
 function Arrow() { return <span aria-hidden="true">↗</span>; }
 
 export function Header({ user, activeHref }: { user: { role: "admin" | "artist" } | null; activeHref?: string }) {
-  return <header className="clone-header section-header">
-    <Link className="clone-brand" href="/"><b>{site.brand}</b><small>{site.subBrand}</small></Link>
-    <nav className="clone-desktop-nav" aria-label="주요 메뉴">{site.nav.map(([label, href]) => <Link className={href === activeHref ? "is-active" : undefined} key={label} href={href}>{label}</Link>)}</nav>
-    <div className="clone-utility">{user ? <><Link href={user.role === "admin" ? "/admin" : "/artist"}>내 정보</Link><a href={user.role === "admin" ? "/api/admin/logout" : "/api/auth/logout"}>로그아웃</a></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}<button aria-label="검색">⌕</button></div>
+  return <header className="agency-header section-header">
+    <Link className="agency-brand" href="/"><b>{site.brand}</b><small>{site.subBrand}</small></Link>
+    <nav className="agency-desktop-nav" aria-label="주요 메뉴">{site.nav.map(([label, href]) => <Link className={href === activeHref ? "is-active" : undefined} key={label} href={href}>{label}</Link>)}</nav>
+    <div className="agency-utility">{user ? <><Link href={user.role === "admin" ? "/admin" : "/artist"}>내 정보</Link><a href={user.role === "admin" ? "/api/admin/logout" : "/api/auth/logout"}>로그아웃</a></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}<button aria-label="검색">⌕</button></div>
   </header>;
 }
 
@@ -58,7 +58,7 @@ function ProjectContent() {
     </section>
     <section className="project-about-service" id="agency-service">
       <div className="project-about-heading"><p className="project-about-kicker">AGENCY SERVICE</p><h2>작가의 작업이<br />더 멀리 닿도록</h2><span>프로필과 작품을 정리하는 것에서 시작해, 전시·체험·굿즈·지역 협업까지 작가의 다음 기회를 설계합니다.</span></div>
-      <div className="project-about-image"><img src="/assets/clone/artist-goods.png" alt="작가 작품과 협업 상품" /></div>
+      <div className="project-about-image"><img src="/assets/home/artist-goods.png" alt="작가 작품과 협업 상품" /></div>
       <div className="project-about-cards"><article><b>01</b><strong>작가 프로필</strong><span>작가의 이야기와 작업 분야, 대표 작품을 하나의 페이지로 소개합니다.</span></article><article><b>02</b><strong>작품 아카이브</strong><span>작품의 이미지와 설명을 기록해 작가의 활동을 오래 보존합니다.</span></article><article><b>03</b><strong>협업 연결</strong><span>전시, 체험, 브랜드 협업과 새로운 방문 기회를 연결합니다.</span></article></div>
     </section>
     <section className="project-about-map" id="artist-map">
@@ -117,5 +117,5 @@ export default async function SectionPage({ kind }: { kind: SectionKind }) {
   } as const;
   const [eyebrow, title, text] = pages[kind];
   const content = kind === "project" ? <ProjectContent/> : kind === "artists" ? <ArtistsContent/> : kind === "passport" ? <PassportContent/> : kind === "news" ? <NewsContent/> : <ContactContent/>;
-  return <main className="clone-page section-page"><Header user={user ? { role: user.role } : null} activeHref={`/${kind}`}/>{kind === "project" || kind === "artists" || kind === "passport" ? content : <><PageIntro eyebrow={eyebrow} title={title} text={text}/><section className="section-body">{content}</section></>}<footer className="clone-footer"><div className="clone-brand"><b>{site.brand}</b><small>{site.subBrand}</small></div><div><p>새김 | 감천 작가 프로젝트</p><p>rjbcom4263@gmail.com</p><p>부산광역시 감천문화마을</p></div><div><Link href="/apply">작가 참여</Link><Link href="/map">작가 지도</Link><Link href="/">메인으로</Link></div><small>© 2026 GAMCHEON ARTISTS. ALL RIGHTS RESERVED.</small></footer><Link className="clone-chat" href="/apply"><span>작가님,<br/>함께할까요?</span><b>문의하기 <Arrow/></b></Link></main>;
+  return <main className="agency-page section-page"><Header user={user ? { role: user.role } : null} activeHref={`/${kind}`}/>{kind === "project" || kind === "artists" || kind === "passport" ? content : <><PageIntro eyebrow={eyebrow} title={title} text={text}/><section className="section-body">{content}</section></>}<footer className="agency-footer"><div className="agency-brand"><b>{site.brand}</b><small>{site.subBrand}</small></div><div><p>새김 | 감천 작가 프로젝트</p><p>rjbcom4263@gmail.com</p><p>부산광역시 감천문화마을</p></div><div><Link href="/apply">작가 참여</Link><Link href="/map">작가 지도</Link><Link href="/">메인으로</Link><a href="/third-party-notices.txt">오픈소스·지도 데이터 출처</a></div><small>© 2026 GAMCHEON ARTISTS. ALL RIGHTS RESERVED.</small></footer><Link className="agency-chat" href="/apply"><span>작가님,<br/>함께할까요?</span><b>문의하기 <Arrow/></b></Link></main>;
 }
