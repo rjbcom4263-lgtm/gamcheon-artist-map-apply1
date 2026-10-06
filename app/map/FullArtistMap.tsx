@@ -34,7 +34,8 @@ export default function FullArtistMap({ initialPlaces, initialArtistId }: { init
     <header className="full-art-map__bar">
       <Link className="full-art-map__brand" href="/" aria-label="감천 작가 지도 홈으로">
         <span aria-hidden="true">←</span>
-        <strong>감천 작가 지도</strong>
+        <i className="full-art-map__mark" aria-hidden="true">G</i>
+        <span className="full-art-map__title"><strong>감천 작가 지도</strong><small>공방과 가게를 한 지도에서</small></span>
       </Link>
       <span className="full-art-map__count">지도에 표시된 작가 {mapped.length}명{initialPlaces.length > mapped.length ? ` · 위치 확인 중 ${initialPlaces.length - mapped.length}명` : ""}</span>
       <nav className="full-art-map__links" aria-label="지도 바로가기">
