@@ -4,7 +4,7 @@ import { requireAdmin } from "../admin-auth";
 
 export const dynamic = "force-dynamic";
 
-// Bundled from https://github.com/InSeok211/art-map at a2485bc.
+// Bundled from https://github.com/InSeok211/art-map at 9f539c8.
 const mapDocument = `<!doctype html>
 <html lang="ko">
 <head>
@@ -22,7 +22,7 @@ export default async function AdminArtMapPage() {
 
   return <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", background: "#f4f5f7" }}>
     <header style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 24px" }}>
-      <div><h1 style={{ margin: 0, fontSize: 22 }}>골목지도 작업실</h1><p style={{ margin: "5px 0 0", fontSize: 14 }}>장소·골목길·3D 모델을 편집할 수 있습니다. 현재 편집 내용은 이 브라우저에만 저장됩니다. 공개 지도와 연결되지 않습니다.</p></div>
+      <div><h1 style={{ margin: 0, fontSize: 22 }}>골목지도 작업실</h1><p style={{ margin: "5px 0 0", fontSize: 14 }}>장소·골목길·3D 모델을 편집할 수 있습니다. 골목길과 걸으며 남긴 GPS 기록은 홈페이지에 저장되고, 확인한 골목길은 공개 지도에 나타납니다. 장소·3D 배치는 이 브라우저에만 저장됩니다.</p></div>
       <Link href="/admin/map" style={{ color: "#245f55", fontWeight: 700 }}>지도 관리로 돌아가기</Link>
     </header>
     <iframe title="감천 골목지도 편집" srcDoc={mapDocument} style={{ display: "block", flex: 1, width: "100%", minHeight: 650, border: 0 }} />
