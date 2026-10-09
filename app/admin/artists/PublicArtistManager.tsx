@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- R2 image URLs are dynamic and already validated by the image API. */
 import Link from "next/link";
+import AdminSidebar from "../AdminSidebar";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import ArtistMapFrame, { type MapPlace } from "../../map/ArtistMapFrame";
 import "./public-artists.css";
@@ -138,20 +139,12 @@ export default function PublicArtistManager({ initial, adminName, initialSelecte
   }
 
   return <div className="admin-dashboard public-artist-admin">
-    <aside className="dash-sidebar">
-      <Link href="/" className="dash-logo"><span>감</span><strong>감천 작가 지도</strong></Link>
-      <nav>
-        <div className="nav-group"><p>신청 관리</p><Link className="sidebar-link" href="/admin"><span>◆</span>신청 목록</Link></div>
-        <Link className="sidebar-link" href="/admin?view=accounts"><span>●</span>계정 관리</Link>
-        <div className="nav-group"><p>지도 관리</p><Link className="sidebar-link" href="/admin/map"><span>◇</span>지도 관리 홈</Link><Link className="sidebar-link active" href="/admin/artists"><span>◆</span>공개 작가 관리</Link></div>
-      </nav>
-      <div className="dash-sidebar-card"><strong>{adminName}</strong><span>운영자 계정</span><a href="/api/admin/logout">로그아웃</a></div>
-    </aside>
+    <AdminSidebar active="artists" adminName={adminName}/>
 
     <main className="dash-main">
       <header className="dash-top">
-        <div><p>GAMCHEON ARTIST MAP</p><h1>공개 작가 관리</h1></div>
-        <div className="dash-actions"><Link href="/admin/map">지도 관리</Link><Link href="/map" target="_blank">공개 지도 보기</Link></div>
+        <div><p>GAMCHEON ARTIST MAP</p><h1>작가 위치·공개</h1></div>
+        <div className="dash-actions"><Link href="/map" target="_blank">공개 지도 보기</Link></div>
       </header>
       <section className="dash-metrics">
         <Metric label="승인 작가" value={counts.approved}/><Metric label="배치 대기" value={unplacedRows.length}/><Metric label="배치 완료" value={placedRows.length}/><Metric label="지도 공개" value={counts.published}/>

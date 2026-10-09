@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AdminSidebar from "../../AdminSidebar";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Account, Application } from "../../AdminDashboard";
@@ -68,14 +69,7 @@ export default function AccountDetail({ account, application }: { account: Accou
   }
 
   return <div className="admin-dashboard">
-    <aside className="dash-sidebar">
-      <Link href="/" className="dash-logo"><span>감</span><strong>감천 작가 지도</strong></Link>
-      <nav>
-        <div className="nav-group"><p>신청 관리</p><Link className="sidebar-link" href="/admin"><span>◆</span>신청 목록</Link></div>
-        <div className="nav-group"><p>계정 관리</p><Link className="sidebar-link active" href="/admin"><span>●</span>계정 목록</Link></div>
-      </nav>
-      <div className="dash-sidebar-card"><strong>운영자</strong><span>작가 계정 상세</span><a href="/api/admin/logout">로그아웃</a></div>
-    </aside>
+    <AdminSidebar active="accounts"/>
     <main className="dash-main account-detail-page">
       <header className="dash-top">
         <div><p>{row.login_id}</p><h1>{row.display_name || row.login_id}</h1></div>

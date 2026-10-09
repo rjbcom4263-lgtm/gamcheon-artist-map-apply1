@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AdminSidebar from "./AdminSidebar";
 import { useMemo, useState } from "react";
 
 export type Application = { id: string; artist_name: string; phone: string; email: string; status: string; payload_json: string; image_keys_json: string; created_at: string };
@@ -20,7 +21,7 @@ function date(value: string | null) {
 export default function AdminDashboard({ initial, initialAccounts, adminName, initialView = "applications" }: { initial: Application[]; initialAccounts: Account[]; adminName: string; initialView?: View }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
-  const [view, setView] = useState<View>(initialView);
+  const view = initialView;
 
   const filtered = useMemo(() => initial.filter((row) => {
     const matchesStatus = filter === "all" || row.status === filter;
@@ -36,19 +37,11 @@ export default function AdminDashboard({ initial, initialAccounts, adminName, in
   }), [initial, initialAccounts]);
 
   return <div className="admin-dashboard">
-    <aside className="dash-sidebar">
-      <Link href="/" className="dash-logo"><span>감</span><strong>감천 작가 지도</strong></Link>
-      <nav>
-        <div className="nav-group"><p>신청 관리</p><button className={view === "applications" ? "active" : ""} onClick={() => setView("applications")}><span>◆</span>신청 목록</button></div>
-        <button className={view === "accounts" ? "active" : ""} onClick={() => setView("accounts")}><span>●</span>계정 관리</button>
-        <div className="nav-group"><p>지도 관리</p><Link className="sidebar-link" href="/admin/map"><span>◇</span>지도 관리 홈</Link><Link className="sidebar-link" href="/admin/artists"><span>◆</span>공개 작가 관리</Link></div>
-      </nav>
-      <div className="dash-sidebar-card"><strong>{adminName}</strong><span>운영자 계정</span><a href="/api/admin/logout">로그아웃</a></div>
-    </aside>
+    <AdminSidebar active={view} adminName={adminName}/>
     <main className="dash-main">
       <header className="dash-top">
         <div><p>GAMCHEON ARTIST MAP</p><h1>{view === "applications" ? "작가 신청 관리" : "회원가입 계정 관리"}</h1></div>
-        <div className="dash-actions"><Link href="/admin/map">지도 관리</Link><Link href="/api/admin/applications/export">CSV 다운로드</Link><Link href="/apply">신청 화면</Link></div>
+        <div className="dash-actions"><Link href="/api/admin/applications/export">CSV 다운로드</Link><Link href="/apply" target="_blank">신청 화면 보기</Link></div>
       </header>
       <section className="dash-metrics">
         <Metric label="전체 신청" value={counts.all}/><Metric label="신규 접수" value={counts.received}/><Metric label="승인 완료" value={counts.approved}/><Metric label="승인 대기 계정" value={counts.pendingAccounts}/>

@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "../admin-auth";
+import AdminSidebar from "../AdminSidebar";
+import "./art-map.css";
 
 export const dynamic = "force-dynamic";
 
-// Bundled from https://github.com/InSeok211/art-map at 9f539c8.
+// Bundled from https://github.com/InSeok211/art-map at fa20f1f.
 const mapDocument = `<!doctype html>
 <html lang="ko">
 <head>
@@ -18,13 +20,18 @@ const mapDocument = `<!doctype html>
 </html>`;
 
 export default async function AdminArtMapPage() {
-  if (!await requireAdmin()) redirect("/admin/login");
+  const admin = await requireAdmin();
+  if (!admin) redirect("/admin/login");
 
-  return <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", background: "#f4f5f7" }}>
-    <header style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 24px" }}>
-      <div><h1 style={{ margin: 0, fontSize: 22 }}>골목지도 작업실</h1><p style={{ margin: "5px 0 0", fontSize: 14 }}>장소·골목길·3D 모델을 편집할 수 있습니다. 골목길과 걸으며 남긴 GPS 기록은 홈페이지에 저장되고, 확인한 골목길은 공개 지도에 나타납니다. 장소·3D 배치는 이 브라우저에만 저장됩니다.</p></div>
-      <Link href="/admin/map" style={{ color: "#245f55", fontWeight: 700 }}>지도 관리로 돌아가기</Link>
-    </header>
-    <iframe title="감천 골목지도 편집" srcDoc={mapDocument} style={{ display: "block", flex: 1, width: "100%", minHeight: 650, border: 0 }} />
-  </main>;
+  return <div className="admin-dashboard admin-workshop">
+    <AdminSidebar active="art-map" adminName={admin.displayName}/>
+    <main className="admin-workshop-main">
+      <header className="admin-workshop-head">
+        <div><h1>골목지도 작업실</h1><p>골목길을 직접 그리거나 걸으며 기록해 찾습니다. 저장한 골목길은 공개 지도에 바로 나타납니다.</p></div>
+        <Link href="/map" target="_blank">공개 지도 보기 ↗</Link>
+      </header>
+      {/* 휴대폰에서 걸으며 GPS를 기록하므로 위치 권한을 넘겨 줍니다(같은 출처의 문서). */}
+      <iframe title="감천 골목지도 작업실" srcDoc={mapDocument} allow="geolocation" className="admin-workshop-frame" />
+    </main>
+  </div>;
 }
