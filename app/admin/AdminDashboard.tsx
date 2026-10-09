@@ -40,7 +40,7 @@ export default function AdminDashboard({ initial, initialAccounts, adminName, in
     <AdminSidebar active={view} adminName={adminName}/>
     <main className="dash-main">
       <header className="dash-top">
-        <div><p>GAMCHEON ARTIST MAP</p><h1>{view === "applications" ? "작가 신청 관리" : "회원가입 계정 관리"}</h1></div>
+        <div><p>GAMCHEON ARTIST MAP</p><h1>{view === "applications" ? "작가 신청 관리" : "작가 계정 관리"}</h1></div>
         <div className="dash-actions"><Link href="/api/admin/applications/export">CSV 다운로드</Link><Link href="/apply" target="_blank">신청 화면 보기</Link></div>
       </header>
       <section className="dash-metrics">

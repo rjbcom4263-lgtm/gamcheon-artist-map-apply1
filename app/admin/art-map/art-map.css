@@ -16,3 +16,4 @@
   .admin-workshop-head p{display:none}
   .admin-workshop-head h1{font-size:15px}
 }
+@media(max-width:680px){.admin-workshop-head{display:none}}

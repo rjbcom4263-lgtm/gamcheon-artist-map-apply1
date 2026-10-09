@@ -1,0 +1,87 @@
+/* 운영자 화면 공통 배치(AdminSidebar가 불러옴). 넓은 화면은 왼쪽 메뉴, 좁은 화면은 위쪽 한 줄 메뉴입니다. */
+.admin-dashboard{background:#f7f8fb}
+.sidebar-logout{display:none}
+
+@media(max-width:1050px){
+  .admin-dashboard{display:block;min-height:100dvh;overflow-x:hidden}
+  /* 위쪽에 붙는 한 줄 메뉴: 그룹 제목을 숨기고 가로로 밀어 봅니다. */
+  .dash-sidebar{position:sticky;top:0;z-index:40;display:flex;flex-direction:row;align-items:center;gap:8px;height:auto;padding:9px 12px;border-right:0;border-bottom:1px solid #ebeef5;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);overflow-x:auto;scrollbar-width:none}
+  .dash-sidebar::-webkit-scrollbar{display:none}
+  .dash-sidebar .dash-logo{flex:none}
+  .dash-sidebar .dash-logo span{width:34px;height:34px;border-radius:11px}
+  .dash-sidebar .dash-logo strong{display:none}
+  .dash-sidebar nav{display:flex;flex-wrap:nowrap;gap:4px;margin:0}
+  .dash-sidebar .nav-group{display:flex;gap:4px}
+  .dash-sidebar .nav-group p{display:none}
+  .dash-sidebar .sidebar-link{flex:none;padding:8px 11px;border-radius:10px;font-size:13px;white-space:nowrap}
+  .dash-sidebar-card{display:none}
+  .sidebar-logout{display:flex}
+  .dash-main{width:calc(100% - 24px);padding:16px 0 32px}
+  .detail-page-grid,.application-manager-grid,.account-manager-grid,.public-manager-grid{grid-template-columns:1fr}
+  .process-card,.account-preview-card{position:static}
+}
+
+@media(max-width:680px){
+  .dash-top{display:grid;gap:12px;margin-bottom:14px}
+  .dash-top h1{font-size:23px}
+  .dash-actions{flex-wrap:wrap}
+  .dash-actions a{padding:9px 11px}
+  .dash-metrics{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .metric-card{padding:13px}
+  .metric-card strong{margin-top:6px;font-size:22px}
+  .dash-card-head{display:grid;padding:15px}
+  .dash-filters{display:grid;grid-template-columns:1fr 110px}
+  .dash-filters input{width:100%}
+  .admin-list-wide{min-height:0}
+  /* 표 대신 카드: 첫 줄에 이름과 상태, 아래에 분야·날짜를 둡니다(행 전체가 상세 열기 링크). */
+  .application-table,.account-table{overflow:visible}
+  .table-head,.account-head{display:none!important}
+  .admin-list-wide .table-row,.account-row{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;min-width:0;padding:14px 15px}
+  .admin-list-wide .table-row>span,.account-row>span{grid-column:1;min-width:0;color:#6c7385;font-size:12px}
+  .admin-list-wide .table-row>span:first-child,.account-row>span:first-child{color:#131629}
+  .admin-list-wide .table-row>span:nth-child(3){grid-column:2;grid-row:1;align-self:start}
+  .admin-list-wide .table-row>span:nth-child(5){display:none}
+  .account-row>span:nth-child(4){grid-column:2;grid-row:1;align-self:start}
+  .account-row>span:nth-child(6){display:none}
+}
+
+/* 사이트 공통 스타일(어두운 신청 화면용 입력칸, main 여백)이 운영자 화면을 덮지 않게 되돌립니다. */
+.admin-dashboard input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="range"]),
+.admin-dashboard select,
+.admin-dashboard textarea{border:1px solid #e1e5ef;background:#f9fafe;color:#131629;border-radius:10px}
+.admin-dashboard input::placeholder,.admin-dashboard textarea::placeholder{color:#9aa1b2;opacity:1}
+.admin-dashboard input:focus,.admin-dashboard select:focus,.admin-dashboard textarea:focus{border-color:#6559ff;box-shadow:0 0 0 3px rgba(101,89,255,.12)}
+.admin-dashboard select option{background:#fff;color:#131629}
+.admin-dashboard .dash-top h1{font-weight:800}
+.admin-dashboard.admin-workshop{display:grid;height:100dvh}
+.admin-dashboard .admin-workshop-main{width:auto;margin:0;padding:0}
+@media(max-width:1050px){
+  .admin-dashboard.admin-workshop{display:flex;flex-direction:column}
+  .admin-dashboard .admin-workshop-main{flex:1;min-height:0;height:auto}
+}
+@media(max-width:680px){.dash-filters{grid-template-columns:minmax(0,1fr) 96px}}
+
+/* 신청서·계정 상세의 오른쪽 처리 영역: 예전 베이지·검정 색을 운영자 화면 색으로 맞춥니다. */
+.admin-dashboard .process-card .detail-title{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;padding-bottom:16px;border-bottom:1px solid #edf0f6}
+.admin-dashboard .process-card .detail-title span{color:#8a91a3;font-size:11px;font-weight:800}
+.admin-dashboard .process-card .detail-title h2{margin:4px 0 0;color:#131629;font-size:22px;line-height:1.25;white-space:nowrap}
+.admin-dashboard .process-card .detail-title select{width:auto;min-width:118px}
+.admin-dashboard .review-panel{margin-top:12px;padding:15px;border:1px solid #edf0f6;border-radius:14px;background:#fbfcff}
+.admin-dashboard .review-panel strong{color:#131629;font-size:13px}
+.admin-dashboard .review-panel span,.admin-dashboard .review-panel small{color:#8a91a3;font-size:11px}
+.admin-dashboard .review-actions{justify-content:flex-start;margin:12px 0 0}
+.admin-dashboard .review-actions button,.admin-dashboard .review-link-button{border:1px solid #e1e5ef;border-radius:10px;background:#fff;color:#3d4356;padding:9px 12px;font-size:12px;font-weight:800;text-decoration:none}
+.admin-dashboard .review-actions button:hover,.admin-dashboard .review-link-button:hover{border-color:#c9c5ff;color:#6559ff}
+.admin-dashboard .review-actions .reject,.admin-dashboard .review-actions .delete{border-color:#f3d2cf;background:#fff5f4;color:#b23b32}
+.admin-dashboard .promote-admin-panel{border-color:#e3e0ff;background:#f6f5ff}
+.admin-dashboard .promote-admin-panel .promote-admin-button{border-color:#6559ff;background:#6559ff;color:#fff}
+.admin-dashboard .promote-admin-panel .promote-admin-button:hover{background:#5248e6;color:#fff}
+.admin-dashboard .detail-section h3{color:#131629;font-size:14px;font-weight:800}
+.admin-dashboard .detail-section{border-bottom-color:#edf0f6}
+.admin-dashboard .admin-work{border-color:#edf0f6;border-radius:12px}
+@media(max-width:680px){
+  .dash-card-head{grid-template-columns:minmax(0,1fr)}
+  .detail-grid{grid-template-columns:1fr}
+  .detail-main-card{padding:4px 16px 16px}
+}
+@media(max-width:680px){.admin-dashboard .dash-filters{width:100%;min-width:0}.admin-dashboard .dash-filters select,.admin-dashboard .dash-filters input{width:100%;min-width:0}}
