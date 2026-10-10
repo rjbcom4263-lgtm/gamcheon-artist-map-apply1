@@ -6,7 +6,7 @@ import "./art-map.css";
 
 export const dynamic = "force-dynamic";
 
-// Bundled from https://github.com/InSeok211/art-map at 46cfe25.
+// Bundled from https://github.com/InSeok211/art-map at bd3138e.
 const mapDocument = `<!doctype html>
 <html lang="ko">
 <head>
