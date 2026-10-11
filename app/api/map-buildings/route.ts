@@ -6,9 +6,9 @@ export const runtime = "edge";
 export async function GET() {
   try {
     const { edits, publishedAt } = await readPublishedBuildingEdits();
-    return Response.json({ edits, publishedAt }, { headers: { "cache-control": "public, max-age=60" } });
+    return Response.json({ edits, publishedAt }, { headers: { "cache-control": "no-store" } });
   } catch (error) {
     console.error("map building edits read failed", error);
-    return Response.json({ edits: { overrides: {} } }, { headers: { "cache-control": "no-store" } });
+    return Response.json({ error: "공개 건물 데이터를 불러오지 못했습니다." }, { status: 503, headers: { "cache-control": "no-store" } });
   }
 }

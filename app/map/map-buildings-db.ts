@@ -1,13 +1,20 @@
 import { env } from "cloudflare:workers";
+import { insideBuildingEditLimits } from "./map-building-limits";
 
 // 골목지도 작업실 '건물' 탭에서 고친 지도 건물(높이·색·지붕·숨기기)을 D1에 저장합니다.
 // 초안(draft, 작업실에서만 보임)과 공개본(published, 공개 지도) 두 벌을 두고, '공개하기'로 초안을 공개본에 옮깁니다.
-// 형식은 골목지도의 buildingEdits.ts와 같습니다: { overrides: { [OSM 건물 번호]: { hidden?, heightMeters?, wallColor?, roofColor?, roofStyle? } } }
+// 형식은 골목지도의 buildingEdits.ts와 같습니다:
+// { overrides: { [OSM 건물 번호]: { hidden?, heightMeters?, wallColor?, roofColor?, roofStyle? } },
+//   added: [{ id, outline: [경도, 위도][], heightMeters, wallColor, roofColor, roofStyle }] }  ← 관리자가 그린 새 건물
 
-export type BuildingOverride = { hidden?: boolean; heightMeters?: number; wallColor?: number; roofColor?: number; roofStyle?: "flat" | "gable" };
-export type BuildingEdits = { overrides: Record<string, BuildingOverride> };
+type RoofStyle = "flat" | "gable";
+export type BuildingOverride = { hidden?: boolean; heightMeters?: number; wallColor?: number; roofColor?: number; roofStyle?: RoofStyle };
+export type AddedBuilding = { id: string; outline: [number, number][]; heightMeters: number; wallColor: number; roofColor: number; roofStyle: RoofStyle };
+export type BuildingEdits = { overrides: Record<string, BuildingOverride>; added: AddedBuilding[] };
 
 const MAX_OVERRIDES = 3000;
+const MAX_ADDED = 500;
+const OUTLINE_POINTS = { min: 3, max: 60 };
 const isColor = (value: unknown): value is number => Number.isInteger(value) && Number(value) >= 0 && Number(value) <= 0xffffff;
 
 // 받은 값을 검사합니다. 하나라도 잘못되면 null(저장하지 않음).
@@ -38,10 +45,38 @@ export function cleanBuildingEdits(value: unknown): BuildingEdits | null {
     }
     if (Object.keys(override).length) overrides[id] = override;
   }
-  return { overrides };
+  const added = cleanAdded((value as { added?: unknown }).added);
+  return added ? { overrides, added } : null;
 }
 
-const EMPTY: BuildingEdits = { overrides: {} };
+function cleanAdded(value: unknown): AddedBuilding[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > MAX_ADDED) return null;
+  const ids = new Set<string>();
+  const added: AddedBuilding[] = [];
+  for (const raw of value) {
+    if (!raw || typeof raw !== "object") return null;
+    const item = raw as Record<string, unknown>;
+    if (typeof item.id !== "string" || !/^[\w-]{1,80}$/.test(item.id) || ids.has(item.id)) return null;
+    ids.add(item.id);
+    if (!Array.isArray(item.outline) || item.outline.length < OUTLINE_POINTS.min || item.outline.length > OUTLINE_POINTS.max) return null;
+    const outline: [number, number][] = [];
+    for (const point of item.outline) {
+      if (!Array.isArray(point) || point.length !== 2) return null;
+      const [lng, lat] = point.map(Number);
+      if (!Number.isFinite(lng) || !Number.isFinite(lat) || !insideBuildingEditLimits(lng, lat)) return null;
+      outline.push([Math.round(lng * 1e7) / 1e7, Math.round(lat * 1e7) / 1e7]);
+    }
+    const height = Number(item.heightMeters);
+    if (!Number.isFinite(height) || height < 2.5 || height > 60) return null;
+    if (!isColor(item.wallColor) || !isColor(item.roofColor)) return null;
+    if (item.roofStyle !== "flat" && item.roofStyle !== "gable") return null;
+    added.push({ id: item.id, outline, heightMeters: Math.round(height * 100) / 100, wallColor: item.wallColor, roofColor: item.roofColor, roofStyle: item.roofStyle });
+  }
+  return added;
+}
+
+const EMPTY: BuildingEdits = { overrides: {}, added: [] };
 
 export async function ensureMapBuildingTable() {
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS map_building_edits (
