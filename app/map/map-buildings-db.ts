@@ -5,16 +5,21 @@ import { insideBuildingEditLimits } from "./map-building-limits";
 // 초안(draft, 작업실에서만 보임)과 공개본(published, 공개 지도) 두 벌을 두고, '공개하기'로 초안을 공개본에 옮깁니다.
 // 형식은 골목지도의 buildingEdits.ts와 같습니다:
 // { overrides: { [OSM 건물 번호]: { hidden?, heightMeters?, wallColor?, roofColor?, roofStyle? } },
-//   added: [{ id, outline: [경도, 위도][], heightMeters, wallColor, roofColor, roofStyle }] }  ← 관리자가 그린 새 건물
+//   added: [{ id, outline: [경도, 위도][], heightMeters, wallColor, roofColor, roofStyle }],  ← 관리자가 그린 새 건물
+//   models: [{ id, modelId, name, longitude, latitude, rotation, widthMeters, replaces }] }  ← 올린 3D 모델(GLB)을 둔 것
 
 type RoofStyle = "flat" | "gable";
 export type BuildingOverride = { hidden?: boolean; heightMeters?: number; wallColor?: number; roofColor?: number; roofStyle?: RoofStyle };
 export type AddedBuilding = { id: string; outline: [number, number][]; heightMeters: number; wallColor: number; roofColor: number; roofStyle: RoofStyle };
-export type BuildingEdits = { overrides: Record<string, BuildingOverride>; added: AddedBuilding[] };
+export type PlacedModel = { id: string; modelId: string; name: string; longitude: number; latitude: number; rotation: number; widthMeters: number; replaces: number[] };
+export type BuildingEdits = { overrides: Record<string, BuildingOverride>; added: AddedBuilding[]; models: PlacedModel[] };
 
 const MAX_OVERRIDES = 3000;
 const MAX_ADDED = 500;
 const OUTLINE_POINTS = { min: 3, max: 60 };
+const MAX_MODELS = 100;
+const MAX_REPLACES = 20;
+export const MODEL_FILE_ID = /^m-[a-z0-9]{8,40}$/;
 const isColor = (value: unknown): value is number => Number.isInteger(value) && Number(value) >= 0 && Number(value) <= 0xffffff;
 
 // 받은 값을 검사합니다. 하나라도 잘못되면 null(저장하지 않음).
@@ -46,7 +51,35 @@ export function cleanBuildingEdits(value: unknown): BuildingEdits | null {
     if (Object.keys(override).length) overrides[id] = override;
   }
   const added = cleanAdded((value as { added?: unknown }).added);
-  return added ? { overrides, added } : null;
+  const models = cleanModels((value as { models?: unknown }).models);
+  return added && models ? { overrides, added, models } : null;
+}
+
+function cleanModels(value: unknown): PlacedModel[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > MAX_MODELS) return null;
+  const ids = new Set<string>();
+  const models: PlacedModel[] = [];
+  for (const raw of value) {
+    if (!raw || typeof raw !== "object") return null;
+    const item = raw as Record<string, unknown>;
+    if (typeof item.id !== "string" || !/^[\w-]{1,80}$/.test(item.id) || ids.has(item.id)) return null;
+    ids.add(item.id);
+    if (typeof item.modelId !== "string" || !MODEL_FILE_ID.test(item.modelId)) return null;
+    if (item.name !== undefined && typeof item.name !== "string") return null;
+    const longitude = Number(item.longitude), latitude = Number(item.latitude), rotation = Number(item.rotation), width = Number(item.widthMeters);
+    if (!Number.isFinite(longitude) || !Number.isFinite(latitude) || !insideBuildingEditLimits(longitude, latitude)) return null;
+    if (!Number.isFinite(rotation) || rotation < 0 || rotation >= 360 || !Number.isFinite(width) || width < 1 || width > 120) return null;
+    if (!Array.isArray(item.replaces) || item.replaces.length > MAX_REPLACES) return null;
+    if (!item.replaces.every((id) => Number.isSafeInteger(id) && Number(id) > 0)) return null;
+    models.push({
+      id: item.id, modelId: item.modelId, name: String(item.name ?? "").slice(0, 80),
+      longitude: Math.round(longitude * 1e7) / 1e7, latitude: Math.round(latitude * 1e7) / 1e7,
+      rotation: Math.round(rotation * 10) / 10, widthMeters: Math.round(width * 10) / 10,
+      replaces: [...new Set(item.replaces as number[])],
+    });
+  }
+  return models;
 }
 
 function cleanAdded(value: unknown): AddedBuilding[] | null {
@@ -76,7 +109,7 @@ function cleanAdded(value: unknown): AddedBuilding[] | null {
   return added;
 }
 
-const EMPTY: BuildingEdits = { overrides: {}, added: [] };
+const EMPTY: BuildingEdits = { overrides: {}, added: [], models: [] };
 
 export async function ensureMapBuildingTable() {
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS map_building_edits (
