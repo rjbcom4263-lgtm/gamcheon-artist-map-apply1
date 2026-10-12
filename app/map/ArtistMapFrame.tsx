@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MAP_APP_ORIGIN } from "./map-app";
 
-// 감천 골목지도 앱(별도 서버)의 공개 지도입니다. 지도와 지도 데이터(골목길·건물 편집)는 그 앱이 맡고, 이 사이트는
-// 승인된 작가 위치를 넘겨주기만 합니다. 메시지는 이 주소하고만 주고받습니다.
+// 감천 골목지도 공개 지도(/map-app/, art-map 저장소에서 npm run export:site로 넣음)를 띄웁니다. 이 사이트가 승인된
+// 작가 위치를 넘겨주고, 메시지는 같은 사이트 주소하고만 주고받습니다.
+export const MAP_APP_PATH = "/map-app/";
 
 export type MapPlace = { id: string; name: string; category: "shop" | "attraction"; latitude: number; longitude: number; address?: string; description?: string };
 
@@ -25,9 +25,10 @@ export default function ArtistMapFrame({ places, selectedId = null, canPick = fa
   const frame = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    const send = () => frame.current?.contentWindow?.postMessage({ source: "gamcheon-artist-host", type: "set", places, selectedId, canPick }, MAP_APP_ORIGIN);
+    const origin = window.location.origin;
+    const send = () => frame.current?.contentWindow?.postMessage({ source: "gamcheon-artist-host", type: "set", places, selectedId, canPick }, origin);
     const receive = (event: MessageEvent) => {
-      if (event.origin !== MAP_APP_ORIGIN || event.source !== frame.current?.contentWindow || event.data?.source !== "gamcheon-artist-map") return;
+      if (event.origin !== origin || event.source !== frame.current?.contentWindow || event.data?.source !== "gamcheon-artist-map") return;
       if (event.data.type === "ready") send();
       if (event.data.type === "select" && typeof event.data.id === "string") onSelect?.(event.data.id);
       if (event.data.type === "pick" && Number.isFinite(event.data.longitude) && Number.isFinite(event.data.latitude)) onPick?.(event.data.longitude, event.data.latitude);
@@ -37,6 +38,6 @@ export default function ArtistMapFrame({ places, selectedId = null, canPick = fa
     return () => window.removeEventListener("message", receive);
   }, [places, selectedId, canPick, onPick, onSelect]);
 
-  // 지도는 다른 주소(지도 앱)라, 내 위치와 휴대폰 방향(나침반) 센서를 쓰도록 따로 허락합니다.
-  return <iframe ref={frame} className={className} title={title} src={full ? `${MAP_APP_ORIGIN}/?mode=full&host=site` : `${MAP_APP_ORIGIN}/`} allow="geolocation; accelerometer; gyroscope; magnetometer" />;
+  // 지도 안에서 내 위치와 휴대폰 방향(나침반) 센서를 쓰도록 허락합니다.
+  return <iframe ref={frame} className={className} title={title} src={full ? `${MAP_APP_PATH}?mode=full&host=site` : MAP_APP_PATH} allow="geolocation; accelerometer; gyroscope; magnetometer" />;
 }
