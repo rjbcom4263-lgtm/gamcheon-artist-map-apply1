@@ -6,13 +6,16 @@ import "./admin-layout.css";
 
 // 모든 운영자 화면이 함께 쓰는 왼쪽 메뉴입니다. 화면마다 따로 만들던 메뉴를 하나로 모아, 어느 화면에서든
 // 같은 자리에서 같은 메뉴로 오갈 수 있게 합니다. (좁은 화면에서는 위쪽 가로 메뉴가 됩니다.)
-export type AdminSection = "applications" | "accounts" | "artists";
+export type AdminSection = "applications" | "accounts" | "artists" | "map-editor";
 
 const GROUPS: { title: string; items: { key: AdminSection; label: string; href: string; icon: string }[] }[] = [
   { title: "작가 관리", items: [
     { key: "applications", label: "신청 목록", href: "/admin", icon: "◆" },
     { key: "accounts", label: "작가 계정", href: "/admin?view=accounts", icon: "●" },
     { key: "artists", label: "작가 위치·공개", href: "/admin/artists", icon: "⌖" },
+  ] },
+  { title: "지도", items: [
+    { key: "map-editor", label: "지도 편집", href: "/admin/map-editor", icon: "▦" },
   ] },
 ];
 

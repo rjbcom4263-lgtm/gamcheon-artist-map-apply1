@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { MAP_APP_ORIGIN } from "./map-app";
 
 // 감천 골목지도 앱(별도 서버)의 공개 지도입니다. 지도와 지도 데이터(골목길·건물 편집)는 그 앱이 맡고, 이 사이트는
 // 승인된 작가 위치를 넘겨주기만 합니다. 메시지는 이 주소하고만 주고받습니다.
-export const MAP_APP_ORIGIN = "https://gamcheon-alley-map.rjbcom4263.workers.dev";
 
 export type MapPlace = { id: string; name: string; category: "shop" | "attraction"; latitude: number; longitude: number; address?: string; description?: string };
 
