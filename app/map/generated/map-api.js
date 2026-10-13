@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at 9de5162.
+// Bundled from https://github.com/InSeok211/art-map at 62b94aa.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -395,6 +395,9 @@ function sanitizeBuildingSettings(value) {
 var EMPTY_BUILDING_EDITS = { overrides: {}, added: [], models: [] };
 var MODEL_WIDTH_RANGE = { min: 1, max: 120 };
 var MODEL_FILE_ID = /^m-[a-z0-9]{8,40}$/;
+var PHOTO_FILE_ID = /^i-[a-z0-9]{8,40}$/;
+var WORKSHOP_TEXT_LIMITS = { name: 60, address: 160, description: 500 };
+var MAX_PREVIEW_PHOTO = 7e5;
 var ADDED_OUTLINE_POINTS = { min: 3, max: 60 };
 var BUILDING_HEIGHT_RANGE = { min: 2.5, max: 60 };
 var MAX_OVERRIDES = 3e3;
@@ -471,7 +474,22 @@ function sanitizeBuildingEdits(value) {
   const added = Array.isArray(addedInput) ? addedInput.slice(0, MAX_ADDED).flatMap((item) => sanitizeAdded(item) ?? []) : [];
   const modelInput = value?.models;
   const models = Array.isArray(modelInput) ? modelInput.slice(0, MAX_MODELS).flatMap((item) => sanitizeModel(item) ?? []) : [];
-  return { overrides, added, models };
+  const workshop = sanitizeWorkshopInfo(value?.workshop);
+  return workshop ? { overrides, added, models, workshop } : { overrides, added, models };
+}
+function sanitizeWorkshopInfo(value) {
+  if (!value || typeof value !== "object") return null;
+  const input = value;
+  const info = {};
+  for (const key of ["name", "address", "description"]) {
+    const text = typeof input[key] === "string" ? input[key].trim().slice(0, WORKSHOP_TEXT_LIMITS[key]) : "";
+    if (text) info[key] = text;
+  }
+  const photo = input.photo;
+  if (typeof photo === "string" && (PHOTO_FILE_ID.test(photo) || photo.startsWith("data:image/jpeg;base64,") && photo.length <= MAX_PREVIEW_PHOTO && /^[A-Za-z0-9+/=]+$/.test(photo.slice(23)))) {
+    info.photo = photo;
+  }
+  return Object.keys(info).length ? info : null;
 }
 
 // server/buildings.ts
@@ -503,6 +521,7 @@ async function saveDraft(request, env) {
   if (Object.keys(draft.overrides).length !== Object.keys(input.overrides).length || draft.added.length !== input.added.length || draft.models.length !== input.models.length || new Set(draft.added.map((building) => building.id)).size !== draft.added.length || new Set(draft.models.map((model) => model.id)).size !== draft.models.length) {
     return error("\uC800\uC7A5\uD560 \uC218 \uC5C6\uB294 \uAC74\uBB3C \uB370\uC774\uD130\uB098 \uC911\uBCF5 ID\uAC00 \uC788\uC2B5\uB2C8\uB2E4. \uAE30\uC874 \uCD08\uC548\uC740 \uC720\uC9C0\uB429\uB2C8\uB2E4.", 400);
   }
+  if (draft.workshop?.photo?.startsWith("data:")) return error("\uACF5\uBC29 \uC0AC\uC9C4\uC740 \uC11C\uBC84\uC5D0 \uC62C\uB9B0 \uB4A4 \uC800\uC7A5\uD574 \uC8FC\uC138\uC694. \uAE30\uC874 \uCD08\uC548\uC740 \uC720\uC9C0\uB429\uB2C8\uB2E4.", 400);
   await write(env, "draft", draft);
   return json({ draft });
 }
@@ -599,6 +618,46 @@ async function getModel(id, request, env) {
   });
 }
 
+// server/images.ts
+var PREFIX2 = "map-images/";
+var MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+var photoKey = (id) => `${PREFIX2}${id}`;
+var newPhotoId = () => `i-${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`;
+function photoType(bytes) {
+  if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return "image/jpeg";
+  if (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71) return "image/png";
+  const text = (start, end) => String.fromCharCode(...bytes.slice(start, end));
+  if (text(0, 4) === "RIFF" && text(8, 12) === "WEBP") return "image/webp";
+  return null;
+}
+async function uploadPhoto(request, env) {
+  if (Number(request.headers.get("content-length") || 0) > MAX_PHOTO_BYTES + 64 * 1024) return error("\uC0AC\uC9C4\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4(\uCD5C\uB300 2MB).", 413);
+  const form = await request.formData().catch(() => null);
+  const file = form?.get("file");
+  if (!file || typeof file === "string" || !file.size) return error("\uC0AC\uC9C4 \uD30C\uC77C\uC744 \uACE8\uB77C \uC8FC\uC138\uC694.", 400);
+  if (file.size > MAX_PHOTO_BYTES) return error("\uC0AC\uC9C4\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4(\uCD5C\uB300 2MB).", 413);
+  const buffer = await file.arrayBuffer();
+  const type = photoType(new Uint8Array(buffer, 0, Math.min(16, buffer.byteLength)));
+  if (!type) return error("JPEG\xB7PNG\xB7WebP \uC0AC\uC9C4\uB9CC \uC62C\uB9B4 \uC218 \uC788\uC2B5\uB2C8\uB2E4.", 400);
+  const id = newPhotoId();
+  await env.MODELS.put(photoKey(id), buffer, { httpMetadata: { contentType: type } });
+  return json({ photo: id });
+}
+async function getPhoto(id, request, env) {
+  if (!PHOTO_FILE_ID.test(id)) return new Response("Not found", { status: 404 });
+  const published = (await readPublished(env)).workshop?.photo === id;
+  if (!published && !await env.isAdmin(request)) return new Response("Not found", { status: 404 });
+  const object = await env.MODELS.get(photoKey(id));
+  if (!object) return new Response("Not found", { status: 404 });
+  return new Response(object.body, {
+    headers: {
+      "content-type": object.httpMetadata?.contentType ?? "image/jpeg",
+      "cache-control": published ? "public, max-age=86400" : "private, no-store",
+      "x-content-type-options": "nosniff"
+    }
+  });
+}
+
 // server/schema.ts
 var ready = null;
 function ensureMapTables(env) {
@@ -635,7 +694,9 @@ var routes = [
   ["GET", /^\/api\/map-models\/([\w-]+)$/, false, (request, env, _url, [id]) => getModel(id, request, env)],
   ["GET", /^\/api\/admin\/map-models$/, true, (_request, env) => listModels(env)],
   ["POST", /^\/api\/admin\/map-models$/, true, (request, env) => uploadModel(request, env)],
-  ["DELETE", /^\/api\/admin\/map-models\/([\w-]+)$/, true, (_request, env, _url, [id]) => deleteModel(id, env)]
+  ["DELETE", /^\/api\/admin\/map-models\/([\w-]+)$/, true, (_request, env, _url, [id]) => deleteModel(id, env)],
+  ["GET", /^\/api\/map-images\/([\w-]+)$/, false, (request, env, _url, [id]) => getPhoto(id, request, env)],
+  ["POST", /^\/api\/admin\/map-images$/, true, (request, env) => uploadPhoto(request, env)]
 ];
 var MAP_API_PATHS = routes.map(([, pattern]) => pattern.source);
 async function handleApi(request, env, url = new URL(request.url)) {
