@@ -1,4 +1,4 @@
-// 자동 생성 파일입니다(art-map 저장소의 server/env.ts, server/index.ts). Bundled from https://github.com/InSeok211/art-map at 68ccf3a.
+// 자동 생성 파일입니다(art-map 저장소의 server/env.ts, server/index.ts). Bundled from https://github.com/InSeok211/art-map at f0a9297.
 export interface MapEnv {
   /** 홈페이지 D1 */
   DB: object
