@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at ff178c4.
+// Bundled from https://github.com/InSeok211/art-map at 9de5162.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
