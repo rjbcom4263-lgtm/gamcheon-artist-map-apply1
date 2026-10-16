@@ -19,9 +19,10 @@ type Props = {
   // 패널(장소 목록·길찾기)까지 갖춘 감천 골목지도 전체 화면으로 엽니다. host=site: 휴대폰에서 지도 쪽 이름표를
   // 숨기고 이 사이트의 제목 카드(FullArtistMap)가 지도 위에 대신 뜹니다.
   full?: boolean;
+  compactApp?: boolean;
 };
 
-export default function ArtistMapFrame({ places, selectedId = null, canPick = false, onPick, onSelect, title, className, full = false }: Props) {
+export default function ArtistMapFrame({ places, selectedId = null, canPick = false, onPick, onSelect, title, className, full = false, compactApp = false }: Props) {
   const frame = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -39,5 +40,5 @@ export default function ArtistMapFrame({ places, selectedId = null, canPick = fa
   }, [places, selectedId, canPick, onPick, onSelect]);
 
   // 지도 안에서 내 위치와 휴대폰 방향(나침반) 센서를 쓰도록 허락합니다.
-  return <iframe ref={frame} className={className} title={title} src={full ? `${MAP_APP_PATH}?mode=full&host=site` : MAP_APP_PATH} allow="geolocation; accelerometer; gyroscope; magnetometer" />;
+  return <iframe ref={frame} className={className} title={title} src={full ? `${MAP_APP_PATH}?mode=full&host=${compactApp ? 'compact' : 'site'}` : MAP_APP_PATH} allow="geolocation; accelerometer; gyroscope; magnetometer" />;
 }
