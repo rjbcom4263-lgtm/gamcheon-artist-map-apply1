@@ -90,7 +90,7 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
 
     <section className="agency-hero" aria-label="주요 프로젝트">
       {heroSlides.map((item, index) => <article key={item.title} className={`agency-hero-slide ${slide === index ? "is-active" : ""}`} aria-hidden={slide !== index}>
-        <img src={item.image} alt="" style={{ objectPosition: item.position }} /><div className="agency-hero-shade" />
+        <picture><source media="(max-width: 767px)" srcSet={item.mobileImage} type="image/webp" /><img src={item.image} alt="" style={{ objectPosition: item.position }} /></picture><div className="agency-hero-shade" />
         <div className="agency-hero-copy"><p>{item.eyebrow}</p><h1>{item.title.split("\n").map((line) => <span key={line}>{line}</span>)}</h1><div><span>{item.text}</span><Link href="/apply">작가 참여 신청 <Arrow /></Link></div></div>
       </article>)}
       <div className="agency-hero-controls"><span>{String(slide + 1).padStart(2, "0")}</span><div>{heroSlides.map((_, index) => <button key={index} aria-label={`${index + 1}번 슬라이드`} className={slide === index ? "is-active" : ""} onClick={() => setSlide(index)} />)}</div><span>{String(heroSlides.length).padStart(2, "0")}</span></div>

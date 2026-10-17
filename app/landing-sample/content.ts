@@ -21,9 +21,9 @@ export function chooseLoaderVariant(randomValue: number) {
 }
 
 export const heroSlides = [
-  { eyebrow: "GAMCHEON ARTIST PROJECT", title: "감천의 작가와\n작품을 연결합니다.", text: "작가의 작업과 이야기를 기록하고, 더 많은 사람과 새로운 기회로 이어지는 로컬 아트 에이전시를 시작합니다.", image: "/assets/home/hero-artist-studio.png", position: "center" },
-  { eyebrow: "ARTIST MAP · COMING SOON", title: "골목마다 숨어 있는\n작업실을 발견하세요.", text: "감천에서 활동하는 작가와 공방을 한눈에 만나는 작가 지도를 준비하고 있습니다.", image: "/gamcheon-map-concept.png", position: "center 55%" },
-  { eyebrow: "ART COLLABORATION", title: "작품이 일상과\n브랜드를 만납니다.", text: "전시, 체험, 굿즈, 기관 협업까지 작가의 활동 반경을 함께 넓혀갑니다.", image: "/assets/home/artist-goods.png", position: "center" },
+  { eyebrow: "GAMCHEON ARTIST PROJECT", title: "감천의 작가와\n작품을 연결합니다.", text: "작가의 작업과 이야기를 기록하고, 더 많은 사람과 새로운 기회로 이어지는 로컬 아트 에이전시를 시작합니다.", image: "/assets/home/hero-artist-studio.png", mobileImage: "/assets/home/hero-artist-studio-mobile.webp", position: "center" },
+  { eyebrow: "ARTIST MAP · COMING SOON", title: "골목마다 숨어 있는\n작업실을 발견하세요.", text: "감천에서 활동하는 작가와 공방을 한눈에 만나는 작가 지도를 준비하고 있습니다.", image: "/gamcheon-map-concept.png", mobileImage: "/assets/home/gamcheon-map-concept-mobile.webp", position: "center 55%" },
+  { eyebrow: "ART COLLABORATION", title: "작품이 일상과\n브랜드를 만납니다.", text: "전시, 체험, 굿즈, 기관 협업까지 작가의 활동 반경을 함께 넓혀갑니다.", image: "/assets/home/artist-goods.png", mobileImage: "/assets/home/artist-goods-mobile.webp", position: "center" },
 ];
 
 export const statLabels = [["참여 작가", "명"], ["기록한 작품", "점"], ["연결한 공간", "곳"], ["준비 중인 프로젝트", "개"]] as const;
