@@ -366,15 +366,15 @@ body.agency-active { background: #fff; color: #171717; }
   .agency-mobile-menu>a span { color:#aaa; font-size:9px; }
   .agency-mobile-auth { display:flex; flex-wrap:wrap; gap:18px; margin-top:22px; font-size:13px; font-weight:800; }
   .agency-mobile-menu .agency-mobile-apply { margin-top:auto; justify-content:space-between; padding:18px; color:#fff; border:0; background:var(--blue); font-size:15px; }
-  .agency-hero { height:clamp(560px,78svh,680px); min-height:0; }
+  .agency-hero { height:calc(100svh - 50px); min-height:640px; }
   .agency-hero-shade { background:linear-gradient(0deg,rgba(0,0,0,.82),rgba(0,0,0,.06) 75%); }
-  .agency-hero-copy { left:20px; right:20px; bottom:88px; width:auto; }
-  .agency-hero-copy>p { margin-bottom:12px; font-size:10px; }
-  .agency-hero-copy h1 { font-size:clamp(34px,10vw,44px); line-height:1.12; }
-  .agency-hero-copy>div { display:block; margin-top:16px; }
+  .agency-hero-copy { left:20px; right:20px; bottom:105px; width:auto; }
+  .agency-hero-copy>p { margin-bottom:14px; font-size:10px; }
+  .agency-hero-copy h1 { font-size:clamp(38px,12vw,54px); line-height:1.08; }
+  .agency-hero-copy>div { display:block; margin-top:22px; }
   .agency-hero-copy>div>span { display:block; font-size:12px; line-height:1.7; }
-  .agency-hero-copy a { min-width:135px; height:42px; margin-top:16px; }
-  .agency-hero-controls { left:20px; right:auto; bottom:24px; }
+  .agency-hero-copy a { min-width:135px; height:42px; margin-top:20px; }
+  .agency-hero-controls { left:20px; right:auto; bottom:35px; }
   .agency-scroll-hint { display:none; }
   .agency-impact { min-height:980px; padding:70px 20px 40px; }
   .agency-impact>em { top:auto; right:20px; bottom:490px; font-size:64px; }
@@ -415,9 +415,9 @@ body.agency-active { background: #fff; color: #171717; }
   .agency-apply h2 { font-size:38px; }
   .agency-footer { grid-template-columns:1fr; gap:26px; padding:50px 20px 30px; }
   .agency-footer>small { grid-column:auto; }
-  .agency-chat { right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); width:auto; height:40px; justify-content:center; padding:0 14px; border-radius:999px; background:var(--blue); }
-  .agency-chat>span { display:none; }
-  .agency-chat>b { font-size:11px; white-space:nowrap; }
+  .agency-chat { right:15px; bottom:15px; width:100px; height:100px; padding:13px; }
+  .agency-chat>span { font-size:12px; }
+  .agency-chat>b { font-size:9px; }
   .agency-film { padding:16px; }
   .agency-film article { aspect-ratio:4/5; }
   .agency-film>button { right:14px; top:12px; }
