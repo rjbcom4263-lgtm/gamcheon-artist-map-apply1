@@ -35,6 +35,7 @@ export default function SignupForm({ nextPath = "/artist" }: { nextPath?: string
     <div className="auth-grid"><div className="auth-field"><label htmlFor="signup-password">비밀번호 <b>*</b></label><div className="auth-password"><input id="signup-password" type={showPassword ? "text" : "password"} value={form.password} onChange={(e) => update("password", e.target.value)} autoComplete="new-password" placeholder="비밀번호 입력" required/><button type="button" onClick={() => setShowPassword((shown) => !shown)} aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}>{showPassword ? "숨김" : "보기"}</button></div></div><div className="auth-field"><label htmlFor="signup-password-confirm">비밀번호 확인 <b>*</b></label><input id="signup-password-confirm" type={showPassword ? "text" : "password"} value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} autoComplete="new-password" placeholder="한 번 더 입력" required/></div></div>
     {error && <div className="auth-error" role="alert">{error}</div>}
     <button className="auth-submit" type="submit" disabled={loading}>{loading ? "가입 중…" : "회원가입"}</button>
+    <p className="auth-privacy-link">가입 전 <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 처리방침</a>을 확인해 주세요.</p>
     <SocialLoginButtons nextPath={nextPath}/>
     <div className="auth-switch"><span>이미 작가 계정이 있으신가요?</span><a href={pathWithNext("/login", nextPath)}>로그인</a></div>
   </form>;
