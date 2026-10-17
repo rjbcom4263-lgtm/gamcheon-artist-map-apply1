@@ -42,5 +42,3 @@ export const goods = [
   ["ARCHIVE", "작업실 노트", "/assets/home/hero-artist-studio.png", "82% 50%"],
   ["ARTIST STORY", "오늘의 작업", "/assets/home/hero-artist-studio.png", "34% 50%"],
 ] as const;
-
-export const partners = ["부산광역시", "사하구", "감천문화마을", "LOCAL ART", "ARTIST MAP", "ART PASSPORT", "STUDIO", "COMMUNITY", "ARCHIVE", "COLLABORATION"];

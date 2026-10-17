@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { chooseLoaderVariant, goods, heroSlides, loaderBrandLines, news, partners, site } from "./content";
+import { chooseLoaderVariant, goods, heroSlides, loaderBrandLines, news, site } from "./content";
 
 type HomeStat = readonly [string, number, string];
 
@@ -131,7 +131,12 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
       <div className="agency-video-grid" id="video"><article className="agency-reveal"><img src="/assets/home/hero-artist-studio.png" alt="작가 작업실" /><button aria-label="작가 작업실 스토리 재생" onClick={() => setFilm(0)}>▶</button><div><span>ARTIST FILM 01</span><h3>골목 끝 작업실에서 시작된 이야기</h3></div></article><article className="agency-reveal"><img src="/assets/home/artist-goods.png" alt="작가 작품과 상품" /><button aria-label="작가 협업 스토리 재생" onClick={() => setFilm(1)}>▶</button><div><span>PROJECT FILM 02</span><h3>작품이 사람의 일상과 만나는 순간</h3></div></article></div>
     </section>
 
-    <section className="agency-partners agency-section" id="partners"><div className="agency-section-head agency-reveal"><div><p>PARTNERS &amp; CLIENTS</p><h2>감천의 작가를 함께<br />응원하고 연결합니다.</h2><span>전시, 아트 큐레이션, 상품 제작, 지역 캠페인 협업을 제안해주세요.</span></div><Link href="/contact">협업 문의 <Arrow /></Link></div><div className="agency-partner-grid">{partners.map((partner) => <span key={partner}>{partner}</span>)}</div></section>
+    <section className="agency-partners agency-section" id="partners">
+      <div className="agency-section-head agency-reveal"><div><p>이런 분들과 함께하고 싶습니다</p><h2>우리의 여정에<br />함께해 주세요.</h2><span>작가·공방, 지역 상점, 브랜드와 기관의 참여를 기다립니다. 아래 칸은 실제 협업이 확인되는 순서대로 채워가겠습니다.</span></div><Link href="/contact">협업 제안하기 <Arrow /></Link></div>
+      <div className="agency-partner-grid" role="group" aria-label="함께할 분들을 위한 빈 자리 10개">
+        {Array.from({ length: 10 }, (_, index) => <span key={index} aria-hidden="true">X</span>)}
+      </div>
+    </section>
 
     <section className="agency-apply"><div className="agency-reveal"><p>JOIN THE PROJECT</p><h2>당신의 작업과 이야기를<br />감천에서 들려주세요.</h2><Link href="/apply">작가 참여 신청하기 <Arrow /></Link></div></section>
 
