@@ -367,6 +367,7 @@ body.agency-active { background: #fff; color: #171717; }
   .agency-mobile-auth { display:flex; flex-wrap:wrap; gap:18px; margin-top:22px; font-size:13px; font-weight:800; }
   .agency-mobile-menu .agency-mobile-apply { margin-top:auto; justify-content:space-between; padding:18px; color:#fff; border:0; background:var(--blue); font-size:15px; }
   .agency-hero { height:calc(100svh - 50px); min-height:640px; }
+  .agency-hero-slide>img { bottom:auto; height:auto; object-fit:contain; }
   .agency-hero-shade { background:linear-gradient(0deg,rgba(0,0,0,.82),rgba(0,0,0,.06) 75%); }
   .agency-hero-copy { left:20px; right:20px; bottom:105px; width:auto; }
   .agency-hero-copy>p { margin-bottom:14px; font-size:10px; }
