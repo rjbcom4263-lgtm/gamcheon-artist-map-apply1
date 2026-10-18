@@ -3,7 +3,7 @@ import { adminCookie, createArtistAccount, createSession } from "../../../admin/
 export const runtime = "edge";
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => ({})) as { loginId?: string; password?: string; displayName?: string; phone?: string; email?: string };
+  const body = await request.json().catch(() => ({})) as { loginId?: string; password?: string; displayName?: string; phone?: string; email?: string; consentRequired?: unknown; consentEmail?: unknown; privacyVersion?: unknown };
   const result = await createArtistAccount(body);
   if ("error" in result) return Response.json({ error: result.error }, { status: result.status });
   const session = await createSession({ accountId: result.account.id, loginId: result.account.loginId, role: "artist", displayName: result.account.displayName });

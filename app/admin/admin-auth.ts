@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { cookies } from "next/headers";
+import { SIGNUP_PRIVACY_VERSION } from "../signup/privacy-consent";
 
 const COOKIE_NAME = "gamcheon_session";
 const SESSION_SECONDS = 60 * 60 * 8;
@@ -55,11 +56,18 @@ export async function ensureAccountTables() {
   )`).run();
   await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_accounts_role ON accounts (role)").run();
   await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_accounts_status ON accounts (status)").run();
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS account_privacy_consents (
+    account_id TEXT PRIMARY KEY NOT NULL,
+    version TEXT NOT NULL,
+    required_accepted_at TEXT NOT NULL,
+    email_accepted_at TEXT
+  )`).run();
 }
 function cleanText(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
-export async function createArtistAccount(input: { loginId?: string; password?: string; displayName?: string; phone?: string; email?: string }) {
+export async function createArtistAccount(input: { loginId?: string; password?: string; displayName?: string; phone?: string; email?: string; consentRequired?: unknown; consentEmail?: unknown; privacyVersion?: unknown }) {
+  if (input.consentRequired !== true || input.privacyVersion !== SIGNUP_PRIVACY_VERSION) return { error: "현재 개인정보 안내를 확인하고 필수 항목에 동의해 주세요.", status: 400 };
   await ensureAccountTables();
   const loginId = cleanText(input.loginId, 150);
   const password = typeof input.password === "string" ? input.password : "";
@@ -67,13 +75,20 @@ export async function createArtistAccount(input: { loginId?: string; password?: 
   const phone = cleanText(input.phone, 30);
   const email = cleanText(input.email, 150);
   if (!loginId || !password || !displayName || !phone) return { error: "필수 정보를 모두 입력해주세요.", status: 400 };
+  if (email && input.consentEmail !== true) return { error: "이메일 수집·이용에 동의하거나 이메일을 비워 주세요.", status: 400 };
   const id = `ACC-${crypto.randomUUID()}`;
+  const acceptedAt = new Date().toISOString();
   try {
-    await env.DB.prepare("INSERT INTO accounts (id, login_id, password_hash, role, status, display_name, phone, email) VALUES (?, ?, ?, 'artist', 'pending', ?, ?, ?)")
-      .bind(id, loginId, await sha256Hex(password), displayName, phone, email).run();
+    await env.DB.batch([
+      env.DB.prepare("INSERT INTO accounts (id, login_id, password_hash, role, status, display_name, phone, email) VALUES (?, ?, ?, 'artist', 'pending', ?, ?, ?)")
+        .bind(id, loginId, await sha256Hex(password), displayName, phone, email),
+      env.DB.prepare("INSERT INTO account_privacy_consents (account_id, version, required_accepted_at, email_accepted_at) VALUES (?, ?, ?, ?)")
+        .bind(id, SIGNUP_PRIVACY_VERSION, acceptedAt, input.consentEmail === true ? acceptedAt : null),
+    ]);
     return { account: { id, loginId, role: "artist" as AccountRole, status: "pending", displayName } };
-  } catch {
-    return { error: "이미 사용 중인 아이디입니다.", status: 409 };
+  } catch (error) {
+    if (String(error).includes("UNIQUE constraint failed: accounts.login_id")) return { error: "이미 사용 중인 아이디입니다.", status: 409 };
+    return { error: "회원가입을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.", status: 500 };
   }
 }
 export async function verifyCredentials(loginId: string, password: string) {
