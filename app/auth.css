@@ -387,17 +387,33 @@
 
 .auth-consent-item {
   margin-top: 10px;
-  padding: 17px 18px;
+  padding: 14px 18px;
   border: 1px solid #dedee5;
   background: #fafaff;
 }
 
-.auth-consent-item > strong {
-  font-size: 13px;
+.auth-consent-details {
+  margin: 10px 0 0 26px;
+  font-size: 11px;
+}
+
+.auth-consent-details summary {
+  width: fit-content;
+  color: #414eaa;
+  font-weight: 700;
+  line-height: 1.5;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.auth-consent-details summary:focus-visible {
+  outline: 2px solid var(--auth-blue);
+  outline-offset: 3px;
 }
 
 .auth-consent-item dl {
-  margin: 12px 0;
+  margin: 14px 0 0;
 }
 
 .auth-consent-item dl > div {
@@ -431,7 +447,7 @@
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  margin-top: 13px;
+  margin: 0;
   font-size: 12px;
   font-weight: 700;
   line-height: 1.5;

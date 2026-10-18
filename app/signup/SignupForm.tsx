@@ -39,18 +39,20 @@ export default function SignupForm({ nextPath = "/artist" }: { nextPath?: string
     <div className="auth-field"><label htmlFor="signup-id">아이디 <b>*</b></label><input id="signup-id" value={form.loginId} onChange={(e) => update("loginId", e.target.value)} autoComplete="username" placeholder="로그인할 아이디" required/></div>
     <div className="auth-grid"><div className="auth-field"><label htmlFor="signup-password">비밀번호 <b>*</b></label><div className="auth-password"><input id="signup-password" type={showPassword ? "text" : "password"} value={form.password} onChange={(e) => update("password", e.target.value)} autoComplete="new-password" placeholder="비밀번호 입력" required/><button type="button" onClick={() => setShowPassword((shown) => !shown)} aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}>{showPassword ? "숨김" : "보기"}</button></div></div><div className="auth-field"><label htmlFor="signup-password-confirm">비밀번호 확인 <b>*</b></label><input id="signup-password-confirm" type={showPassword ? "text" : "password"} value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} autoComplete="new-password" placeholder="한 번 더 입력" required/></div></div>
     <section className="auth-consent" aria-labelledby="signup-consent-heading">
-      <h3 id="signup-consent-heading">개인정보 수집·이용 안내</h3>
+      <h3 id="signup-consent-heading">개인정보 수집·이용 동의</h3>
       <div className="auth-consent-item">
-        <strong>필수 정보</strong>
-        <dl><div><dt>목적</dt><dd>회원 식별, 로그인, 계정 관리 및 작가 신청 관련 연락</dd></div><div><dt>항목</dt><dd>작가명·활동명, 휴대전화, 아이디, 비밀번호의 해시값, 계정번호, 가입·로그인 일시, 동의 내역</dd></div><div><dt>보유기간</dt><dd>회원 탈퇴 또는 동의 철회 처리 시까지</dd></div></dl>
-        <p>동의를 거부할 수 있으나, 거부하면 회원가입이 제한됩니다.</p>
-        <label className="auth-consent-check"><input type="checkbox" checked={consentRequired} onChange={(event) => setConsentRequired(event.target.checked)}/><span>[필수] 위 개인정보 수집·이용에 동의합니다.</span></label>
+        <label className="auth-consent-check"><input type="checkbox" checked={consentRequired} onChange={(event) => setConsentRequired(event.target.checked)} required/><span>[필수] 개인정보 수집·이용에 동의합니다.</span></label>
+        <details className="auth-consent-details"><summary>필수 정보 수집·이용 내용 보기</summary>
+          <dl><div><dt>목적</dt><dd>회원 식별, 로그인, 계정 관리 및 작가 신청 관련 연락</dd></div><div><dt>항목</dt><dd>작가명·활동명, 휴대전화, 아이디, 비밀번호의 해시값, 계정번호, 가입·로그인 일시, 동의 내역</dd></div><div><dt>보유기간</dt><dd>회원 탈퇴 또는 동의 철회 처리 시까지</dd></div></dl>
+          <p>동의를 거부할 수 있으나, 거부하면 회원가입이 제한됩니다.</p>
+        </details>
       </div>
       <div className="auth-consent-item">
-        <strong>선택 정보</strong>
-        <dl><div><dt>목적</dt><dd>계정 및 작가 신청 관련 이메일 연락</dd></div><div><dt>항목</dt><dd>이메일 주소</dd></div><div><dt>보유기간</dt><dd>회원 탈퇴 또는 동의 철회 처리 시까지</dd></div></dl>
-        <p>동의를 거부해도 회원가입할 수 있습니다. 이메일을 비워 두세요.</p>
         <label className="auth-consent-check"><input type="checkbox" checked={consentEmail} onChange={(event) => setConsentEmail(event.target.checked)}/><span>[선택] 이메일 수집·이용에 동의합니다.</span></label>
+        <details className="auth-consent-details"><summary>선택 이메일 수집·이용 내용 보기</summary>
+          <dl><div><dt>목적</dt><dd>계정 및 작가 신청 관련 이메일 연락</dd></div><div><dt>항목</dt><dd>이메일 주소</dd></div><div><dt>보유기간</dt><dd>회원 탈퇴 또는 동의 철회 처리 시까지</dd></div></dl>
+          <p>동의를 거부해도 회원가입할 수 있습니다. 이메일을 비워 두세요.</p>
+        </details>
       </div>
       <p className="auth-consent-footer">열람·정정·동의 철회·삭제 요청: <a href="mailto:rjbcom4263@gmail.com">rjbcom4263@gmail.com</a> · <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 처리방침 보기 ↗</a></p>
     </section>
