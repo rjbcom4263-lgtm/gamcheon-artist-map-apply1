@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at 8dd354c.
+// Bundled from https://github.com/InSeok211/art-map at 8dd354c + uncommitted changes.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -90,16 +90,16 @@ async function saveTrail(request, env) {
   if (!body || typeof body.id !== "string" || !body.id || body.id.length > 80 || typeof body.startedAt !== "string" || Number.isNaN(Date.parse(body.startedAt)) || !Array.isArray(body.points) || body.points.length > MAX_TRAIL_POINTS) {
     return error(`\uAE30\uB85D \uD615\uC2DD\uC774 \uB9DE\uC9C0 \uC54A\uAC70\uB098 \uB108\uBB34 \uAE41\uB2C8\uB2E4(\uCD5C\uB300 ${MAX_TRAIL_POINTS}\uC810).`, 400);
   }
-  const points = body.points.flatMap((point) => {
+  const points2 = body.points.flatMap((point) => {
     if (!Array.isArray(point) || point.length !== 4 || !point.every((part) => typeof part === "number" && Number.isFinite(part))) return [];
     const [lng, lat, accuracy, time] = point;
     return insideWorkArea(lng, lat) ? [[round7(lng), round7(lat), Math.round(accuracy * 10) / 10, Math.round(time)]] : [];
   });
-  if (points.length < 5) return error("\uAC10\uCC9C \uC791\uC5C5 \uBC94\uC704 \uC548\uC5D0\uC11C \uAE30\uB85D\uD55C \uC704\uCE58\uAC00 \uB108\uBB34 \uC801\uC2B5\uB2C8\uB2E4.", 400);
+  if (points2.length < 5) return error("\uAC10\uCC9C \uC791\uC5C5 \uBC94\uC704 \uC548\uC5D0\uC11C \uAE30\uB85D\uD55C \uC704\uCE58\uAC00 \uB108\uBB34 \uC801\uC2B5\uB2C8\uB2E4.", 400);
   const startedAt = new Date(body.startedAt).toISOString();
   await env.DB.prepare(`INSERT INTO gps_trails (id, started_at, points_json) VALUES (?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET points_json = excluded.points_json`).bind(body.id, startedAt, JSON.stringify(points)).run();
-  return json({ trail: { id: body.id, startedAt, points } });
+    ON CONFLICT(id) DO UPDATE SET points_json = excluded.points_json`).bind(body.id, startedAt, JSON.stringify(points2)).run();
+  return json({ trail: { id: body.id, startedAt, points: points2 } });
 }
 async function deleteTrail(url, env) {
   const id = url.searchParams.get("id");
@@ -662,6 +662,9 @@ async function getPhoto(id, request, env) {
 var ready = null;
 function ensureMapTables(env) {
   ready ??= env.DB.batch([
+    env.DB.prepare(`CREATE TABLE IF NOT EXISTS map_places (
+      id TEXT PRIMARY KEY NOT NULL DEFAULT 'active', places_json TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS map_alleys (
       id TEXT PRIMARY KEY NOT NULL DEFAULT 'active', alleys_json TEXT NOT NULL,
       dismissed_json TEXT NOT NULL DEFAULT '[]', updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)`),
@@ -678,8 +681,414 @@ function ensureMapTables(env) {
   return ready;
 }
 
+// src/data/gamcheon-bus-stops.json
+var gamcheon_bus_stops_default = [
+  {
+    id: "busan-BSB215880203",
+    name: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
+    next: "\uAD6C\uAC10",
+    latitude: 35.0942518,
+    longitude: 129.0101845,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880203",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB215880201",
+    name: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
+    next: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
+    latitude: 35.0928287,
+    longitude: 129.0090255,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880201",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB177890203",
+    name: "\uD55C\uC0D8\uC288\uD37C",
+    next: "\uB300\uC9C4\uC288\uD37C",
+    latitude: 35.0978101,
+    longitude: 129.0114563,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890203",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB168490207",
+    name: "\uD55C\uC0D8\uC288\uD37C",
+    next: "\uC544\uBBF8\uB3D9\uAC10\uCC9C\uC0BC\uAC70\uB9AC",
+    latitude: 35.0986386,
+    longitude: 129.0120141,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490207",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB177890202",
+    name: "\uAD6C\uAC10",
+    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    latitude: 35.0956798,
+    longitude: 129.0105951,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890202",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB168590203",
+    name: "\uC544\uBBF8\uB3D9\uAC10\uCC9C\uC0BC\uAC70\uB9AC",
+    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    latitude: 35.0980416,
+    longitude: 129.0113878,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590203",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB177890303",
+    name: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
+    next: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
+    latitude: 35.0944935,
+    longitude: 129.0100766,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890303",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB177890301",
+    name: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
+    next: "\uAC10\uCC9C2\uB3D9\uC0C8\uB9C8\uC744\uAE08\uACE0",
+    latitude: 35.0928666,
+    longitude: 129.008809,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890301",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB168590202",
+    name: "\uAD6C\uAC10",
+    next: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
+    latitude: 35.09559,
+    longitude: 129.0103809,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590202",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB214130101",
+    name: "\uB300\uC131\uC0AC",
+    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    latitude: 35.0984326,
+    longitude: 129.0112805,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB214130101",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB168590103",
+    name: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
+    next: "\uC544\uBBF8\uB3D9\uACF5\uC601\uC8FC\uCC28\uC7A5",
+    latitude: 35.0997435,
+    longitude: 129.0121239,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590103",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB168590106",
+    name: "\uC544\uBBF8\uCCAD\uB144\uD68C",
+    next: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
+    latitude: 35.0990847,
+    longitude: 129.0121164,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590106",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB168590102",
+    name: "\uB300\uC9C4\uC288\uD37C",
+    next: "\uC544\uBBF8\uCCAD\uB144\uD68C",
+    latitude: 35.0983199,
+    longitude: 129.0119922,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590102",
+    checkedAt: "2026-10-19",
+    replaces: "osm-node-9657838805",
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB168490202",
+    name: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
+    next: "\uC544\uBBF8\uCCAD\uB144\uD68C",
+    latitude: 35.0998039,
+    longitude: 129.0120733,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490202",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB168490205",
+    name: "\uC544\uBBF8\uCCAD\uB144\uD68C",
+    next: "\uD55C\uC0D8\uC288\uD37C",
+    latitude: 35.0991799,
+    longitude: 129.0119605,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490205",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB168590108",
+    name: "\uBBF8\uD654\uB2F9\uC288\uD37C",
+    next: "\uC544\uBBF8\uB3D9\uACF5\uC601\uC8FC\uCC28\uC7A5",
+    latitude: 35.09933,
+    longitude: 129.0130313,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590108",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB168490208",
+    name: "\uBBF8\uD654\uB2F9\uC288\uD37C",
+    next: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
+    latitude: 35.0994588,
+    longitude: 129.0131442,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490208",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC11C\uAD6C2"
+    ]
+  },
+  {
+    id: "busan-BSB502390000",
+    name: "\uC544\uBBF8\uC0B0 \uB300\uC131\uC0AC",
+    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    latitude: 35.0985189,
+    longitude: 129.0115276,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB502390000",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1"
+    ]
+  },
+  {
+    id: "busan-BSB168590201",
+    name: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    next: "\uAD6C\uAC10",
+    latitude: 35.0972086,
+    longitude: 129.0101505,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590201",
+    checkedAt: "2026-10-19",
+    replaces: "osm-node-3859163057",
+    positionSource: "OpenStreetMap \uAE30\uC874 \uB4F1\uB85D \uC704\uCE58 \uC720\uC9C0",
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB177890201",
+    name: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    next: "\uD55C\uC0D8\uC288\uD37C",
+    latitude: 35.0973041,
+    longitude: 129.0106455,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890201",
+    checkedAt: "2026-10-19",
+    replaces: "osm-node-3859163058",
+    positionSource: "OpenStreetMap \uAE30\uC874 \uB4F1\uB85D \uC704\uCE58 \uC720\uC9C0",
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB177890302",
+    name: "\uAC10\uCC9C2\uB3D9\uC0C8\uB9C8\uC744\uAE08\uACE0",
+    next: "\uAC10\uCC9C2\uB3D9",
+    latitude: 35.0924059,
+    longitude: 129.00846,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890302",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ]
+  },
+  {
+    id: "busan-BSB215880202",
+    name: "\uAC10\uCC9C2\uB3D9\uC0C8\uB9C8\uC744\uAE08\uACE0",
+    next: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
+    latitude: 35.0918924,
+    longitude: 129.0083461,
+    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880202",
+    checkedAt: "2026-10-19",
+    replaces: null,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ]
+  }
+];
+
+// src/data/mapAmenities.ts
+var points = [
+  [3859163057, "bus_stop", 35.0972086, 129.0101505, "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00 (\uAD6C\uAC10 \uBC29\uBA74)"],
+  [3859163058, "bus_stop", 35.0973041, 129.0106455, "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00 (\uD55C\uC0D8\uC288\uD37C \uBC29\uBA74)"],
+  [4473495859, "bus_stop", 35.1000425, 129.0159166],
+  [5006392764, "bus_stop", 35.0878391, 129.0041471, "\uAC10\uCC9C1\uB3D9\uC8FC\uBBFC\uC13C\uD130\xB7\uBD80\uC0B0\uCC9C\uC5F0\uAC00\uC2A4\uBC1C\uC804\uC18C"],
+  [6924043187, "toilets", 35.0985138, 129.0091825],
+  [6924087486, "toilets", 35.0977265, 129.0105011],
+  [6924087487, "toilets", 35.0985277, 129.0100606],
+  [9657838805, "bus_stop", 35.0984172, 129.0120983],
+  [9657908525, "toilets", 35.0996994, 129.0122466],
+  [11166195005, "toilets", 35.0879178, 129.015572],
+  [11252131056, "bus_stop", 35.1012812, 129.0115548],
+  [11252131057, "bus_stop", 35.1014154, 129.0116005],
+  [11853831032, "toilets", 35.0972918, 129.0094237],
+  [11853836253, "toilets", 35.0936128, 129.0026825],
+  [12878495601, "toilets", 35.0967595, 129.0081532],
+  [13075407401, "toilets", 35.0943191, 129.0080254],
+  [13509548714, "toilets", 35.0976417, 129.0083769]
+];
+var toiletCount = 0;
+var busCount = 0;
+var osmAmenities = points.map(([id, category, latitude, longitude, mappedName]) => ({
+  id: `osm-node-${id}`,
+  name: mappedName ?? (category === "toilets" ? `\uD654\uC7A5\uC2E4 \uC704\uCE58 ${++toiletCount}` : `\uBC84\uC2A4 \uC815\uB958\uC7A5 \uC704\uCE58 ${++busCount}`),
+  category,
+  latitude,
+  longitude,
+  description: id === 3859163057 ? "\uCE74\uCE74\uC624 \uB85C\uB4DC\uBDF0(2025\uB144 11\uC6D4)\uB97C \uCC38\uACE0\uD55C \uC815\uB958\uC7A5 \uC258\uD130 3D \uC2DC\uC548 \xB7 \uD06C\uAE30\uC640 \uC815\uD655\uD55C \uC704\uCE58\uB294 \uD604\uC7A5 \uD655\uC778 \uC804" : category === "toilets" ? "OpenStreetMap \uC704\uCE58 \uC790\uB8CC \xB7 \uAC1C\uBC29 \uC5EC\uBD80\uC640 \uC6B4\uC601\uC2DC\uAC04 \uD655\uC778 \uC804" : "OpenStreetMap \uC704\uCE58 \uC790\uB8CC \xB7 \uC815\uB958\uC7A5 \uBC88\uD638\uC640 \uC6B4\uD589 \uB178\uC120 \uD655\uC778 \uC804"
+}));
+var REGISTERED_BUS_STOPS = gamcheon_bus_stops_default.map((stop) => ({
+  id: stop.replaces ?? stop.id,
+  name: `${stop.name} (${stop.next} \uBC29\uBA74)`,
+  category: "bus_stop",
+  latitude: stop.latitude,
+  longitude: stop.longitude,
+  description: `\uB9C8\uC744\uBC84\uC2A4 ${stop.routes.join(" \xB7 ")} \xB7 \uB2E4\uC74C \uC815\uB958\uC7A5: ${stop.next} \xB7 ${stop.checkedAt} \uC790\uB8CC \uD655\uC778`
+}));
+var MAP_AMENITIES = [
+  ...osmAmenities.filter((place) => !REGISTERED_BUS_STOPS.some((stop) => stop.id === place.id)),
+  ...REGISTERED_BUS_STOPS
+];
+
+// src/places/mapPlaces.ts
+function cleanMapPlaces(value) {
+  if (!Array.isArray(value) || value.length > 500) return null;
+  const ids = /* @__PURE__ */ new Set();
+  const places = [];
+  for (const item of value) {
+    const p = item;
+    if (!p || typeof p.id !== "string" || !p.id || p.id.length > 100 || ids.has(p.id) || typeof p.name !== "string" || !p.name.trim() || p.name.length > 80 || !["shop", "attraction", "toilets", "bus_stop"].includes(p.category ?? "") || typeof p.longitude !== "number" || !Number.isFinite(p.longitude) || typeof p.latitude !== "number" || !Number.isFinite(p.latitude) || !isInsideGamcheonMap(p.longitude, p.latitude) || p.address !== void 0 && (typeof p.address !== "string" || p.address.length > 160) || p.description !== void 0 && (typeof p.description !== "string" || p.description.length > 500)) return null;
+    ids.add(p.id);
+    places.push({
+      id: p.id,
+      name: p.name.trim(),
+      category: p.category,
+      longitude: p.longitude,
+      latitude: p.latitude,
+      address: p.address ?? "",
+      description: p.description ?? ""
+    });
+  }
+  return places;
+}
+
+// server/places.ts
+var defaults = MAP_AMENITIES.filter((p) => isInsideGamcheonMap(p.longitude, p.latitude));
+async function readPlaces(env) {
+  const row = await env.DB.prepare("SELECT places_json FROM map_places WHERE id = 'active'").first();
+  return json({ places: row ? cleanMapPlaces(JSON.parse(row.places_json)) ?? defaults : defaults });
+}
+async function savePlaces(request, env) {
+  const body = await readJson(request);
+  const places = cleanMapPlaces(body?.places);
+  if (!places) return error("\uC7A5\uC18C \uC774\uB984\xB7\uBD84\uB958\xB7\uC9C0\uB3C4 \uC548\uC758 \uC704\uCE58\uB97C \uD655\uC778\uD574 \uC8FC\uC138\uC694.", 400);
+  await env.DB.prepare(`INSERT INTO map_places (id, places_json, updated_at) VALUES ('active', ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET places_json = excluded.places_json, updated_at = CURRENT_TIMESTAMP`).bind(JSON.stringify(places)).run();
+  return json({ places });
+}
+
 // server/index.ts
 var routes = [
+  ["GET", /^\/api\/map-places$/, false, (_request, env) => readPlaces(env)],
+  ["GET", /^\/api\/admin\/map-places$/, true, (_request, env) => readPlaces(env)],
+  ["PUT", /^\/api\/admin\/map-places$/, true, (request, env) => savePlaces(request, env)],
   ["GET", /^\/api\/map-alleys$/, false, (_request, env) => publicAlleys(env)],
   ["GET", /^\/api\/admin\/map-alleys$/, true, (_request, env) => adminAlleys(env)],
   ["PUT", /^\/api\/admin\/map-alleys$/, true, (request, env) => saveAlleys(request, env)],
