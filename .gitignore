@@ -45,3 +45,6 @@ next-env.d.ts
 *.zip
 tsconfig.tsbuildinfo
 .verify-live.mjs
+
+# 인수인계 메모(로컬 전용)
+HANDOFF.md
