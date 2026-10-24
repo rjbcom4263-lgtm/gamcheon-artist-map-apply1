@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at 134714b + uncommitted changes.
+// Bundled from https://github.com/InSeok211/art-map at 3680a11 + uncommitted changes.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -1084,8 +1084,71 @@ async function savePlaces(request, env) {
   return json({ places });
 }
 
+// server/busArrivals.ts
+var stopIds = new Map(gamcheon_bus_stops_default.map((stop) => [stop.replaces ?? stop.id, stop.id.replace("busan-BSB", "")]));
+var cache = /* @__PURE__ */ new Map();
+var pending = /* @__PURE__ */ new Map();
+var decode = (s) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+function field(xml, tag) {
+  return decode(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`).exec(xml)?.[1]?.trim() ?? "").slice(0, 100);
+}
+function nextBus(xml, n) {
+  const value = field(xml, `min${n}`);
+  if (!value) return null;
+  const minutes = /^\d+$/.test(value) ? Number(value) : null;
+  const count = field(xml, `station${n}`);
+  return { minutes, status: minutes === null ? value : null, stopsAway: /^\d+$/.test(count) ? Number(count) : null };
+}
+function parseBusArrivals(xml) {
+  if (field(xml, "resultCode") !== "00") throw new Error("upstream service error");
+  return [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/g)].map(([, item]) => ({
+    route: field(item, "lineno"),
+    type: field(item, "bustype"),
+    first: nextBus(item, 1),
+    second: nextBus(item, 2)
+  })).filter((item) => item.route);
+}
+async function busArrivals(env, url) {
+  const placeId = url.searchParams.get("placeId") ?? "";
+  const stopId = stopIds.get(placeId);
+  if (!stopId) return error("\uC774 \uC815\uB958\uC7A5\uC740 \uB3C4\uCC29\uC815\uBCF4 \uC5F0\uACB0\uC744 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.", 404);
+  if (!env.busanBusApiKey) return error("\uBC84\uC2A4 \uB3C4\uCC29\uC815\uBCF4 \uC11C\uBE44\uC2A4 \uC5F0\uACB0\uC744 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.", 503);
+  const saved = cache.get(stopId);
+  if (saved && saved.until > Date.now()) return json(saved.value);
+  let job = pending.get(stopId);
+  if (!job) {
+    const key = env.busanBusApiKey;
+    job = (async () => {
+      let decodedKey = key;
+      try {
+        decodedKey = decodeURIComponent(key);
+      } catch {
+      }
+      const upstream = new URL("https://apis.data.go.kr/6260000/BusanBIMS/stopArrByBstopid");
+      upstream.searchParams.set("serviceKey", decodedKey);
+      upstream.searchParams.set("bstopid", stopId);
+      const response = await fetch(upstream, { signal: AbortSignal.timeout(8e3) });
+      if (!response.ok) throw new Error("upstream request failed");
+      const xml = await response.text();
+      if (xml.length > 1e6) throw new Error("upstream response too large");
+      const value = { stopId, arrivals: parseBusArrivals(xml), updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      cache.set(stopId, { until: Date.now() + 3e4, value });
+      return value;
+    })();
+    pending.set(stopId, job);
+  }
+  try {
+    return json(await job);
+  } catch {
+    return error("\uB3C4\uCC29\uC815\uBCF4\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC7A0\uC2DC \uB4A4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.", 502);
+  } finally {
+    if (pending.get(stopId) === job) pending.delete(stopId);
+  }
+}
+
 // server/index.ts
 var routes = [
+  ["GET", /^\/api\/map-bus-arrivals$/, false, (_request, env, url) => busArrivals(env, url)],
   ["GET", /^\/api\/map-places$/, false, (_request, env) => readPlaces(env)],
   ["GET", /^\/api\/admin\/map-places$/, true, (_request, env) => readPlaces(env)],
   ["PUT", /^\/api\/admin\/map-places$/, true, (request, env) => savePlaces(request, env)],
