@@ -1,4 +1,4 @@
-// 자동 생성 파일입니다(art-map 저장소의 server/env.ts, server/index.ts). Bundled from https://github.com/InSeok211/art-map at d13dc2a + uncommitted changes.
+// 자동 생성 파일입니다(art-map 저장소의 server/env.ts, server/index.ts). Bundled from https://github.com/InSeok211/art-map at 7a16796 + uncommitted changes.
 export interface MapEnv {
   busanBusApiKey?: string
   /** 홈페이지 D1 */
