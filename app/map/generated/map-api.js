@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at 5ca97d9 + uncommitted changes.
+// Bundled from https://github.com/InSeok211/art-map at c564d0d + uncommitted changes.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -684,192 +684,262 @@ function ensureMapTables(env) {
 // src/data/gamcheon-bus-stops.json
 var gamcheon_bus_stops_default = [
   {
-    id: "busan-BSB215880203",
-    name: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
-    next: "\uAD6C\uAC10",
-    latitude: 35.0942518,
-    longitude: 129.0101845,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880203",
-    checkedAt: "2026-10-19",
-    replaces: null,
+    id: "busan-BSB168800201",
+    name: "\uBD80\uC0B0\uC11C\uAD50\uD68C",
+    next: "\uD55C\uD615\uC11D\uC790\uC720\uC544\uB3D9\uADF9\uC7A5",
+    latitude: 35.1020221,
+    longitude: 129.0165728,
     routes: [
-      "\uC0AC\uD558\uAD6C1",
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2-2"
-    ]
+      "\uC11C\uAD6C3",
+      "\uC11C\uAD6C3-1"
+    ],
+    stopIds: [
+      "168800201"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168800201"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
-    id: "busan-BSB215880201",
-    name: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
-    next: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
-    latitude: 35.0928287,
-    longitude: 129.0090255,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880201",
-    checkedAt: "2026-10-19",
-    replaces: null,
+    id: "busan-BSB168600301",
+    name: "\uAE4C\uCE58\uC0C8\uAE38\uC785\uAD6C",
+    next: "\uC544\uB984\uB2E4\uC6B4\uAD50\uD68C",
+    latitude: 35.1013748,
+    longitude: 129.0117167,
     routes: [
-      "\uC0AC\uD558\uAD6C1",
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2-2"
-    ]
+      "61",
+      "87"
+    ],
+    stopIds: [
+      "168600301"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168600301"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
-    id: "busan-BSB177890203",
-    name: "\uD55C\uC0D8\uC288\uD37C",
-    next: "\uB300\uC9C4\uC288\uD37C",
-    latitude: 35.0978101,
-    longitude: 129.0114563,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890203",
-    checkedAt: "2026-10-19",
-    replaces: null,
+    id: "busan-BSB208270202",
+    name: "\uAE4C\uCE58\uC0C8\uAE38\uC785\uAD6C",
+    next: "\uB300\uC131\uC0AC",
+    latitude: 35.1013347,
+    longitude: 129.0113731,
+    routes: [
+      "61",
+      "87"
+    ],
+    stopIds: [
+      "208270202"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB208270202"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168600201",
+    name: "\uC138\uC2E0\uBE4C\uB77C",
+    next: "\uB300\uC131\uC0AC",
+    latitude: 35.1006042,
+    longitude: 129.011417,
+    routes: [
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "168600201"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168600201"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168800101",
+    name: "\uC544\uBBF8\uD30C\uCD9C\uC18C",
+    next: "\uC544\uBBF8\uC2DC\uC7A5",
+    latitude: 35.1005349,
+    longitude: 129.0163013,
+    routes: [
+      "\uC11C\uAD6C3",
+      "\uC11C\uAD6C3-1"
+    ],
+    stopIds: [
+      "168800101"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168800101"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168500302",
+    name: "\uCC9C\uC8FC\uAD50\uC544\uD30C\uD2B8",
+    next: "\uAE4C\uCE58\uC0C8\uAE38\uC785\uAD6C",
+    latitude: 35.1002762,
+    longitude: 129.0134317,
+    routes: [
+      "87"
+    ],
+    stopIds: [
+      "168500302"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168500302"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168380403",
+    name: "\uC544\uBBF8\uD30C\uCD9C\uC18C",
+    next: "\uAD11\uC131\uC0AC",
+    latitude: 35.1002688,
+    longitude: 129.0167904,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C3",
+      "\uC11C\uAD6C3-1"
+    ],
+    stopIds: [
+      "168380403"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168380403"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB214130201",
+    name: "\uC138\uC2E0\uBE4C\uB77C",
+    next: "\uCC9C\uC8FC\uAD50\uC544\uD30C\uD2B8",
+    latitude: 35.1002652,
+    longitude: 129.0115321,
+    routes: [
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "214130201"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB214130201"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB515070000",
+    name: "\uCC9C\uC8FC\uAD50\uC544\uD30C\uD2B8",
+    next: "\uC138\uC2E0\uBE4C\uB77C",
+    latitude: 35.1001908,
+    longitude: 129.0135624,
+    routes: [
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "515070000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB515070000"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168600104",
+    name: "\uCC9C\uC8FC\uAD50\uC544\uD30C\uD2B8",
+    next: "\uC544\uB3D9\uBCF4\uD638\uC885\uD569\uC13C\uD130",
+    latitude: 35.1001114,
+    longitude: 129.0133274,
+    routes: [
+      "\uC11C\uAD6C2-2",
+      "87"
+    ],
+    stopIds: [
+      "168600104",
+      "168600101"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168600104",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168600101"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168500303",
+    name: "\uC544\uB3D9\uBCF4\uD638\uC885\uD569\uC13C\uD130",
+    next: "\uCC9C\uC8FC\uAD50\uC544\uD30C\uD2B8",
+    latitude: 35.1000816,
+    longitude: 129.015931,
+    routes: [
+      "\uC11C\uAD6C2-2",
+      "87"
+    ],
+    stopIds: [
+      "168500303",
+      "168500301"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168500303",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168500301"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168490301",
+    name: "\uC544\uBBF8\uD30C\uCD9C\uC18C",
+    next: "\uD1A0\uC131\uC5ED\xB7\uC544\uBBF8\uB3D9\uC785\uAD6C",
+    latitude: 35.0999988,
+    longitude: 129.0167726,
+    routes: [
+      "134",
+      "190"
+    ],
+    stopIds: [
+      "168490301"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490301"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168500103",
+    name: "\uC544\uBBF8\uC2DC\uC7A5",
+    next: "\uD1A0\uC131\uC5ED",
+    latitude: 35.0999713,
+    longitude: 129.0168426,
     routes: [
       "\uC0AC\uD558\uAD6C1-1",
       "\uC11C\uAD6C2",
-      "\uC11C\uAD6C2-2"
-    ]
+      "\uC11C\uAD6C2-2",
+      "\uC11C\uAD6C3",
+      "\uC11C\uAD6C3-1"
+    ],
+    stopIds: [
+      "168500103"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168500103"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
-    id: "busan-BSB168490207",
-    name: "\uD55C\uC0D8\uC288\uD37C",
-    next: "\uC544\uBBF8\uB3D9\uAC10\uCC9C\uC0BC\uAC70\uB9AC",
-    latitude: 35.0986386,
-    longitude: 129.0120141,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490207",
-    checkedAt: "2026-10-19",
-    replaces: null,
+    id: "busan-BSB168600103",
+    name: "\uC544\uB3D9\uBCF4\uD638\uC885\uD569\uC13C\uD130",
+    next: "\uC544\uBBF8\uC2DC\uC7A5",
+    latitude: 35.0999034,
+    longitude: 129.0160114,
     routes: [
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2"
-    ]
-  },
-  {
-    id: "busan-BSB177890202",
-    name: "\uAD6C\uAC10",
-    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
-    latitude: 35.0956798,
-    longitude: 129.0105951,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890202",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC0AC\uD558\uAD6C1",
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2-2"
-    ]
-  },
-  {
-    id: "busan-BSB168590203",
-    name: "\uC544\uBBF8\uB3D9\uAC10\uCC9C\uC0BC\uAC70\uB9AC",
-    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
-    latitude: 35.0980416,
-    longitude: 129.0113878,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590203",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2"
-    ]
-  },
-  {
-    id: "busan-BSB177890303",
-    name: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
-    next: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
-    latitude: 35.0944935,
-    longitude: 129.0100766,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890303",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC0AC\uD558\uAD6C1",
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2-2"
-    ]
-  },
-  {
-    id: "busan-BSB177890301",
-    name: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
-    next: "\uAC10\uCC9C2\uB3D9\uC0C8\uB9C8\uC744\uAE08\uACE0",
-    latitude: 35.0928666,
-    longitude: 129.008809,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890301",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC0AC\uD558\uAD6C1",
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2-2"
-    ]
-  },
-  {
-    id: "busan-BSB168590202",
-    name: "\uAD6C\uAC10",
-    next: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
-    latitude: 35.09559,
-    longitude: 129.0103809,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590202",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC0AC\uD558\uAD6C1",
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2-2"
-    ]
-  },
-  {
-    id: "busan-BSB214130101",
-    name: "\uB300\uC131\uC0AC",
-    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
-    latitude: 35.0984326,
-    longitude: 129.0112805,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB214130101",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC11C\uAD6C2-2"
-    ]
-  },
-  {
-    id: "busan-BSB168590103",
-    name: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
-    next: "\uC544\uBBF8\uB3D9\uACF5\uC601\uC8FC\uCC28\uC7A5",
-    latitude: 35.0997435,
-    longitude: 129.0121239,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590103",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2"
-    ]
-  },
-  {
-    id: "busan-BSB168590106",
-    name: "\uC544\uBBF8\uCCAD\uB144\uD68C",
-    next: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
-    latitude: 35.0990847,
-    longitude: 129.0121164,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590106",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2"
-    ]
-  },
-  {
-    id: "busan-BSB168590102",
-    name: "\uB300\uC9C4\uC288\uD37C",
-    next: "\uC544\uBBF8\uCCAD\uB144\uD68C",
-    latitude: 35.0983199,
-    longitude: 129.0119922,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590102",
-    checkedAt: "2026-10-19",
-    replaces: "osm-node-9657838805",
-    routes: [
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2"
-    ]
+      "\uC11C\uAD6C2-2",
+      "87"
+    ],
+    stopIds: [
+      "168600103",
+      "168600102"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168600103",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168600102"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
     id: "busan-BSB168490202",
@@ -877,40 +947,35 @@ var gamcheon_bus_stops_default = [
     next: "\uC544\uBBF8\uCCAD\uB144\uD68C",
     latitude: 35.0998039,
     longitude: 129.0120733,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490202",
-    checkedAt: "2026-10-19",
-    replaces: null,
     routes: [
       "\uC0AC\uD558\uAD6C1-1",
       "\uC11C\uAD6C2"
-    ]
+    ],
+    stopIds: [
+      "168490202"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490202"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
-    id: "busan-BSB168490205",
-    name: "\uC544\uBBF8\uCCAD\uB144\uD68C",
-    next: "\uD55C\uC0D8\uC288\uD37C",
-    latitude: 35.0991799,
-    longitude: 129.0119605,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490205",
-    checkedAt: "2026-10-19",
-    replaces: null,
-    routes: [
-      "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2"
-    ]
-  },
-  {
-    id: "busan-BSB168590108",
-    name: "\uBBF8\uD654\uB2F9\uC288\uD37C",
+    id: "busan-BSB168590103",
+    name: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
     next: "\uC544\uBBF8\uB3D9\uACF5\uC601\uC8FC\uCC28\uC7A5",
-    latitude: 35.09933,
-    longitude: 129.0130313,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590108",
-    checkedAt: "2026-10-19",
-    replaces: null,
+    latitude: 35.0997435,
+    longitude: 129.0121239,
     routes: [
+      "\uC0AC\uD558\uAD6C1-1",
       "\uC11C\uAD6C2"
-    ]
+    ],
+    stopIds: [
+      "168590103"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590103"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
     id: "busan-BSB168490208",
@@ -918,12 +983,249 @@ var gamcheon_bus_stops_default = [
     next: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
     latitude: 35.0994588,
     longitude: 129.0131442,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490208",
-    checkedAt: "2026-10-19",
-    replaces: null,
     routes: [
       "\uC11C\uAD6C2"
-    ]
+    ],
+    stopIds: [
+      "168490208"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490208"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168500201",
+    name: "\uC544\uBBF8\uD30C\uCD9C\uC18C",
+    next: "\uC544\uBBF8\uCD08\uB4F1\uD559\uAD50",
+    latitude: 35.099435,
+    longitude: 129.0160775,
+    routes: [
+      "134",
+      "190"
+    ],
+    stopIds: [
+      "168500201"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168500201"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168590108",
+    name: "\uBBF8\uD654\uB2F9\uC288\uD37C",
+    next: "\uC544\uBBF8\uB3D9\uACF5\uC601\uC8FC\uCC28\uC7A5",
+    latitude: 35.09933,
+    longitude: 129.0130313,
+    routes: [
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168590108"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590108"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168490204",
+    name: "\uC544\uBBF8\uB3D9\uACF5\uC601\uC8FC\uCC28\uC7A5",
+    next: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
+    latitude: 35.0991888,
+    longitude: 129.0133172,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168490204"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490204"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168490205",
+    name: "\uC544\uBBF8\uCCAD\uB144\uD68C",
+    next: "\uD55C\uC0D8\uC288\uD37C",
+    latitude: 35.0991799,
+    longitude: 129.0119605,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168490205"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490205"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168490203",
+    name: "\uC138\uD654\uC5B4\uB9B0\uC774\uC9D1",
+    next: "\uC544\uBBF8\uB3D9\uACF5\uC601\uC8FC\uCC28\uC7A5",
+    latitude: 35.0991646,
+    longitude: 129.0145198,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168490203"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490203"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168590106",
+    name: "\uC544\uBBF8\uCCAD\uB144\uD68C",
+    next: "\uC0B0\uC0C1\uAD50\uD68C\xB7\uBE44\uC11D\uBB38\uD654\uB9C8\uC744",
+    latitude: 35.0990847,
+    longitude: 129.0121164,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168590106"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590106"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168590105",
+    name: "\uC544\uBBF8\uB3D9\uACF5\uC601\uC8FC\uCC28\uC7A5",
+    next: "\uC138\uD654\uC5B4\uB9B0\uC774\uC9D1",
+    latitude: 35.0990125,
+    longitude: 129.0134309,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168590105"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590105"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168490206",
+    name: "\uC544\uBBF8\uCD08\uB4F1\uD559\uAD50",
+    next: "\uC138\uD654\uC5B4\uB9B0\uC774\uC9D1",
+    latitude: 35.0989047,
+    longitude: 129.0158053,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168490206"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490206"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168590104",
+    name: "\uC138\uD654\uC5B4\uB9B0\uC774\uC9D1",
+    next: "\uC544\uBBF8\uCD08\uB4F1\uD559\uAD50",
+    latitude: 35.0988833,
+    longitude: 129.0147734,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168590104"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590104"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168590107",
+    name: "\uC544\uBBF8\uCD08\uB4F1\uD559\uAD50",
+    next: "\uAD11\uC131\uC0AC",
+    latitude: 35.0988202,
+    longitude: 129.0157726,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168590107"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590107"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168490201",
+    name: "\uAD11\uC131\uC0AC",
+    next: "\uC544\uBBF8\uCD08\uB4F1\uD559\uAD50",
+    latitude: 35.0987784,
+    longitude: 129.0163951,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168490201"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490201"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168590101",
+    name: "\uAD11\uC131\uC0AC",
+    next: "\uC544\uBBF8\uC2DC\uC7A5",
+    latitude: 35.0986427,
+    longitude: 129.0163449,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168590101"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590101"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168490207",
+    name: "\uD55C\uC0D8\uC288\uD37C",
+    next: "\uC544\uBBF8\uB3D9\uAC10\uCC9C\uC0BC\uAC70\uB9AC",
+    latitude: 35.0986386,
+    longitude: 129.0120141,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168490207"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490207"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
     id: "busan-BSB502390000",
@@ -931,46 +1233,318 @@ var gamcheon_bus_stops_default = [
     next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
     latitude: 35.0985189,
     longitude: 129.0115276,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB502390000",
-    checkedAt: "2026-10-19",
-    replaces: null,
     routes: [
       "\uC0AC\uD558\uAD6C1"
-    ]
+    ],
+    stopIds: [
+      "502390000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB502390000"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
-    id: "busan-BSB168590201",
+    id: "busan-BSB517590000",
+    name: "\uB300\uC131\uC0AC",
+    next: "\uAE4C\uCE58\uC0C8\uAE38\uC785\uAD6C",
+    latitude: 35.0984423,
+    longitude: 129.0115402,
+    routes: [
+      "61"
+    ],
+    stopIds: [
+      "517590000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB517590000"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB214130101",
+    name: "\uB300\uC131\uC0AC",
+    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    latitude: 35.0984326,
+    longitude: 129.0112805,
+    routes: [
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "214130101",
+      "517600000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB214130101",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB517600000"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "osm-node-9657838805",
+    name: "\uB300\uC9C4\uC288\uD37C",
+    next: "\uC544\uBBF8\uCCAD\uB144\uD68C",
+    latitude: 35.0983199,
+    longitude: 129.0119922,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168590102"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590102"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168590203",
+    name: "\uC544\uBBF8\uB3D9\uAC10\uCC9C\uC0BC\uAC70\uB9AC",
+    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    latitude: 35.0980416,
+    longitude: 129.0113878,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2"
+    ],
+    stopIds: [
+      "168590203"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590203"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB177890203",
+    name: "\uD55C\uC0D8\uC288\uD37C",
+    next: "\uB300\uC9C4\uC288\uD37C",
+    latitude: 35.0978101,
+    longitude: 129.0114563,
+    routes: [
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2",
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "177890203"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890203"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168480201",
+    name: "\uC544\uBBF8\uCD08\uB4F1\uD559\uAD50",
+    next: "\uC544\uBBF8\uD30C\uCD9C\uC18C",
+    latitude: 35.0978095,
+    longitude: 129.0172983,
+    routes: [
+      "134",
+      "190"
+    ],
+    stopIds: [
+      "168480201"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168480201"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168490101",
+    name: "\uC544\uBBF8\uCD08\uB4F1\uD559\uAD50",
+    next: "\uD558\uB3D9\uC0C1\uD68C",
+    latitude: 35.0976906,
+    longitude: 129.0170938,
+    routes: [
+      "134",
+      "190"
+    ],
+    stopIds: [
+      "168490101"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168490101"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "osm-node-3859163058",
+    name: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    next: "\uC544\uBBF8\uC0B0 \uB300\uC131\uC0AC",
+    latitude: 35.0973041,
+    longitude: 129.0106455,
+    positionSource: "OpenStreetMap \uAE30\uC874 \uB4F1\uB85D \uC704\uCE58 \uC720\uC9C0",
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2",
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "177890201",
+      "517490000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890201",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB517490000"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "osm-node-3859163057",
     name: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
     next: "\uAD6C\uAC10",
     latitude: 35.0972086,
     longitude: 129.0101505,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590201",
-    checkedAt: "2026-10-19",
-    replaces: "osm-node-3859163057",
     positionSource: "OpenStreetMap \uAE30\uC874 \uB4F1\uB85D \uC704\uCE58 \uC720\uC9C0",
     routes: [
       "\uC0AC\uD558\uAD6C1",
       "\uC0AC\uD558\uAD6C1-1",
       "\uC11C\uAD6C2",
-      "\uC11C\uAD6C2-2"
-    ]
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "168590201",
+      "517500000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590201",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB517500000"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
-    id: "busan-BSB177890201",
-    name: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
-    next: "\uD55C\uC0D8\uC288\uD37C",
-    latitude: 35.0973041,
-    longitude: 129.0106455,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890201",
-    checkedAt: "2026-10-19",
-    replaces: "osm-node-3859163058",
-    positionSource: "OpenStreetMap \uAE30\uC874 \uB4F1\uB85D \uC704\uCE58 \uC720\uC9C0",
+    id: "busan-BSB177890202",
+    name: "\uAD6C\uAC10",
+    next: "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00",
+    latitude: 35.0956798,
+    longitude: 129.0105951,
     routes: [
       "\uC0AC\uD558\uAD6C1",
       "\uC0AC\uD558\uAD6C1-1",
-      "\uC11C\uAD6C2",
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "177890202",
+      "519040000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890202",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB519040000"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB168590202",
+    name: "\uAD6C\uAC10",
+    next: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
+    latitude: 35.09559,
+    longitude: 129.0103809,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "168590202",
+      "519030000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB168590202",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB519030000"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB177890303",
+    name: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
+    next: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
+    latitude: 35.0944935,
+    longitude: 129.0100766,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
       "\uC11C\uAD6C2-2"
-    ]
+    ],
+    stopIds: [
+      "177890303"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890303"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB215880203",
+    name: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
+    next: "\uAD6C\uAC10",
+    latitude: 35.0942518,
+    longitude: 129.0101845,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "215880203"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880203"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB177890301",
+    name: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
+    next: "\uAC10\uCC9C2\uB3D9\uC0C8\uB9C8\uC744\uAE08\uACE0",
+    latitude: 35.0928666,
+    longitude: 129.008809,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "177890301",
+      "517440000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890301",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB517440000"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB215880201",
+    name: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
+    next: "\uAC10\uCC9C2\uB3D9\uD589\uC815\uBCF5\uC9C0\uC13C\uD130",
+    latitude: 35.0928287,
+    longitude: 129.0090255,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "215880201",
+      "517430000"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880201",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB517430000"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
     id: "busan-BSB177890302",
@@ -978,14 +1552,18 @@ var gamcheon_bus_stops_default = [
     next: "\uAC10\uCC9C2\uB3D9",
     latitude: 35.0924059,
     longitude: 129.00846,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890302",
-    checkedAt: "2026-10-19",
-    replaces: null,
     routes: [
       "\uC0AC\uD558\uAD6C1",
       "\uC0AC\uD558\uAD6C1-1",
       "\uC11C\uAD6C2-2"
-    ]
+    ],
+    stopIds: [
+      "177890302"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890302"
+    ],
+    checkedAt: "2026-10-24"
   },
   {
     id: "busan-BSB215880202",
@@ -993,31 +1571,294 @@ var gamcheon_bus_stops_default = [
     next: "\uAC10\uCC9C2\uB3D9\uC0BC\uAC70\uB9AC",
     latitude: 35.0918924,
     longitude: 129.0083461,
-    source: "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880202",
-    checkedAt: "2026-10-19",
-    replaces: null,
     routes: [
       "\uC0AC\uD558\uAD6C1",
       "\uC0AC\uD558\uAD6C1-1",
       "\uC11C\uAD6C2-2"
-    ]
+    ],
+    stopIds: [
+      "215880202"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880202"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB188130504",
+    name: "\uAC10\uCC9C2\uB3D9",
+    next: "\uAC10\uCC9C2\uB3D9\uC0C8\uB9C8\uC744\uAE08\uACE0",
+    latitude: 35.0908549,
+    longitude: 129.0069303,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "188130504",
+      "188130103"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188130504",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188130103"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB215880103",
+    name: "\uAC10\uCC9C2\uB3D9",
+    next: "\uC218\uD611",
+    latitude: 35.0908359,
+    longitude: 129.0066065,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2",
+      "61"
+    ],
+    stopIds: [
+      "215880103",
+      "177890101"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880103",
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890101"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB188120203",
+    name: "\uBD80\uC77C\uACE0\uB4F1\uD559\uAD50",
+    next: "\uC0BC\uC131\uC5EC\uACE0",
+    latitude: 35.089639,
+    longitude: 129.0000974,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1"
+    ],
+    stopIds: [
+      "188120203"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188120203"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB188130101",
+    name: "\uC218\uD611",
+    next: "\uAC10\uCC9C2\uB3D9",
+    latitude: 35.0893096,
+    longitude: 129.0056767,
+    routes: [
+      "61"
+    ],
+    stopIds: [
+      "188130101"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188130101"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB215880105",
+    name: "\uC218\uD611",
+    next: "\uAC10\uCC9C1\uB3D9\uC8FC\uBBFC\uC13C\uD130",
+    latitude: 35.0891732,
+    longitude: 129.0053923,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "215880105"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880105"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB177890102",
+    name: "\uC218\uD611",
+    next: "\uAC10\uCC9C\uC0AC\uAC70\uB9AC",
+    latitude: 35.088916,
+    longitude: 129.0053075,
+    routes: [
+      "61"
+    ],
+    stopIds: [
+      "177890102"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB177890102"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB178160103",
+    name: "\uBD80\uC77C\uACE0\uB4F1\uD559\uAD50",
+    next: "\uAC10\uCC9C\uC0AC\uAC70\uB9AC",
+    latitude: 35.0888354,
+    longitude: 129.0006881,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1"
+    ],
+    stopIds: [
+      "178160103"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB178160103"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB188130506",
+    name: "\uC218\uD611",
+    next: "\uAC10\uCC9C2\uB3D9",
+    latitude: 35.0888051,
+    longitude: 129.0055063,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "188130506"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188130506"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB178160101",
+    name: "\uBD80\uC77C\uC804\uC790\uB514\uC790\uC778\uACE0\uAD50",
+    next: "\uAC10\uCC9C\uC0AC\uAC70\uB9AC",
+    latitude: 35.0887361,
+    longitude: 129.000829,
+    routes: [
+      "16",
+      "171",
+      "172",
+      "6",
+      "96-1"
+    ],
+    stopIds: [
+      "178160101"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB178160101"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB188120201",
+    name: "\uBD80\uC0B0\uCC9C\uC5F0\uAC00\uC2A4\uBC1C\uC804\uC18C",
+    next: "\uBD80\uC77C\uC804\uC790\uB514\uC790\uC778\uACE0\uAD50",
+    latitude: 35.088261,
+    longitude: 129.0027885,
+    routes: [
+      "16",
+      "171",
+      "172",
+      "3006",
+      "6",
+      "96-1"
+    ],
+    stopIds: [
+      "188120201"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188120201"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB215880104",
+    name: "\uAC10\uCC9C\uC0AC\uAC70\uB9AC",
+    next: "\uAC10\uCC9C119\uC548\uC804\uC13C\uD130",
+    latitude: 35.0880864,
+    longitude: 129.005094,
+    routes: [
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "215880104"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB215880104"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB188120202",
+    name: "\uAC10\uCC9C1\uB3D9\uC8FC\uBBFC\uC13C\uD130",
+    next: "\uBD80\uC77C\uACE0\uB4F1\uD559\uAD50",
+    latitude: 35.087875,
+    longitude: 129.0042867,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1"
+    ],
+    stopIds: [
+      "188120202"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188120202"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB188130505",
+    name: "\uAC10\uCC9C\uC0AC\uAC70\uB9AC",
+    next: "\uC218\uD611",
+    latitude: 35.0878376,
+    longitude: 129.0052228,
+    routes: [
+      "\uC0AC\uD558\uAD6C1",
+      "\uC0AC\uD558\uAD6C1-1",
+      "\uC11C\uAD6C2-2"
+    ],
+    stopIds: [
+      "188130505"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188130505"
+    ],
+    checkedAt: "2026-10-24"
+  },
+  {
+    id: "busan-BSB188130102",
+    name: "\uAC10\uCC9C\uC6B0\uCCB4\uAD6D",
+    next: "\uC218\uD611",
+    latitude: 35.0877835,
+    longitude: 129.0052637,
+    routes: [
+      "61"
+    ],
+    stopIds: [
+      "188130102"
+    ],
+    source: [
+      "https://trans.minmins.kr/bus-stop.php?city=21&id=BSB188130102"
+    ],
+    checkedAt: "2026-10-24"
   }
 ];
 
 // src/data/mapAmenities.ts
 var points = [
-  [3859163057, "bus_stop", 35.0972086, 129.0101505, "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00 (\uAD6C\uAC10 \uBC29\uBA74)"],
-  [3859163058, "bus_stop", 35.0973041, 129.0106455, "\uAC10\uCC9C\uBB38\uD654\uB9C8\uC744\xB7\uBD80\uC0B0\uAD50\uC721\uC5ED\uC0AC\uAD00 (\uD55C\uC0D8\uC288\uD37C \uBC29\uBA74)"],
-  [4473495859, "bus_stop", 35.1000425, 129.0159166],
-  [5006392764, "bus_stop", 35.0878391, 129.0041471, "\uAC10\uCC9C1\uB3D9\uC8FC\uBBFC\uC13C\uD130\xB7\uBD80\uC0B0\uCC9C\uC5F0\uAC00\uC2A4\uBC1C\uC804\uC18C"],
   [6924043187, "toilets", 35.0985138, 129.0091825],
   [6924087486, "toilets", 35.0977265, 129.0105011],
   [6924087487, "toilets", 35.0985277, 129.0100606],
-  [9657838805, "bus_stop", 35.0984172, 129.0120983],
   [9657908525, "toilets", 35.0996994, 129.0122466],
   [11166195005, "toilets", 35.0879178, 129.015572],
-  [11252131056, "bus_stop", 35.1012812, 129.0115548],
-  [11252131057, "bus_stop", 35.1014154, 129.0116005],
   [11853831032, "toilets", 35.0972918, 129.0094237],
   [11853836253, "toilets", 35.0936128, 129.0026825],
   [12878495601, "toilets", 35.0967595, 129.0081532],
@@ -1025,27 +1866,23 @@ var points = [
   [13509548714, "toilets", 35.0976417, 129.0083769]
 ];
 var toiletCount = 0;
-var busCount = 0;
-var osmAmenities = points.map(([id, category, latitude, longitude, mappedName]) => ({
+var osmAmenities = points.map(([id, category, latitude, longitude]) => ({
   id: `osm-node-${id}`,
-  name: mappedName ?? (category === "toilets" ? `\uD654\uC7A5\uC2E4 \uC704\uCE58 ${++toiletCount}` : `\uBC84\uC2A4 \uC815\uB958\uC7A5 \uC704\uCE58 ${++busCount}`),
+  name: `\uD654\uC7A5\uC2E4 \uC704\uCE58 ${++toiletCount}`,
   category,
   latitude,
   longitude,
-  description: id === 3859163057 ? "\uCE74\uCE74\uC624 \uB85C\uB4DC\uBDF0(2025\uB144 11\uC6D4)\uB97C \uCC38\uACE0\uD55C \uC815\uB958\uC7A5 \uC258\uD130 3D \uC2DC\uC548 \xB7 \uD06C\uAE30\uC640 \uC815\uD655\uD55C \uC704\uCE58\uB294 \uD604\uC7A5 \uD655\uC778 \uC804" : category === "toilets" ? "OpenStreetMap \uC704\uCE58 \uC790\uB8CC \xB7 \uAC1C\uBC29 \uC5EC\uBD80\uC640 \uC6B4\uC601\uC2DC\uAC04 \uD655\uC778 \uC804" : "OpenStreetMap \uC704\uCE58 \uC790\uB8CC \xB7 \uC815\uB958\uC7A5 \uBC88\uD638\uC640 \uC6B4\uD589 \uB178\uC120 \uD655\uC778 \uC804"
+  description: "OpenStreetMap \uC704\uCE58 \uC790\uB8CC \xB7 \uAC1C\uBC29 \uC5EC\uBD80\uC640 \uC6B4\uC601\uC2DC\uAC04 \uD655\uC778 \uC804"
 }));
 var REGISTERED_BUS_STOPS = gamcheon_bus_stops_default.map((stop) => ({
-  id: stop.replaces ?? stop.id,
+  id: stop.id,
   name: `${stop.name} (${stop.next} \uBC29\uBA74)`,
   category: "bus_stop",
   latitude: stop.latitude,
   longitude: stop.longitude,
-  description: `\uB9C8\uC744\uBC84\uC2A4 ${stop.routes.join(" \xB7 ")} \xB7 \uB2E4\uC74C \uC815\uB958\uC7A5: ${stop.next} \xB7 ${stop.checkedAt} \uC790\uB8CC \uD655\uC778`
+  description: `\uBC84\uC2A4 ${stop.routes.join(" \xB7 ")} \xB7 \uB2E4\uC74C \uC815\uB958\uC7A5: ${stop.next} \xB7 ${stop.checkedAt} \uBD80\uC0B0\uBC84\uC2A4\uC815\uBCF4\uC2DC\uC2A4\uD15C \uC815\uB958\uC18C \uC790\uB8CC`
 }));
-var MAP_AMENITIES = [
-  ...osmAmenities.filter((place) => !REGISTERED_BUS_STOPS.some((stop) => stop.id === place.id)),
-  ...REGISTERED_BUS_STOPS
-];
+var MAP_AMENITIES = [...osmAmenities, ...REGISTERED_BUS_STOPS];
 
 // src/places/mapPlaces.ts
 function cleanMapPlaces(value) {
@@ -1085,8 +1922,8 @@ async function savePlaces(request, env) {
 }
 
 // src/data/busStopLinks.ts
-var stopIds = new Map(gamcheon_bus_stops_default.map((stop) => [stop.replaces ?? stop.id, stop.id.replace("busan-BSB", "")]));
-var busStopIdFor = (placeId) => stopIds.get(placeId);
+var stopIds = new Map(gamcheon_bus_stops_default.map((stop) => [stop.id, stop.stopIds]));
+var busStopIdsFor = (placeId) => stopIds.get(placeId);
 
 // server/busArrivals.ts
 var cache = /* @__PURE__ */ new Map();
@@ -1111,16 +1948,11 @@ function parseBusArrivals(xml) {
     second: nextBus(item, 2)
   })).filter((item) => item.route);
 }
-async function busArrivals(env, url) {
-  const placeId = url.searchParams.get("placeId") ?? "";
-  const stopId = busStopIdFor(placeId);
-  if (!stopId) return error("\uC774 \uC815\uB958\uC7A5\uC740 \uB3C4\uCC29\uC815\uBCF4 \uC5F0\uACB0\uC744 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.", 404);
-  if (!env.busanBusApiKey) return error("\uBC84\uC2A4 \uB3C4\uCC29\uC815\uBCF4 \uC11C\uBE44\uC2A4 \uC5F0\uACB0\uC744 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.", 503);
+async function stopArrivals(key, stopId) {
   const saved = cache.get(stopId);
-  if (saved && saved.until > Date.now()) return json(saved.value);
+  if (saved && saved.until > Date.now()) return saved.value;
   let job = pending.get(stopId);
   if (!job) {
-    const key = env.busanBusApiKey;
     job = (async () => {
       let decodedKey = key;
       try {
@@ -1139,14 +1971,28 @@ async function busArrivals(env, url) {
       return value;
     })();
     pending.set(stopId, job);
+    const settled = job;
+    settled.catch(() => void 0).finally(() => {
+      if (pending.get(stopId) === settled) pending.delete(stopId);
+    });
   }
-  try {
-    return json(await job);
-  } catch {
-    return error("\uB3C4\uCC29\uC815\uBCF4\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC7A0\uC2DC \uB4A4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.", 502);
-  } finally {
-    if (pending.get(stopId) === job) pending.delete(stopId);
-  }
+  return job;
+}
+async function busArrivals(env, url) {
+  const placeId = url.searchParams.get("placeId") ?? "";
+  const stopIds2 = busStopIdsFor(placeId);
+  if (!stopIds2?.length) return error("\uC774 \uC815\uB958\uC7A5\uC740 \uB3C4\uCC29\uC815\uBCF4 \uC5F0\uACB0\uC744 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.", 404);
+  if (!env.busanBusApiKey) return error("\uBC84\uC2A4 \uB3C4\uCC29\uC815\uBCF4 \uC11C\uBE44\uC2A4 \uC5F0\uACB0\uC744 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.", 503);
+  const key = env.busanBusApiKey;
+  const results = await Promise.allSettled(stopIds2.map((stopId) => stopArrivals(key, stopId)));
+  const ok = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+  if (!ok.length) return error("\uB3C4\uCC29\uC815\uBCF4\uB97C \uBD88\uB7EC\uC624\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC7A0\uC2DC \uB4A4 \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.", 502);
+  const soon = (item) => item.first?.minutes ?? Number.POSITIVE_INFINITY;
+  return json({
+    stopIds: ok.map((item) => item.stopId),
+    arrivals: ok.flatMap((item) => item.arrivals).sort((a, b) => soon(a) - soon(b)),
+    updatedAt: ok.map((item) => item.updatedAt).sort()[0]
+  });
 }
 
 // server/index.ts
