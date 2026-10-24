@@ -47,9 +47,33 @@ body.agency-active { background: #fff; color: #171717; }
 .agency-account-menu>div a { display:block; padding:9px 10px; white-space:nowrap; }
 .agency-account-menu>div a:hover { color:#111; background:#f4f4f4; }
 .agency-menu-button,.agency-mobile-menu { display:none; }
-.agency-hero { position:relative; height:calc(100svh - 70px); min-height:680px; color:#fff; background:#111; overflow:hidden; }
-.agency-hero-slide { position:absolute; inset:0; opacity:0; visibility:hidden; transform:scale(1.035); transition:opacity 1s ease,transform 6.4s ease,visibility 1s; }
-.agency-hero-slide.is-active { opacity:1; visibility:visible; transform:scale(1); }
+.agency-hero { position:relative; height:calc(100svh - 70px); min-height:680px; overflow:hidden; color:#fff; background:#111; cursor:grab; touch-action:pan-y pinch-zoom; user-select:none; }
+.agency-hero.is-dragging-next,.agency-hero.is-dragging-previous { cursor:grabbing; }
+.agency-hero-slide { position:absolute; inset:0; visibility:hidden; opacity:0; transform:translateX(100%); }
+.agency-hero-slide.is-active,.agency-hero-slide.is-leaving,.agency-hero-slide.is-peeking { visibility:visible; opacity:1; }
+.agency-hero-slide.is-active { z-index:2; transform:translateX(0); }
+.agency-hero-slide.is-leaving,.agency-hero-slide.is-peeking { z-index:1; pointer-events:none; }
+.agency-hero.is-dragging-next .agency-hero-slide.is-active,.agency-hero.is-dragging-previous .agency-hero-slide.is-active { transform:translateX(var(--hero-drag,0px)); }
+.agency-hero.is-dragging-next .agency-hero-slide.is-peeking { transform:translateX(calc(100% + var(--hero-drag,0px))); }
+.agency-hero.is-dragging-previous .agency-hero-slide.is-peeking { transform:translateX(calc(-100% + var(--hero-drag,0px))); }
+.agency-hero.is-snapping-next .agency-hero-slide.is-active,.agency-hero.is-snapping-previous .agency-hero-slide.is-active { animation:agency-hero-snap-active .35s ease-out both; }
+.agency-hero.is-snapping-next .agency-hero-slide.is-peeking { animation:agency-hero-snap-next .35s ease-out both; }
+.agency-hero.is-snapping-previous .agency-hero-slide.is-peeking { animation:agency-hero-snap-previous .35s ease-out both; }
+.agency-hero.is-fading .agency-hero-slide.is-active { animation:agency-hero-fade-in .8s ease both; }
+.agency-hero.is-fading .agency-hero-slide.is-leaving { animation:agency-hero-fade-out .8s ease both; }
+.agency-hero.is-moving-next .agency-hero-slide.is-active { animation:agency-hero-enter-next .8s cubic-bezier(.25,.8,.25,1) both; }
+.agency-hero.is-moving-next .agency-hero-slide.is-leaving { animation:agency-hero-leave-next .8s cubic-bezier(.25,.8,.25,1) both; }
+.agency-hero.is-moving-previous .agency-hero-slide.is-active { animation:agency-hero-enter-previous .8s cubic-bezier(.25,.8,.25,1) both; }
+.agency-hero.is-moving-previous .agency-hero-slide.is-leaving { animation:agency-hero-leave-previous .8s cubic-bezier(.25,.8,.25,1) both; }
+@keyframes agency-hero-fade-in { from { opacity:0; transform:translateX(0); } to { opacity:1; transform:translateX(0); } }
+@keyframes agency-hero-fade-out { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(0); } }
+@keyframes agency-hero-snap-active { from { transform:translateX(var(--hero-start-offset,0px)); } to { transform:translateX(0); } }
+@keyframes agency-hero-snap-next { from { transform:translateX(calc(100% + var(--hero-start-offset,0px))); } to { transform:translateX(100%); } }
+@keyframes agency-hero-snap-previous { from { transform:translateX(calc(-100% + var(--hero-start-offset,0px))); } to { transform:translateX(-100%); } }
+@keyframes agency-hero-enter-next { from { transform:translateX(calc(100% + var(--hero-start-offset,0px))); } to { transform:translateX(0); } }
+@keyframes agency-hero-leave-next { from { transform:translateX(var(--hero-start-offset,0px)); } to { transform:translateX(-100%); } }
+@keyframes agency-hero-enter-previous { from { transform:translateX(calc(-100% + var(--hero-start-offset,0px))); } to { transform:translateX(0); } }
+@keyframes agency-hero-leave-previous { from { transform:translateX(var(--hero-start-offset,0px)); } to { transform:translateX(100%); } }
 .agency-hero-slide>picture { position:absolute; inset:0; display:block; }
 .agency-hero-slide>picture>img,.agency-impact>img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .agency-hero-shade { position:absolute; inset:0; background:linear-gradient(90deg,rgba(0,0,0,.76) 0%,rgba(0,0,0,.42) 47%,rgba(0,0,0,.13) 78%),linear-gradient(0deg,rgba(0,0,0,.42),transparent 55%); }

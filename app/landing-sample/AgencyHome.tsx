@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { chooseLoaderVariant, goods, heroSlides, loaderBrandLines, news, site } from "./content";
 
 type HomeStat = readonly [string, number, string];
+type HeroDirection = 1 | -1;
+type HeroTransition = { from: number; direction: HeroDirection; mode: "fade" | "slide" | "snap" };
 
 function Counter({ value }: { value: number }) {
   const ref = useRef<HTMLElement>(null);
@@ -36,11 +38,15 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
   const [progress, setProgress] = useState(0);
   const [loaderVariant, setLoaderVariant] = useState<"classic" | "studio" | null>(null);
   const [slide, setSlide] = useState(0);
-  const [manualSlideChange, setManualSlideChange] = useState(0);
+  const [heroTransition, setHeroTransition] = useState<HeroTransition | null>(null);
+  const [dragDirection, setDragDirection] = useState<HeroDirection | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [goodsTab, setGoodsTab] = useState(0);
   const [film, setFilm] = useState<number | null>(null);
-  const heroTouchStart = useRef<{ x: number; y: number } | null>(null);
+  const heroElement = useRef<HTMLElement>(null);
+  const heroPointer = useRef<{ id: number; x: number; y: number; offset: number; active: boolean } | null>(null);
+  const currentSlide = useRef(0);
+  const autoSlideTimer = useRef<number | null>(null);
   const goodsTrack = useRef<HTMLDivElement>(null);
   const goodsTabs = ["작가 작품", "아트 굿즈", "지역 프로젝트", "전시·체험", "브랜드 협업"];
 
@@ -50,11 +56,36 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
     return () => { document.body.classList.remove("agency-active"); timers.forEach(clearTimeout); };
   }, []);
 
+  const showSlide = useCallback((next: number, direction: HeroDirection, mode: HeroTransition["mode"] = "slide", startOffset = 0) => {
+    const from = currentSlide.current;
+    if (from === next) return;
+    currentSlide.current = next;
+    heroElement.current?.style.setProperty("--hero-start-offset", `${startOffset}px`);
+    setHeroTransition({ from, direction, mode });
+    setSlide(next);
+  }, []);
+
+  const resetAutoSlideTimer = useCallback(function scheduleNextSlide() {
+    if (autoSlideTimer.current !== null) window.clearTimeout(autoSlideTimer.current);
+    autoSlideTimer.current = window.setTimeout(() => {
+      if (!heroPointer.current) showSlide((currentSlide.current + 1) % heroSlides.length, 1, "fade");
+      scheduleNextSlide();
+    }, 5600);
+  }, [showSlide]);
+
   useEffect(() => {
     if (!loaded) return;
-    const timer = window.setInterval(() => setSlide((current) => (current + 1) % heroSlides.length), 5600);
-    return () => clearInterval(timer);
-  }, [loaded, manualSlideChange]);
+    resetAutoSlideTimer();
+    return () => {
+      if (autoSlideTimer.current !== null) window.clearTimeout(autoSlideTimer.current);
+    };
+  }, [loaded, resetAutoSlideTimer]);
+
+  useEffect(() => {
+    if (!heroTransition) return;
+    const timer = window.setTimeout(() => setHeroTransition((current) => current === heroTransition ? null : current), heroTransition.mode === "snap" ? 400 : 850);
+    return () => clearTimeout(timer);
+  }, [heroTransition]);
 
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll<HTMLElement>(".agency-reveal"));
@@ -75,24 +106,53 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
     if (track) track.scrollTo({ left: index * (track.scrollWidth / goods.length), behavior: "smooth" });
   };
 
-  const handleHeroTouchStart = (event: TouchEvent<HTMLElement>) => {
-    const touch = event.touches[0];
-    heroTouchStart.current = event.touches.length === 1 && window.innerWidth <= 767 && touch
-      ? { x: touch.clientX, y: touch.clientY }
-      : null;
+  const handleHeroPointerDown = (event: PointerEvent<HTMLElement>) => {
+    if (heroTransition || heroPointer.current || (event.pointerType === "mouse" && event.button !== 0)) return;
+    if (event.target instanceof Element && event.target.closest("a, button")) return;
+    heroPointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY, offset: 0, active: false };
+    if (autoSlideTimer.current !== null) window.clearTimeout(autoSlideTimer.current);
   };
 
-  const handleHeroTouchEnd = (event: TouchEvent<HTMLElement>) => {
-    const start = heroTouchStart.current;
-    heroTouchStart.current = null;
-    const touch = event.changedTouches[0];
-    if (!start || !touch) return;
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    if (Math.abs(dx) < 45 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
-    setSlide((current) => (current + (dx < 0 ? 1 : heroSlides.length - 1)) % heroSlides.length);
-    setManualSlideChange((current) => current + 1);
+  const handleHeroPointerMove = (event: PointerEvent<HTMLElement>) => {
+    const pointer = heroPointer.current;
+    if (!pointer || pointer.id !== event.pointerId) return;
+    const dx = event.clientX - pointer.x;
+    const dy = event.clientY - pointer.y;
+    if (!pointer.active) {
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
+      pointer.active = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    event.preventDefault();
+    pointer.offset = Math.max(-event.currentTarget.clientWidth, Math.min(event.currentTarget.clientWidth, dx));
+    const direction: HeroDirection = pointer.offset < 0 ? 1 : -1;
+    setDragDirection(direction);
+    event.currentTarget.style.setProperty("--hero-drag", `${pointer.offset}px`);
   };
+
+  const finishHeroPointer = (event: PointerEvent<HTMLElement>, cancelled = false) => {
+    const pointer = heroPointer.current;
+    if (!pointer || pointer.id !== event.pointerId) return;
+    heroPointer.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (pointer.active) {
+      const direction: HeroDirection = pointer.offset < 0 ? 1 : -1;
+      if (!cancelled && Math.abs(pointer.offset) >= Math.min(100, Math.max(45, event.currentTarget.clientWidth * .12))) {
+        showSlide((currentSlide.current + direction + heroSlides.length) % heroSlides.length, direction, "slide", pointer.offset);
+      } else {
+        event.currentTarget.style.setProperty("--hero-start-offset", `${pointer.offset}px`);
+        setHeroTransition({ from: currentSlide.current, direction, mode: "snap" });
+      }
+    }
+    setDragDirection(null);
+    event.currentTarget.style.removeProperty("--hero-drag");
+    resetAutoSlideTimer();
+  };
+
+  const peekDirection = dragDirection ?? (heroTransition?.mode === "snap" ? heroTransition.direction : null);
+  const heroMotionClass = heroTransition
+    ? heroTransition.mode === "fade" ? "is-fading" : `is-${heroTransition.mode === "snap" ? "snapping" : "moving"}-${heroTransition.direction === 1 ? "next" : "previous"}`
+    : dragDirection ? `is-dragging-${dragDirection === 1 ? "next" : "previous"}` : "";
 
   return <main className="agency-page">
     <div className={`agency-loader ${loaderVariant ? `is-${loaderVariant}` : ""} ${loaded ? "is-done" : ""}`} aria-hidden="true">
@@ -109,12 +169,12 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
 
     <aside className={`agency-mobile-menu ${menuOpen ? "is-open" : ""}`}>{site.nav.map(([label, href], index) => <Link key={label} href={href} onClick={() => setMenuOpen(false)}><span>0{index + 1}</span>{label}</Link>)}<div className="agency-mobile-auth">{user ? <>{user.role === "admin" ? <><Link href="/admin">관리자 페이지</Link><Link href="/admin?view=accounts">작가 페이지</Link></> : <Link href="/artist">내 정보</Link>}<a href={user.role === "admin" ? "/api/admin/logout" : "/api/auth/logout"}>로그아웃</a></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}</div><Link className="agency-mobile-apply" href="/apply">작가 참여 신청 <Arrow /></Link></aside>
 
-    <section className="agency-hero" aria-label="주요 프로젝트" onTouchStart={handleHeroTouchStart} onTouchEnd={handleHeroTouchEnd} onTouchCancel={() => { heroTouchStart.current = null; }}>
-      {heroSlides.map((item, index) => <article key={item.title} className={`agency-hero-slide ${slide === index ? "is-active" : ""}`} aria-hidden={slide !== index}>
-        <picture><source media="(max-width: 767px)" srcSet={item.mobileImage} type="image/webp" /><img src={item.image} alt="" style={{ objectPosition: item.position }} /></picture><div className="agency-hero-shade" />
+    <section ref={heroElement} className={`agency-hero ${heroMotionClass}`} aria-label="주요 프로젝트" onPointerDown={handleHeroPointerDown} onPointerMove={handleHeroPointerMove} onPointerUp={finishHeroPointer} onPointerCancel={(event) => finishHeroPointer(event, true)} onDragStart={(event) => event.preventDefault()}>
+      {heroSlides.map((item, index) => <article key={item.title} className={`agency-hero-slide ${slide === index ? "is-active" : ""} ${heroTransition?.mode !== "snap" && heroTransition?.from === index ? "is-leaving" : ""} ${peekDirection && (slide + peekDirection + heroSlides.length) % heroSlides.length === index ? "is-peeking" : ""}`} aria-hidden={slide !== index}>
+        <picture><source media="(max-width: 767px)" srcSet={item.mobileImage} type="image/webp" /><img src={item.image} alt="" draggable={false} style={{ objectPosition: item.position }} /></picture><div className="agency-hero-shade" />
         <div className="agency-hero-copy"><p>{item.eyebrow}</p><h1>{item.title.split("\n").map((line) => <span key={line}>{line}</span>)}</h1><div><span>{item.text}</span><Link href="/apply">작가 참여 신청 <Arrow /></Link></div></div>
       </article>)}
-      <div className="agency-hero-controls"><span>{String(slide + 1).padStart(2, "0")}</span><div>{heroSlides.map((_, index) => <button key={index} aria-label={`${index + 1}번 슬라이드`} className={slide === index ? "is-active" : ""} onClick={() => { setSlide(index); setManualSlideChange((current) => current + 1); }} />)}</div><span>{String(heroSlides.length).padStart(2, "0")}</span></div>
+      <div className="agency-hero-controls"><span>{String(slide + 1).padStart(2, "0")}</span><div>{heroSlides.map((_, index) => <button key={index} aria-label={`${index + 1}번 슬라이드`} className={slide === index ? "is-active" : ""} onClick={() => { showSlide(index, index < currentSlide.current ? -1 : 1); resetAutoSlideTimer(); }} />)}</div><span>{String(heroSlides.length).padStart(2, "0")}</span></div>
       <div className="agency-scroll-hint">SCROLL <i /></div>
     </section>
 
