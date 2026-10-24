@@ -110,7 +110,7 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
     </section>
 
     <section className="agency-platform" id="platform">
-      <div className="agency-platform-art agency-reveal"><img src="/gamcheon-map-concept.png" alt="감천 작가 지도 콘셉트" /><i>ART<br />PASSPORT</i></div>
+      <div className="agency-platform-art agency-reveal"><img src="/assets/home/art-passport-visual.webp" alt="감천 마을을 배경으로 한 아트 패스포트 콘셉트" /><i>ART<br />PASSPORT</i></div>
       <div className="agency-platform-copy agency-reveal"><p>GAMCHEON ART PASSPORT</p><h2>작가의 공간을 방문하고<br />작품의 이야기를 수집하세요.</h2><span>작가 지도와 아트 패스포트는 골목의 작업실을 찾고, 작가와 작품을 더 가까이 만나는 지역 문화 경험입니다.</span><div><Link href="/map">작가 지도 보기 <Arrow /></Link><Link href="/passport">ART PASSPORT 보기 <Arrow /></Link></div></div>
     </section>
 
