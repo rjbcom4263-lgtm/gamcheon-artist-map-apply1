@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at ed57400 + uncommitted changes.
+// Bundled from https://github.com/InSeok211/art-map at 5ca97d9 + uncommitted changes.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -1084,8 +1084,11 @@ async function savePlaces(request, env) {
   return json({ places });
 }
 
-// server/busArrivals.ts
+// src/data/busStopLinks.ts
 var stopIds = new Map(gamcheon_bus_stops_default.map((stop) => [stop.replaces ?? stop.id, stop.id.replace("busan-BSB", "")]));
+var busStopIdFor = (placeId) => stopIds.get(placeId);
+
+// server/busArrivals.ts
 var cache = /* @__PURE__ */ new Map();
 var pending = /* @__PURE__ */ new Map();
 var decode = (s) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
@@ -1110,7 +1113,7 @@ function parseBusArrivals(xml) {
 }
 async function busArrivals(env, url) {
   const placeId = url.searchParams.get("placeId") ?? "";
-  const stopId = stopIds.get(placeId);
+  const stopId = busStopIdFor(placeId);
   if (!stopId) return error("\uC774 \uC815\uB958\uC7A5\uC740 \uB3C4\uCC29\uC815\uBCF4 \uC5F0\uACB0\uC744 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.", 404);
   if (!env.busanBusApiKey) return error("\uBC84\uC2A4 \uB3C4\uCC29\uC815\uBCF4 \uC11C\uBE44\uC2A4 \uC5F0\uACB0\uC744 \uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.", 503);
   const saved = cache.get(stopId);
