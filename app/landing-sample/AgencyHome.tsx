@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { chooseLoaderVariant, goods, heroSlides, loaderBrandLines, news, site } from "./content";
 
 type HomeStat = readonly [string, number, string];
@@ -36,9 +36,11 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
   const [progress, setProgress] = useState(0);
   const [loaderVariant, setLoaderVariant] = useState<"classic" | "studio" | null>(null);
   const [slide, setSlide] = useState(0);
+  const [manualSlideChange, setManualSlideChange] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [goodsTab, setGoodsTab] = useState(0);
   const [film, setFilm] = useState<number | null>(null);
+  const heroTouchStart = useRef<{ x: number; y: number } | null>(null);
   const goodsTrack = useRef<HTMLDivElement>(null);
   const goodsTabs = ["작가 작품", "아트 굿즈", "지역 프로젝트", "전시·체험", "브랜드 협업"];
 
@@ -52,7 +54,7 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
     if (!loaded) return;
     const timer = window.setInterval(() => setSlide((current) => (current + 1) % heroSlides.length), 5600);
     return () => clearInterval(timer);
-  }, [loaded]);
+  }, [loaded, manualSlideChange]);
 
   useEffect(() => {
     const elements = Array.from(document.querySelectorAll<HTMLElement>(".agency-reveal"));
@@ -73,6 +75,25 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
     if (track) track.scrollTo({ left: index * (track.scrollWidth / goods.length), behavior: "smooth" });
   };
 
+  const handleHeroTouchStart = (event: TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+    heroTouchStart.current = event.touches.length === 1 && window.innerWidth <= 767 && touch
+      ? { x: touch.clientX, y: touch.clientY }
+      : null;
+  };
+
+  const handleHeroTouchEnd = (event: TouchEvent<HTMLElement>) => {
+    const start = heroTouchStart.current;
+    heroTouchStart.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 45 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
+    setSlide((current) => (current + (dx < 0 ? 1 : heroSlides.length - 1)) % heroSlides.length);
+    setManualSlideChange((current) => current + 1);
+  };
+
   return <main className="agency-page">
     <div className={`agency-loader ${loaderVariant ? `is-${loaderVariant}` : ""} ${loaded ? "is-done" : ""}`} aria-hidden="true">
       <div className="agency-loader-classic"><b>{site.brand}</b><small>{site.subBrand}</small></div>
@@ -88,12 +109,12 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
 
     <aside className={`agency-mobile-menu ${menuOpen ? "is-open" : ""}`}>{site.nav.map(([label, href], index) => <Link key={label} href={href} onClick={() => setMenuOpen(false)}><span>0{index + 1}</span>{label}</Link>)}<div className="agency-mobile-auth">{user ? <>{user.role === "admin" ? <><Link href="/admin">관리자 페이지</Link><Link href="/admin?view=accounts">작가 페이지</Link></> : <Link href="/artist">내 정보</Link>}<a href={user.role === "admin" ? "/api/admin/logout" : "/api/auth/logout"}>로그아웃</a></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}</div><Link className="agency-mobile-apply" href="/apply">작가 참여 신청 <Arrow /></Link></aside>
 
-    <section className="agency-hero" aria-label="주요 프로젝트">
+    <section className="agency-hero" aria-label="주요 프로젝트" onTouchStart={handleHeroTouchStart} onTouchEnd={handleHeroTouchEnd} onTouchCancel={() => { heroTouchStart.current = null; }}>
       {heroSlides.map((item, index) => <article key={item.title} className={`agency-hero-slide ${slide === index ? "is-active" : ""}`} aria-hidden={slide !== index}>
         <picture><source media="(max-width: 767px)" srcSet={item.mobileImage} type="image/webp" /><img src={item.image} alt="" style={{ objectPosition: item.position }} /></picture><div className="agency-hero-shade" />
         <div className="agency-hero-copy"><p>{item.eyebrow}</p><h1>{item.title.split("\n").map((line) => <span key={line}>{line}</span>)}</h1><div><span>{item.text}</span><Link href="/apply">작가 참여 신청 <Arrow /></Link></div></div>
       </article>)}
-      <div className="agency-hero-controls"><span>{String(slide + 1).padStart(2, "0")}</span><div>{heroSlides.map((_, index) => <button key={index} aria-label={`${index + 1}번 슬라이드`} className={slide === index ? "is-active" : ""} onClick={() => setSlide(index)} />)}</div><span>{String(heroSlides.length).padStart(2, "0")}</span></div>
+      <div className="agency-hero-controls"><span>{String(slide + 1).padStart(2, "0")}</span><div>{heroSlides.map((_, index) => <button key={index} aria-label={`${index + 1}번 슬라이드`} className={slide === index ? "is-active" : ""} onClick={() => { setSlide(index); setManualSlideChange((current) => current + 1); }} />)}</div><span>{String(heroSlides.length).padStart(2, "0")}</span></div>
       <div className="agency-scroll-hint">SCROLL <i /></div>
     </section>
 
