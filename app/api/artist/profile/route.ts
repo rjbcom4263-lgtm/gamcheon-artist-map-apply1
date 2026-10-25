@@ -61,7 +61,7 @@ export async function PUT(request: Request) {
     }
 
     const oldValues = typeof payload.values === "object" && payload.values ? payload.values as Record<string, unknown> : {};
-    payload = { ...payload, values: { ...oldValues, ...cleaned.values, artistName: cleaned.artistName }, categories: cleaned.categories, works: cleaned.works };
+    payload = { ...payload, values: { ...oldValues, ...cleaned.values, artistName: cleaned.artistName }, categories: cleaned.categories, works: cleaned.works, ...(cleaned.experiences === undefined ? {} : { experiences: cleaned.experiences }) };
     const update = await env.DB.prepare("UPDATE artist_applications SET artist_name = ?, payload_json = ?, image_keys_json = ? WHERE id = ? AND account_id = ? AND status = 'approved'")
       .bind(cleaned.artistName, JSON.stringify(payload), JSON.stringify(images), applicationId, artist.accountId).run();
     if (!update.meta.changes) throw new Error("approved application changed during update");

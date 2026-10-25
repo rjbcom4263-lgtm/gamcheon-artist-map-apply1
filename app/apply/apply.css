@@ -356,7 +356,6 @@
 
 .apply-make-theme .field small,
 .apply-make-theme .choice small,
-.apply-make-theme .passport-preview small,
 .apply-make-theme .upload small {
   color: #999;
   line-height: 1.6;
@@ -543,6 +542,35 @@
   background: #f7f7f5;
 }
 
+.apply-make-theme .experience-heading,
+.apply-make-theme .experience-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.apply-make-theme .experience-heading { margin-bottom: 16px; }
+.apply-make-theme .experience-heading > label { font-size: 12px; font-weight: 900; }
+.apply-make-theme .experience-heading button,
+.apply-make-theme .experience-card-head button {
+  padding: 9px 13px;
+  border: 1px solid #bfc5ff;
+  border-radius: 999px;
+  color: #3446c6;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+.apply-make-theme .experience-heading button:disabled { opacity: .45; cursor: default; }
+.apply-make-theme .experience-empty { margin: 0; padding: 18px; background: #f7f7f5; color: #777; font-size: 12px; }
+.apply-make-theme .experience-card { margin-bottom: 14px; padding: 18px; border: 1px solid #dedede; }
+.apply-make-theme .experience-card-head { margin-bottom: 18px; }
+.apply-make-theme .experience-card-head strong { font-size: 14px; }
+.apply-make-theme .experience-card-head button { border-color: #ddd; color: #666; }
+.apply-make-theme .experience-card .field { margin-bottom: 18px; }
+.apply-make-theme .experience-card .field:last-child { margin-bottom: 0; }
+
 .apply-make-theme .info-panel {
   padding: 18px 20px;
   border: 0;
@@ -556,28 +584,43 @@
   color: #747474;
 }
 
-.apply-make-theme .info-panel.warm,
-.apply-make-theme .passport-preview {
+.apply-make-theme .info-panel.warm {
   border: 0;
   border-radius: 0;
   color: #333;
   background: #f3f3f0;
 }
 
-.apply-make-theme .passport-preview {
-  padding: 20px;
+.apply-make-theme .apply-passport-feature {
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  margin-bottom: 30px;
+  overflow: hidden;
+  background: #f1f3ff;
 }
+.apply-make-theme .apply-passport-feature img { display: block; width: 100%; height: 100%; min-height: 250px; object-fit: cover; object-position: center 62%; }
+.apply-make-theme .apply-passport-feature > div { display: flex; flex-direction: column; justify-content: center; padding: 26px; }
+.apply-make-theme .apply-passport-feature span { color: var(--apply-blue); font-size: 10px; font-weight: 900; letter-spacing: .04em; }
+.apply-make-theme .apply-passport-feature strong { margin-top: 12px; font-size: 21px; line-height: 1.35; letter-spacing: -.05em; }
+.apply-make-theme .apply-passport-feature p { margin: 12px 0 0; color: #676d82; font-size: 12px; line-height: 1.65; }
+.apply-make-theme .apply-passport-feature a { align-self: flex-start; margin-top: 16px; color: #293dbb; font-size: 12px; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
 
-.apply-make-theme .passport-book {
-  border-radius: 0;
-  color: #fff;
-  background: var(--apply-blue);
-  box-shadow: none;
-}
-
-.apply-make-theme .passport-book small {
-  color: #e6e9ff;
-}
+.apply-make-theme .consent-intro { margin: 20px 0; font-size: 12px; line-height: 1.6; }
+.apply-make-theme .consent-intro a,
+.apply-make-theme .consent-details a { color: #3446c6; text-decoration: underline; text-underline-offset: 3px; }
+.apply-make-theme .consent-item { margin-bottom: 12px; border: 1px solid #dedede; }
+.apply-make-theme .consent-item .consent-box { margin: 0; border: 0; }
+.apply-make-theme .consent-details { border-top: 1px solid #e5e5e5; }
+.apply-make-theme .consent-details summary { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; color: #535979; background: #f8f8fb; cursor: pointer; font-size: 12px; font-weight: 800; list-style: none; }
+.apply-make-theme .consent-details summary::-webkit-details-marker { display: none; }
+.apply-make-theme .consent-details summary::after { content: "+"; font-size: 18px; line-height: 1; }
+.apply-make-theme .consent-details[open] summary::after { content: "−"; }
+.apply-make-theme .consent-details > div { padding: 16px; color: #555; font-size: 12px; line-height: 1.7; }
+.apply-make-theme .consent-details p { margin: 0 0 10px; }
+.apply-make-theme .consent-details p:last-child { margin-bottom: 0; }
+.apply-make-theme .consent-details dl { display: grid; grid-template-columns: 80px 1fr; gap: 10px 14px; margin: 0 0 12px; }
+.apply-make-theme .consent-details dt { font-weight: 900; color: #222; }
+.apply-make-theme .consent-details dd { margin: 0; }
 
 .apply-make-theme .actions {
   margin-top: 42px;
@@ -815,6 +858,13 @@
     margin: -18px -18px 20px;
     padding: 14px 18px;
   }
+
+  .apply-make-theme .apply-passport-feature { grid-template-columns: 1fr; }
+  .apply-make-theme .apply-passport-feature img { height: 220px; min-height: 0; }
+  .apply-make-theme .apply-passport-feature > div { padding: 20px; }
+  .apply-make-theme .experience-card { padding: 14px; }
+  .apply-make-theme .consent-details dl { grid-template-columns: 1fr; gap: 4px; }
+  .apply-make-theme .consent-details dd { margin-bottom: 10px; }
 
   .apply-make-theme .actions {
     position: sticky;

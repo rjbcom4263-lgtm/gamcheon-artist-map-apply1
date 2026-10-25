@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { requireArtist } from "../../admin/admin-auth";
 import { ensureApplicationsTable } from "../../applications-db";
+import { sanitizeExperiences } from "../../artist/profile-data";
 import { isAllowedImageFile, isAllowedImageType } from "../../image-upload";
 
 export const runtime = "edge";
@@ -11,6 +12,7 @@ type Payload = {
   values?: Record<string, string | boolean>;
   categories?: string[];
   works?: Array<{ id?: string; title?: string; status?: string; description?: string }>;
+  experiences?: unknown[];
   expectedImages?: { profile?: boolean; works?: boolean[] };
   uploadedImages?: Array<{ type?: string; workIndex?: number; key?: string; name?: string; contentType?: string }>;
 };
@@ -43,7 +45,9 @@ export async function POST(request: Request) {
     const email = cleanText(values.email, 150);
     const categories = Array.isArray(payload.categories) ? payload.categories.slice(0, 12).map((x) => cleanText(x, 30)).filter(Boolean) : [];
     const works = Array.isArray(payload.works) ? payload.works.slice(0, REQUIRED_WORK_COUNT).map((w) => ({ id: cleanText(w.id, 80), title: cleanText(w.title, 150), status: cleanText(w.status, 40), description: cleanText(w.description, 1200) })) : [];
+    const experiences = sanitizeExperiences(payload.experiences);
     if (!artistName || !phone || !categories.length || works.length !== REQUIRED_WORK_COUNT || works.some((work) => !work.title)) return Response.json({ error: "대표 작품 5점의 필수 정보를 모두 입력해주세요." }, { status: 400 });
+    if (payload.experiences !== undefined && (!Array.isArray(payload.experiences) || payload.experiences.length > 20 || experiences.some((experience) => !experience.title))) return Response.json({ error: "체험 프로그램 이름을 확인해주세요." }, { status: 400 });
     if (!values.consentInfo || !values.consentImage || !values.consentPrivacy) return Response.json({ error: "필수 동의가 필요합니다." }, { status: 400 });
 
     const id = applicationId(payload.applicationId);
@@ -98,7 +102,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "대표 작품 5점의 이미지를 모두 올려주세요." }, { status: 400 });
     }
 
-    const safePayload = { values: { ...values, artistName, phone, email }, categories, works };
+    const safePayload = { values: { ...values, artistName, phone, email }, categories, works, experiences };
     const saved = await env.DB.prepare("UPDATE artist_applications SET artist_name = ?, phone = ?, email = ?, status = 'received', payload_json = ?, image_keys_json = ? WHERE id = ? AND account_id = ? AND status = 'draft'")
       .bind(artistName, phone, email, JSON.stringify(safePayload), JSON.stringify(imageRecords), id, user.accountId).run();
     if (!saved.meta.changes) {

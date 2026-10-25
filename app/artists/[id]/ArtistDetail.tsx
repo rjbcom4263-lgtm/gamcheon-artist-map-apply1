@@ -75,7 +75,7 @@ export default function ArtistDetail({ artist }: { artist: PublicArtist }) {
         <section className="artist-visit-section">
           <div className="artist-detail-heading"><div><span>STUDIO VISIT</span><h2>화실 방문 정보</h2></div></div>
           <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{artist.studio}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{artist.address}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{artist.hours}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{artist.visitType}</dd></div></dl>
-          {artist.experience && artist.experience !== "없음" && <div className="artist-experience"><span>체험 프로그램 · {artist.experience}</span><p>{artist.experienceDesc || "체험 프로그램의 자세한 내용은 작가에게 문의해주세요."}</p></div>}
+          {artist.experiences.map((experience) => <div className="artist-experience" key={experience.id}><span>{experience.title} · {experience.status}</span><p>{experience.description || "체험 프로그램의 자세한 내용은 작가에게 문의해주세요."}</p></div>)}
         </section>
 
         {(artist.instagram || artist.website || artist.shopUrl) && <section className="artist-channel-section"><span>작가 채널</span><div>{artist.instagram && <a href={artist.instagram} target="_blank" rel="noreferrer">Instagram ↗</a>}{artist.website && <a href={artist.website} target="_blank" rel="noreferrer">Website ↗</a>}{artist.shopUrl && <a href={artist.shopUrl} target="_blank" rel="noreferrer">작품 구매 ↗</a>}</div></section>}

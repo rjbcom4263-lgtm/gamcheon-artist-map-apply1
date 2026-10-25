@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { PublicArtist } from "../artists/public-artist";
+import type { ArtistExperience } from "./profile-data";
 import { Icon } from "../artists/[id]/ArtistDetail";
 import { profileEditorControl } from "./profile-editor-controls";
 import "../artists/[id]/artist-detail.css";
@@ -23,6 +24,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
   const [categories, setCategories] = useState((payload.categories || []).join(", "));
   const [values, setValues] = useState<Values>(Object.fromEntries(fields.map((key) => [key, typeof payload.values?.[key] === "string" ? String(payload.values[key]) : ""])));
   const [works, setWorks] = useState<Work[]>(payload.works || []);
+  const [experiences, setExperiences] = useState<ArtistExperience[]>(artist.experiences);
   const [files, setFiles] = useState<Record<string, File>>({});
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [panel, setPanel] = useState<Panel>(null);
@@ -51,7 +53,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
     setMessage("");
     const form = new FormData();
     form.set("applicationId", applicationId);
-    form.set("profile", JSON.stringify({ artistName, categories: categoryList, values, works }));
+    form.set("profile", JSON.stringify({ artistName, categories: categoryList, values: { ...values, experience: experiences.length ? "있음" : "없음", experienceDesc: experiences.map(({ title, description }) => `${title}${description ? `: ${description}` : ""}`).join("\n") }, works, experiences }));
     for (const [key, file] of Object.entries(files)) form.set(key, file);
     const response = await fetch("/api/artist/profile", { method: "PUT", body: form });
     const result = await response.json().catch(() => ({})) as { error?: string };
@@ -89,6 +91,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
         <section className="artist-visit-section editable-section">
           <div className="artist-detail-heading"><div><span>STUDIO VISIT</span><h2>화실 방문 정보</h2></div></div><button className="inline-edit-button section-edit" type="button" onClick={() => setPanel("visit")}>방문 정보 수정</button>
           <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{values.studioName || "감천 작업실"}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{publicAddress}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{values.hours || "방문 전 확인"}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{values.visitType || "방문 전 문의"}</dd></div></dl>
+          {experiences.map((experience) => <div className="artist-experience" key={experience.id}><span>{experience.title || "체험 프로그램"} · {experience.status}</span><p>{experience.description || "체험 내용을 준비하고 있습니다."}</p></div>)}
         </section>
 
         <section className="artist-channel-section editable-section"><span>작가 채널</span><button className="inline-edit-button section-edit" type="button" onClick={() => setPanel("channels")}>채널 수정</button><div>{values.instagram && <i>Instagram</i>}{values.website && <i>Website</i>}{values.shopUrl && <i>작품 구매</i>}{!values.instagram && !values.website && !values.shopUrl && <small>등록된 채널이 없습니다.</small>}</div></section>
@@ -100,7 +103,15 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
         {panel === "profile" && <><Field label="작가명"><input required maxLength={100} value={artistName} onChange={(event) => setArtistName(event.target.value)}/></Field><Field label="작품 분야"><input required value={categories} placeholder="회화, 일러스트" onChange={(event) => setCategories(event.target.value)}/></Field><Field label="한 줄 소개"><textarea required maxLength={200} rows={3} value={values.tagline} onChange={(event) => update("tagline", event.target.value)}/></Field><ImagePicker label="프로필 이미지" preview={previews.profileImage || artist.profile} onChange={(file) => pickImage("profileImage", file)}/></>}
         {panel === "work" && <><div className="work-selector">{works.map((_, index) => <button className={index === workIndex ? "is-active" : ""} type="button" key={index} onClick={() => setWorkIndex(index)}>{index + 1}</button>)}</div><ImagePicker label="작품 이미지" preview={workImage(workIndex)} onChange={(file) => pickImage(`workImage${workIndex}`, file)}/><Field label="작품명"><input required maxLength={150} value={works[workIndex]?.title || ""} onChange={(event) => setWorks((current) => current.map((item, index) => index === workIndex ? { ...item, title: event.target.value } : item))}/></Field><Field label="작품 상태"><select value={works[workIndex]?.status || "문의 필요"} onChange={(event) => setWorks((current) => current.map((item, index) => index === workIndex ? { ...item, status: event.target.value } : item))}>{statuses.map((status) => <option key={status}>{status}</option>)}</select></Field><Field label="작품 설명"><textarea maxLength={1200} rows={4} value={works[workIndex]?.description || ""} onChange={(event) => setWorks((current) => current.map((item, index) => index === workIndex ? { ...item, description: event.target.value } : item))}/></Field></>}
         {panel === "story" && <Field label="작가 이야기"><textarea maxLength={4000} rows={9} value={values.bio} onChange={(event) => update("bio", event.target.value)}/></Field>}
-        {panel === "visit" && <><Field label="작업실 이름"><input maxLength={150} value={values.studioName} onChange={(event) => update("studioName", event.target.value)}/></Field><Field label="주소"><input maxLength={300} value={values.address} onChange={(event) => update("address", event.target.value)}/></Field><Field label="주소 공개 범위"><select value={values.locationPrivacy || "nearby"} onChange={(event) => update("locationPrivacy", event.target.value)}><option value="exact">정확한 주소 공개</option><option value="nearby">감천문화마을 일대로 표시</option><option value="reservation">예약 방문객에게만 안내</option></select></Field><Field label="운영시간"><textarea maxLength={500} rows={3} value={values.hours} onChange={(event) => update("hours", event.target.value)}/></Field><Field label="방문 방식"><select value={values.visitType} onChange={(event) => update("visitType", event.target.value)}>{["자유 방문 가능", "운영시간 내 방문 가능", "사전 예약 필요", "일반 방문 불가"].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label="체험 프로그램"><select value={values.experience} onChange={(event) => update("experience", event.target.value)}>{["없음", "있음", "준비 중"].map((item) => <option key={item}>{item}</option>)}</select></Field><Field label="체험 설명"><textarea maxLength={1000} rows={3} value={values.experienceDesc} onChange={(event) => update("experienceDesc", event.target.value)}/></Field></>}
+        {panel === "visit" && <>
+          <Field label="작업실 이름"><input maxLength={150} value={values.studioName} onChange={(event) => update("studioName", event.target.value)}/></Field>
+          <Field label="주소"><input maxLength={300} value={values.address} onChange={(event) => update("address", event.target.value)}/></Field>
+          <Field label="주소 공개 범위"><select value={values.locationPrivacy || "nearby"} onChange={(event) => update("locationPrivacy", event.target.value)}><option value="exact">정확한 주소 공개</option><option value="nearby">감천문화마을 일대로 표시</option><option value="reservation">예약 방문객에게만 안내</option></select></Field>
+          <Field label="운영시간"><textarea maxLength={500} rows={3} value={values.hours} onChange={(event) => update("hours", event.target.value)}/></Field>
+          <Field label="방문 방식"><select value={values.visitType} onChange={(event) => update("visitType", event.target.value)}>{["자유 방문 가능", "운영시간 내 방문 가능", "사전 예약 필요", "일반 방문 불가"].map((item) => <option key={item}>{item}</option>)}</select></Field>
+          <div className="visual-experience-heading"><strong>체험 프로그램</strong><button type="button" disabled={experiences.length >= 20} onClick={() => setExperiences((current) => [...current, { id: crypto.randomUUID(), title: "", status: "운영 중", description: "" }])}>＋ 추가</button></div>
+          {experiences.map((experience, index) => <div className="visual-experience-card" key={experience.id}><header><strong>체험 {index + 1}</strong><button type="button" onClick={() => setExperiences((current) => current.filter((item) => item.id !== experience.id))}>삭제</button></header><Field label="체험명"><input maxLength={100} value={experience.title} onChange={(event) => setExperiences((current) => current.map((item) => item.id === experience.id ? { ...item, title: event.target.value } : item))}/></Field><Field label="운영 상태"><select value={experience.status} onChange={(event) => setExperiences((current) => current.map((item) => item.id === experience.id ? { ...item, status: event.target.value as ArtistExperience["status"] } : item))}><option>운영 중</option><option>준비 중</option></select></Field><Field label="체험 설명"><textarea maxLength={500} rows={3} value={experience.description} onChange={(event) => setExperiences((current) => current.map((item) => item.id === experience.id ? { ...item, description: event.target.value } : item))}/></Field></div>)}
+        </>}
         {panel === "channels" && <><Field label="Instagram"><input type="url" value={values.instagram} placeholder="https://instagram.com/..." onChange={(event) => update("instagram", event.target.value)}/></Field><Field label="홈페이지"><input type="url" value={values.website} placeholder="https://..." onChange={(event) => update("website", event.target.value)}/></Field><Field label="온라인 판매처"><input type="url" value={values.shopUrl} placeholder="https://..." onChange={(event) => update("shopUrl", event.target.value)}/></Field></>}
       </div><footer><span>입력 내용이 화면에 바로 미리보기 됩니다.</span><button type="button" onClick={() => setPanel(null)}>미리보기 적용</button></footer></section>}
     </div>
