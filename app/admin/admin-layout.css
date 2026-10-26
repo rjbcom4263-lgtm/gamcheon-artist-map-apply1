@@ -1,6 +1,7 @@
 /* 운영자 화면 공통 배치(AdminSidebar가 불러옴). 넓은 화면은 왼쪽 메뉴, 좁은 화면은 위쪽 한 줄 메뉴입니다. */
 .admin-dashboard{background:#f7f8fb}
 .sidebar-logout{display:none}
+.guide-pending-badge{display:inline-grid;place-items:center;min-width:20px;height:20px;margin-left:auto;border-radius:999px;background:#e34558;color:#fff;font-size:11px;line-height:1}
 
 @media(max-width:1050px){
   .admin-dashboard{display:block;min-height:100dvh;overflow-x:hidden}

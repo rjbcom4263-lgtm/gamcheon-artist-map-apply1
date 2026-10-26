@@ -1,18 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./admin-layout.css";
 
 // 모든 운영자 화면이 함께 쓰는 왼쪽 메뉴입니다. 화면마다 따로 만들던 메뉴를 하나로 모아, 어느 화면에서든
 // 같은 자리에서 같은 메뉴로 오갈 수 있게 합니다. (좁은 화면에서는 위쪽 가로 메뉴가 됩니다.)
-export type AdminSection = "applications" | "accounts" | "artists" | "map-editor";
+export type AdminSection = "applications" | "accounts" | "artists" | "work-guides" | "map-editor";
 
 const GROUPS: { title: string; items: { key: AdminSection; label: string; href: string; icon: string }[] }[] = [
   { title: "작가 관리", items: [
     { key: "applications", label: "신청 목록", href: "/admin", icon: "◆" },
     { key: "accounts", label: "작가 계정", href: "/admin?view=accounts", icon: "●" },
     { key: "artists", label: "작가 위치·공개", href: "/admin/artists", icon: "⌖" },
+    { key: "work-guides", label: "작품 해설 검수", href: "/admin/work-guides", icon: "▣" },
   ] },
   { title: "지도", items: [
     { key: "map-editor", label: "지도 편집", href: "/admin/map-editor", icon: "▦" },
@@ -21,6 +22,13 @@ const GROUPS: { title: string; items: { key: AdminSection; label: string; href: 
 
 export default function AdminSidebar({ active, adminName = "운영자" }: { active: AdminSection; adminName?: string }) {
   const asideRef = useRef<HTMLElement>(null);
+  const [pendingGuides, setPendingGuides] = useState(0);
+  useEffect(() => {
+    const refresh = () => { fetch("/api/admin/work-guides?count=1", { cache: "no-store" }).then(async (response) => response.ok ? await response.json() as { count: number } : null).then((result) => { if (result) setPendingGuides(result.count || 0); }).catch(() => {}); };
+    refresh();
+    const timer = window.setInterval(refresh, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
   // 좁은 화면의 가로 메뉴에서 지금 화면 항목이 보이도록 그 자리로 밀어 둡니다.
   useEffect(() => {
     const aside = asideRef.current;
@@ -33,7 +41,7 @@ export default function AdminSidebar({ active, adminName = "운영자" }: { acti
       {GROUPS.map((group) => <div className="nav-group" key={group.title}>
         <p>{group.title}</p>
         {group.items.map((item) => <Link key={item.key} className={`sidebar-link${active === item.key ? " active" : ""}`} href={item.href} aria-current={active === item.key ? "page" : undefined}>
-          <span aria-hidden="true">{item.icon}</span>{item.label}
+          <span aria-hidden="true">{item.icon}</span>{item.label}{item.key === "work-guides" && pendingGuides > 0 && <b className="guide-pending-badge" aria-label={`검수 대기 ${pendingGuides}건`}>{pendingGuides}</b>}
         </Link>)}
       </div>)}
       <div className="nav-group"><p>바로가기</p><Link className="sidebar-link" href="/map" target="_blank"><span aria-hidden="true">↗</span>공개 지도 보기</Link>

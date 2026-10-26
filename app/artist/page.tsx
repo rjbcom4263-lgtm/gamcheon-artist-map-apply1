@@ -72,6 +72,7 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
         <a className="active" href="#dashboard"><b>01</b>대시보드</a>
         <a href="#profile"><b>02</b>프로필</a>
         <a href="#artworks"><b>03</b>대표 작품</a>
+        {!isAdmin && <Link href="/artist/work-guides"><b>QR</b>작품 해설·QR</Link>}
         {canEdit && <button {...profileEditorControl("show")}><b>04</b>공개 정보 수정</button>}
         <a href="#channels"><b>{canEdit ? "05" : "04"}</b>방문·채널</a>
         <a href="#account"><b>{canEdit ? "06" : "05"}</b>계정 관리</a>
@@ -104,7 +105,7 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
           </section>
 
           <section className="artist-card" id="artworks">
-            <div className="artist-card-head"><div><p>ARTWORK ARCHIVE</p><h2>대표 작품 {works.length}점</h2></div><span>작품 정보는 신청서를 기준으로 표시됩니다.</span></div>
+            <div className="artist-card-head"><div><p>ARTWORK ARCHIVE</p><h2>대표 작품 {works.length}점</h2></div>{current.status === "approved" ? <Link className="artist-card-action" href="/artist/work-guides">작품 해설·QR 관리 ↗</Link> : <span>작품 정보는 신청서를 기준으로 표시됩니다.</span>}</div>
             <div className="artist-dashboard-work-grid">
               {works.map((work, index) => {
                 const image = images.find((item) => item.type === "work" && item.workIndex === index);
@@ -117,7 +118,7 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
           </section>
 
           <section className="artist-card artist-info-card" id="channels">
-            <div className="artist-card-head"><div><p>VISIT & CHANNELS</p><h2>방문·온라인 정보</h2></div>{canEdit && <button className="artist-card-action" type="button" {...profileEditorControl("show")}>공개 정보 수정</button>}</div>
+            <div className="artist-card-head"><div><p>VISIT & CHANNELS</p><h2>방문·온라인 정보</h2></div>{canEdit && <button className="artist-card-action" {...profileEditorControl("show")}>공개 정보 수정</button>}</div>
             <dl>
               <div><dt>공방·작업실</dt><dd>{String(values.studioName || "-")}</dd></div>
               <div><dt>주소</dt><dd>{String(values.address || "-")}</dd></div>
