@@ -6,6 +6,23 @@ export const MAX_EXPERIENCES = 20;
 /** 업로드 이미지 한 장의 최대 크기(서버 검증 기준). */
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 export const MAX_IMAGE_LABEL = "2MB";
+/** 초안 하나에 R2에 쌓일 수 있는 이미지 객체 수 상한. 슬롯 6개(프로필 1 + 작품 5)를 여러 번 다시 고르는 것까지 감안한 값. 제출 시 미참조 객체는 지웁니다. */
+export const MAX_DRAFT_IMAGE_OBJECTS = 30;
+
+type ListableBucket = { list(options: { prefix: string; cursor?: string; limit?: number }): Promise<{ objects: Array<{ key: string }>; truncated: boolean; cursor?: string }> };
+
+/** 신청서 접두어(applications/{id}/) 아래의 R2 객체 키를 모두 나열합니다. */
+export async function listApplicationImageKeys(bucket: ListableBucket, applicationId: string) {
+  const prefix = `applications/${applicationId}/`;
+  const keys: string[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await bucket.list({ prefix, cursor, limit: 1000 });
+    keys.push(...page.objects.map((object) => object.key));
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return keys;
+}
 
 const APPLICATION_ID_PATTERN = /^GA-\d{8}-[A-F0-9]{6}$/;
 

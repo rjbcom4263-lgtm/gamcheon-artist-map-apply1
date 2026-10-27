@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { requireAdmin } from "../../../../admin/admin-auth";
 import { forbidden } from "../../../../lib/http";
+import { listApplicationImageKeys } from "../../../../lib/application";
 
 export const runtime = "edge";
 const allowedStatuses = new Set(["received", "reviewing", "approved", "hold", "rejected", "cancelled"]);
@@ -41,12 +42,15 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
 
   let images: ImageRecord[] = [];
   try { images = JSON.parse(current.image_keys_json); } catch {}
-  const imageKeys = images
+  const recordedKeys = images
     .map((image) => image.key || "")
     .filter((key) => key.startsWith(`applications/${id}/`) && !key.includes(".."));
 
   const result = await env.DB.prepare("DELETE FROM artist_applications WHERE id = ?").bind(id).run();
   if (!result.meta.changes) return Response.json({ error: "신청서를 찾을 수 없습니다." }, { status: 404 });
-  await Promise.allSettled(imageKeys.map((key) => env.BUCKET.delete(key)));
-  return Response.json({ ok: true, deletedImages: imageKeys.length });
+  // 신청서에 기록된 키뿐 아니라 접두어 아래 남은 객체(작성 중 다시 고른 사진 등)까지 모두 지웁니다.
+  const imageKeys = new Set(recordedKeys);
+  try { for (const key of await listApplicationImageKeys(env.BUCKET, id)) imageKeys.add(key); } catch (error) { console.error("listing application images failed", id, error); }
+  await Promise.allSettled([...imageKeys].map((key) => env.BUCKET.delete(key)));
+  return Response.json({ ok: true, deletedImages: imageKeys.size });
 }

@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { requireArtist } from "../../admin/admin-auth";
 import { sanitizeExperiences } from "../../artist/profile-data";
 import { isAllowedImageFile, isAllowedImageType } from "../../image-upload";
-import { MAX_IMAGE_BYTES, REQUIRED_WORK_COUNT, applicationId, cleanText, safeFileName } from "../../lib/application";
+import { MAX_IMAGE_BYTES, REQUIRED_WORK_COUNT, applicationId, cleanText, listApplicationImageKeys, safeFileName } from "../../lib/application";
 import { forbidden } from "../../lib/http";
 
 export const runtime = "edge";
@@ -95,6 +95,14 @@ export async function POST(request: Request) {
       await Promise.allSettled(uploaded.map((key) => env.BUCKET.delete(key)));
       uploaded.length = 0;
       return Response.json({ error: "이미 제출된 신청서입니다." }, { status: 409 });
+    }
+    // 작성 중 여러 번 다시 고른 사진처럼 신청서에 기록되지 않은 객체는 여기서 지웁니다(실패해도 접수는 유지).
+    try {
+      const referenced = new Set(imageRecords.map((image) => image.key));
+      const orphans = (await listApplicationImageKeys(env.BUCKET, id)).filter((key) => !referenced.has(key));
+      if (orphans.length) await env.BUCKET.delete(orphans);
+    } catch (error) {
+      console.error("orphan image cleanup failed", id, error);
     }
     return Response.json({ id }, { status: 201 });
   } catch (error) {

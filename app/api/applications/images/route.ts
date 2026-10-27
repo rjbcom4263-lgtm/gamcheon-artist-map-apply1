@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { requireArtist } from "../../../admin/admin-auth";
 import { isAllowedImageFile } from "../../../image-upload";
-import { MAX_IMAGE_BYTES, applicationId as validApplicationId, cleanText, safeFileName } from "../../../lib/application";
+import { MAX_DRAFT_IMAGE_OBJECTS, MAX_IMAGE_BYTES, applicationId as validApplicationId, cleanText, safeFileName } from "../../../lib/application";
 import { forbidden } from "../../../lib/http";
 
 export const runtime = "edge";
@@ -24,6 +24,10 @@ export async function POST(request: Request) {
     const draft = await env.DB.prepare("SELECT id FROM artist_applications WHERE id = ? AND account_id = ? AND status = 'draft'")
       .bind(applicationId, user.accountId).first<{ id: string }>();
     if (!draft) return forbidden("이 계정의 신청서가 아니거나 이미 제출된 신청서입니다.");
+
+    // 초안 하나에 무한히 올리지 못하게 막습니다. 제출하면 참조되지 않은 객체는 자동으로 정리됩니다.
+    const existing = await env.BUCKET.list({ prefix: `applications/${applicationId}/`, limit: MAX_DRAFT_IMAGE_OBJECTS });
+    if (existing.objects.length >= MAX_DRAFT_IMAGE_OBJECTS) return Response.json({ error: "이 신청서에 올린 사진이 너무 많습니다. 지금 선택한 사진으로 신청서를 제출하거나 운영진에게 문의해주세요." }, { status: 429 });
 
     const key = `applications/${applicationId}/${safeFileName(image)}`;
     await env.BUCKET.put(key, image.stream(), { httpMetadata: { contentType: image.type }, customMetadata: { applicationId, originalName: image.name.slice(0, 180) } });

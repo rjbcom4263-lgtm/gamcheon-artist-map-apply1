@@ -5,7 +5,7 @@ import { AUTH_NEXT_COOKIE, safeNextCookie, safeNextPath } from "../../auth-next"
 import { clearCookie, cookie, redirectWithCookies } from "../../lib/http";
 
 export type SocialProvider = "google" | "kakao" | "naver";
-type Account = { id: string; login_id: string; role: string; status: string; display_name: string };
+type Account = { id: string; login_id: string; role: string; status: string; display_name: string; session_version: number };
 
 const STATE_COOKIE_MAX_AGE = 600;
 
@@ -60,14 +60,14 @@ export async function completeSocialLogin(input: { provider: SocialProvider; pro
   const email = input.email?.trim().toLowerCase().slice(0, 150) || "";
   const displayName = input.displayName?.trim().slice(0, 100) || email.split("@")[0] || provider;
 
-  let account = await env.DB.prepare(`SELECT a.id, a.login_id, a.role, a.status, a.display_name FROM social_accounts s
+  let account = await env.DB.prepare(`SELECT a.id, a.login_id, a.role, a.status, a.display_name, a.session_version FROM social_accounts s
     JOIN accounts a ON a.id = s.account_id WHERE s.provider = ? AND s.provider_user_id = ?`).bind(provider, providerUserId).first<Account>();
   if (!account) {
     const id = `ACC-${crypto.randomUUID()}`;
     const loginId = `${provider}_${providerUserId}`;
     await env.DB.prepare("INSERT INTO accounts (id, login_id, password_hash, role, status, display_name, phone, email) VALUES (?, ?, ?, 'artist', 'pending', ?, '', ?)")
       .bind(id, loginId, await hashPassword(crypto.randomUUID()), displayName, email).run();
-    account = { id, login_id: loginId, role: "artist", status: "pending", display_name: displayName };
+    account = { id, login_id: loginId, role: "artist", status: "pending", display_name: displayName, session_version: 1 };
   }
   const roleAllowed = account.role === "artist" || (input.allowAdmin && account.role === "admin");
   if (!roleAllowed || account.status === "suspended" || account.status === "deleted") return socialError(origin, provider, "account", nextPath);
@@ -75,7 +75,7 @@ export async function completeSocialLogin(input: { provider: SocialProvider; pro
   await env.DB.prepare("INSERT OR IGNORE INTO social_accounts (provider, provider_user_id, account_id, email) VALUES (?, ?, ?, ?)").bind(provider, providerUserId, account.id, email).run();
   await env.DB.prepare("UPDATE accounts SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?").bind(account.id).run();
   const role = account.role === "admin" ? "admin" : "artist";
-  const session = await createSession({ accountId: account.id, loginId: account.login_id, role, displayName: account.display_name || displayName });
+  const session = await createSession({ accountId: account.id, loginId: account.login_id, role, displayName: account.display_name || displayName, sessionVersion: account.session_version });
   const location = `${origin}${role === "admin" && nextPath === "/" ? "/admin" : nextPath}`;
   const response = redirectWithCookies(location, [
     cookie(adminCookie.name, session, adminCookie.maxAge),
