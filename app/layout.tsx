@@ -6,7 +6,8 @@ import "./auth.css";
 import "./artist/artist.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://gamcheon-artist-apply.rjbcom4263.chatgpt.site"),
+  // OG 이미지 등 절대 URL의 기준. 운영 도메인입니다(예전 chatgpt.site 임시 주소에서 변경).
+  metadataBase: new URL("https://artist-map.com"),
   title: "감천 작가 프로젝트 | 작가와 작품을 연결합니다",
   description: "감천의 작가와 작품을 소개하고, 작가 참여와 지역 프로젝트를 연결하는 감천 작가 프로젝트입니다.",
   openGraph: { title: "감천 작가 프로젝트", description: "감천의 작가와 작품을 발견하고 새로운 기회를 연결합니다.", type: "website", images: ["/og.png"] },

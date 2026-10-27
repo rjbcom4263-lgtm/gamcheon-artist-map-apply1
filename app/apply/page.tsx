@@ -1,47 +1,23 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { MAX_EXPERIENCES, REQUIRED_WORK_COUNT } from "../lib/application";
+import { compressImage } from "../lib/image-client";
+import { openDaumPostcode } from "./daum-postcode";
+import {
+  CATEGORIES, LAST_STEP, STEPS, STEP_DESCRIPTIONS, STEP_TITLES, blankExperience, blankWorks, clearDraft, initialValues, loadDraft, saveDraft,
+  type Experience, type UploadedImage, type Values, type Work,
+} from "./apply-form";
 
-const STEPS = ["작가 정보", "대표 작품", "활동 공간", "연락·채널", "참여 의견", "확인·제출"];
-const CATEGORIES = ["회화", "민화", "캘리그라피", "도자", "공예", "조각", "섬유", "일러스트", "캐릭터", "사진", "금속", "목공", "기타"];
-const STORAGE_KEY = "gamcheon_artist_apply_v2";
-
-type Work = { id: string; title: string; status: string; description: string; image?: File; preview?: string };
-type Experience = { id: string; title: string; status: "운영 중" | "준비 중"; description: string };
-type Values = Record<string, string | boolean>;
-type UploadedImage = { type: string; workIndex?: number; key: string; name: string; contentType: string };
-type AddressResult = { roadAddress?: string; jibunAddress?: string; address?: string };
-
-declare global {
-  interface Window {
-    daum?: {
-      Postcode: new (options: { oncomplete: (data: AddressResult) => void }) => { open: () => void };
-    };
-  }
-}
-
-const REQUIRED_WORK_COUNT = 5;
-const MAX_EXPERIENCES = 20;
+// 상수·타입·임시 저장은 apply-form.ts, 이미지 축소는 lib/image-client.ts, 주소 검색은 daum-postcode.ts에 있습니다.
 const SHOW_REGISTRATION_INTRO = false;
-
-const initialValues: Values = {
-  artistName: "", studioName: "", tagline: "", bio: "", address: "", locationPrivacy: "exact",
-  visitType: "운영시간 내 방문 가능", hours: "", experience: "없음", experienceDesc: "",
-  instagram: "", website: "", shopUrl: "", phone: "", email: "",
-  stampInterest: "자세한 설명을 듣고 결정하고 싶음", nfcInterest: "자세한 설명을 듣고 결정하고 싶음",
-  feedback: "", consentInfo: false, consentImage: false, consentPrivacy: false,
-};
-
-function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
-function blankWork(): Work { return { id: uid(), title: "", status: "문의 필요", description: "" }; }
-function blankExperience(): Experience { return { id: uid(), title: "", status: "운영 중", description: "" }; }
 
 export default function Home() {
   const [step, setStep] = useState(0);
   const [values, setValues] = useState<Values>(initialValues);
   const [categories, setCategories] = useState<string[]>([]);
   const [customCategory, setCustomCategory] = useState("");
-  const [works, setWorks] = useState<Work[]>(Array.from({ length: REQUIRED_WORK_COUNT }, blankWork));
+  const [works, setWorks] = useState<Work[]>(blankWorks);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [profileImage, setProfileImage] = useState<File>();
   const [profilePreview, setProfilePreview] = useState("");
@@ -53,24 +29,14 @@ export default function Home() {
   const [addressLoading, setAddressLoading] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const draft = JSON.parse(raw);
-      setValues({ ...initialValues, ...(draft.values || {}) });
-      setCategories(draft.categories || []);
-      if (draft.works?.length) {
-        const restored = draft.works.slice(0, REQUIRED_WORK_COUNT).map((w: Work) => ({ ...w, image: undefined, preview: "" }));
-        setWorks([...restored, ...Array.from({ length: Math.max(0, REQUIRED_WORK_COUNT - restored.length) }, blankWork)]);
-      }
-      if (Array.isArray(draft.experiences)) setExperiences(draft.experiences.slice(0, MAX_EXPERIENCES).map((raw: unknown): Experience => {
-        const item = raw && typeof raw === "object" ? raw as Partial<Experience> : {};
-        return { id: item.id || uid(), title: item.title || "", status: item.status === "준비 중" ? "준비 중" : "운영 중", description: item.description || "" };
-      }));
-      else if (draft.values?.experience && draft.values.experience !== "없음") setExperiences([{ id: uid(), title: "체험 프로그램", status: draft.values.experience === "준비 중" ? "준비 중" : "운영 중", description: draft.values.experienceDesc || "" }]);
-      setStep(Math.min(Number(draft.step) || 0, 5));
-      setSaveLabel("이전 임시 저장 불러옴");
-    } catch { /* damaged drafts are ignored */ }
+    const draft = loadDraft();
+    if (!draft) return;
+    setValues(draft.values);
+    setCategories(draft.categories);
+    setWorks(draft.works);
+    setExperiences(draft.experiences);
+    setStep(draft.step);
+    setSaveLabel("이전 임시 저장 불러옴");
   }, []);
 
   useEffect(() => {
@@ -84,41 +50,18 @@ export default function Home() {
   useEffect(() => {
     if (submittedId) return;
     const timer = window.setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ values, categories, works: works.map((w) => ({ id: w.id, title: w.title, status: w.status, description: w.description })), experiences, step }));
-        setSaveLabel(`임시 저장됨 · ${new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}`);
-      } catch { setSaveLabel("일부 정보 저장 제한"); }
+      if (saveDraft({ values, categories, works, experiences, step })) setSaveLabel(`임시 저장됨 · ${new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}`);
+      else setSaveLabel("일부 정보 저장 제한");
     }, 450);
     return () => window.clearTimeout(timer);
   }, [values, categories, works, experiences, step, submittedId]);
 
   const progress = Math.round(((step + 1) / STEPS.length) * 100);
-  const currentTitle = ["프로필 기본 정보", "대표 작품 등록", "활동 공간과 방문", "연락처와 온라인 채널", "프로젝트 참여 의향", "공개 범위와 최종 확인"][step];
-  const currentDesc = [
-    "작가 프로필에 가장 먼저 보일 이름과 소개를 입력해주세요.", "작가님의 작업 세계를 잘 보여주는 작품 5점을 등록합니다.",
-    "공방 방문 가능 여부와 공개할 위치 범위를 선택해주세요.", "작가님을 다시 찾을 수 있는 채널과 운영진 연락처를 입력합니다.",
-    "앞으로 함께 만들 프로젝트에 대한 참여 의향을 알려주세요.", "공개되는 정보와 운영용 정보를 마지막으로 확인합니다."
-  ][step];
+  const currentTitle = STEP_TITLES[step];
+  const currentDesc = STEP_DESCRIPTIONS[step];
 
   const update = (name: string, value: string | boolean) => setValues((v) => ({ ...v, [name]: value }));
-  const openAddressSearch = () => {
-    if (!window.daum?.Postcode) return;
-    new window.daum.Postcode({ oncomplete: (data) => update("address", data.roadAddress || data.jibunAddress || data.address || "") }).open();
-  };
-  const loadAddressSearch = () => {
-    if (window.daum?.Postcode) { openAddressSearch(); return; }
-    setAddressLoading(true);
-    const existing = document.querySelector<HTMLScriptElement>("script[data-daum-postcode]");
-    const script = existing || document.createElement("script");
-    if (!existing) {
-      script.src = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
-      script.async = true;
-      script.dataset.daumPostcode = "true";
-      document.head.appendChild(script);
-    }
-    script.addEventListener("load", () => { setAddressLoading(false); openAddressSearch(); }, { once: true });
-    script.addEventListener("error", () => { setAddressLoading(false); alert("주소 검색을 불러오지 못했습니다."); }, { once: true });
-  };
+  const loadAddressSearch = () => openDaumPostcode((address) => update("address", address), setAddressLoading);
   const addCustomCategory = () => {
     const category = customCategory.trim().slice(0, 30);
     if (!category) return;
@@ -130,25 +73,6 @@ export default function Home() {
   );
   const textArea = (name: string, placeholder = "") => <textarea name={name} value={String(values[name] || "")} placeholder={placeholder} onChange={(e) => update(name, e.target.value)} />;
   const select = (name: string, options: string[]) => <select name={name} value={String(values[name])} onChange={(e) => update(name, e.target.value)}>{options.map((o) => <option key={o}>{o}</option>)}</select>;
-
-  async function compressImage(file: File) {
-    if (file.size <= 900 * 1024) return file;
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    let blob: Blob | null = null;
-    for (const quality of [0.82, 0.7, 0.58]) {
-      blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-      if (blob && blob.size <= 1100 * 1024) break;
-    }
-    if (!blob) throw new Error("이미지를 변환하지 못했습니다.");
-    const name = file.name.replace(/\.[^.]+$/, "") || "image";
-    return new File([blob], `${name}.jpg`, { type: "image/jpeg", lastModified: Date.now() });
-  }
 
   async function pickImage(e: ChangeEvent<HTMLInputElement>, kind: "profile" | "work", workId?: string) {
     const original = e.target.files?.[0];
@@ -175,14 +99,14 @@ export default function Home() {
     if (step === 1 && works.some((work) => !work.image)) return "대표 작품 5점의 이미지를 모두 선택해주세요.";
     if (step === 2 && experiences.some((experience) => !experience.title.trim())) return "추가한 체험 프로그램의 이름을 입력해주세요.";
     if (step === 3 && !String(values.phone).trim()) return "운영진 연락용 휴대전화를 입력해주세요.";
-    if (step === 5 && (!values.consentInfo || !values.consentImage || !values.consentPrivacy)) return "필수 동의 항목을 모두 확인해주세요.";
+    if (step === LAST_STEP && (!values.consentInfo || !values.consentImage || !values.consentPrivacy)) return "필수 동의 항목을 모두 확인해주세요.";
     return "";
   }
 
   function next() {
     const message = validate();
     if (message) { alert(message); return; }
-    setStep((s) => Math.min(5, s + 1));
+    setStep((s) => Math.min(LAST_STEP, s + 1));
     document.querySelector(".workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -200,7 +124,7 @@ export default function Home() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (step < 5) { next(); return; }
+    if (step < LAST_STEP) { next(); return; }
     const message = validate(); if (message) { alert(message); return; }
     setSubmitting(true); setError("");
     try {
@@ -228,7 +152,7 @@ export default function Home() {
       const contentType = response.headers.get("content-type") || "";
       const result = contentType.includes("application/json") ? await response.json() : { error: await response.text() };
       if (!response.ok) throw new Error(result.error || "접수 중 오류가 발생했습니다.");
-      localStorage.removeItem(STORAGE_KEY); setSubmittedId(result.id);
+      clearDraft(); setSubmittedId(result.id);
     } catch (err) { setError(err instanceof Error ? err.message : "접수 중 오류가 발생했습니다."); }
     finally { setSubmitting(false); }
   }
@@ -267,7 +191,7 @@ export default function Home() {
               </div>}
               {step === 3 && <div className="section active"><div className="grid-2"><div className="field"><label>Instagram</label>{input("instagram", "url", "https://instagram.com/...")}</div><div className="field"><label>홈페이지</label>{input("website", "url", "https://...")}</div></div><div className="field"><label>온라인 판매처</label>{input("shopUrl", "url", "스마트스토어 등")}</div><div className="info-panel"><strong>운영진 연락용</strong><p>아래 정보는 확인·연락을 위해서만 사용하며 관광객에게 공개하지 않습니다.</p></div><div className="grid-2"><div className="field"><label>휴대전화 <b>*</b></label>{input("phone", "tel", "010-0000-0000", true)}</div><div className="field"><label>이메일</label>{input("email", "email", "artist@example.com")}</div></div></div>}
               {step === 4 && <div className="section active"><div className="apply-passport-feature"><img src="/assets/home/art-passport-visual-labeled.webp" alt="표지에 ART PASSPORT가 적힌 감천 아트 패스포트 이미지"/><div><span>GAMCHEON ART PASSPORT</span><strong>작가의 공간을 방문하고<br/>작품의 이야기를 수집하세요.</strong><p>작가 지도와 아트 패스포트는 골목의 작업실을 찾고, 작가와 작품을 더 가까이 만나는 지역 문화 경험입니다.</p><a href="/passport" target="_blank" rel="noopener noreferrer">홈페이지에서 자세히 보기 ↗</a></div></div><div className="field"><label>작가 스탬프 프로젝트</label>{select("stampInterest", ["참여하고 싶음", "자세한 설명을 듣고 결정하고 싶음", "현재는 참여 의사 없음"])}</div><div className="field"><label>NFC 작가 카드</label>{select("nfcInterest", ["참여하고 싶음", "자세한 설명을 듣고 결정하고 싶음", "현재는 참여 의사 없음"])}</div><div className="field"><label>감천 작가 지도에 바라는 기능이나 의견</label>{textArea("feedback", "관광객에게 꼭 보여주고 싶은 정보, 우려되는 점, 필요한 기능 등을 적어주세요.")}</div></div>}
-              {step === 5 && <div className="section active">
+              {step === LAST_STEP && <div className="section active">
                 <div className="info-panel"><strong>서비스 공개 정보</strong><p>작가명, 소개, 작품, 선택한 범위의 위치·방문 정보, 등록한 온라인 채널</p></div>
                 <div className="info-panel warm"><strong>운영 목적으로만 사용</strong><p>휴대전화, 이메일, 신청 관련 연락 정보</p></div>
                 <p className="consent-intro">각 항목의 내용을 펼쳐 확인해 주세요. <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 처리방침 전문 보기 ↗</a></p>
@@ -276,7 +200,7 @@ export default function Home() {
                 <div className="consent-item"><label className="consent-box"><input type="checkbox" checked={Boolean(values.consentPrivacy)} onChange={(event) => update("consentPrivacy", event.target.checked)}/><span>개인정보 수집·이용에 동의합니다. <b>*</b></span></label><details className="consent-details"><summary>수집 항목·목적·보유기간 보기</summary><div><dl><dt>이용 목적</dt><dd>작가 신청 접수·검토·연락, 승인 후 작가 소개</dd><dt>처리 항목</dt><dd>작가명, 분야, 한 줄 소개, 작품 정보·이미지, 휴대전화, 동의 선택, 접수번호·일시·상태. 소개, 프로필 사진, 공방·위치·방문 정보, 온라인 채널, 이메일과 의견은 입력한 경우에 처리합니다.</dd><dt>보유기간</dt><dd>신청 검토 및 프로젝트 참여 기간 동안 보관하며, 공개 철회·삭제 요청 시 관련 자료와 보존 필요 여부를 확인하여 처리합니다. 구체적인 기간은 운영 기준 확정 후 반영합니다.</dd></dl><p>필수 항목의 동의를 거부하면 작가 신청을 진행하기 어렵습니다. 정보 열람·정정·삭제와 동의 철회는 <a href="mailto:rjbcom4263@gmail.com">운영팀에 요청</a>할 수 있습니다.</p></div></details></div>
                 {error && <div className="error" role="alert">{error}</div>}
               </div>}
-              <div className="actions"><button type="button" className="ghost" style={{ visibility: step === 0 ? "hidden" : "visible" }} onClick={() => setStep((s) => Math.max(0, s - 1))}>이전</button><button className="primary" type="submit" disabled={submitting || imageProcessing > 0}>{imageProcessing > 0 ? "사진 처리 중…" : submitting ? "접수 중…" : step === 5 ? "신청서 제출" : "다음"}</button></div>
+              <div className="actions"><button type="button" className="ghost" style={{ visibility: step === 0 ? "hidden" : "visible" }} onClick={() => setStep((s) => Math.max(0, s - 1))}>이전</button><button className="primary" type="submit" disabled={submitting || imageProcessing > 0}>{imageProcessing > 0 ? "사진 처리 중…" : submitting ? "접수 중…" : step === LAST_STEP ? "신청서 제출" : "다음"}</button></div>
             </form>
           </>}
         </section>

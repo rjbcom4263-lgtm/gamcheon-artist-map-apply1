@@ -8,6 +8,8 @@ import PasswordChangeForm from "./PasswordChangeForm";
 import ProfileEditForm from "./ProfileEditForm";
 import { EDITABLE_APPLICATION_QUERY, PROFILE_EDITOR_ID, profileEditorControl } from "./profile-editor-controls";
 import { LogoutButton } from "../LogoutButton";
+import { parse } from "../lib/json";
+import { ARTIST_STATUS_LABELS, formatDateTime } from "../lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +19,8 @@ type Work = { id?: string; title?: string; status?: string; description?: string
 type Payload = { values?: Record<string, string | boolean>; categories?: string[]; works?: Work[]; adminReview?: { note?: string; processedAt?: string; status?: string } };
 type ImageRecord = { type: string; workIndex?: number; key: string; name: string; contentType?: string };
 
-const STATUS = { draft: "작성 중", received: "접수", reviewing: "검토 중", approved: "승인", hold: "보류", rejected: "반려", cancelled: "신청자 취소" } as const;
 const ACCOUNT_STATUS = { pending: "승인 대기", active: "활성", suspended: "정지", deleted: "삭제됨" } as const;
 
-function parse<T>(value: string, fallback: T): T { try { return JSON.parse(value) as T; } catch { return fallback; } }
-function date(value: string | null) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value + (value.endsWith("Z") ? "" : "Z")));
-}
 
 export default async function ArtistPage({ searchParams }: { searchParams: Promise<{ account?: string }> }) {
   const viewer = await requireSession();
@@ -53,7 +49,7 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
   const works = payload.works || [];
   const profile = images.find((image) => image.type === "profile");
   const accountState = ACCOUNT_STATUS[(account?.status || "pending") as keyof typeof ACCOUNT_STATUS] || account?.status || "승인 대기";
-  const applicationState = current ? STATUS[current.status as keyof typeof STATUS] || current.status : "신청 없음";
+  const applicationState = current ? ARTIST_STATUS_LABELS[current.status as keyof typeof ARTIST_STATUS_LABELS] || current.status : "신청 없음";
   const imageApi = isAdmin ? "/api/admin/images" : "/api/artist/images";
   const accountUrl = `/admin/accounts/${encodeURIComponent(account.id)}`;
   const editablePayload = editableApplication ? parse<Payload>(editableApplication.payload_json, {}) : {};
@@ -81,13 +77,13 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
       <section className="artist-main" id="dashboard">
         <div className="artist-welcome">
           <div><p>WELCOME, ARTIST</p><h1>{name} 작가님,<br/>안녕하세요.</h1><span>등록한 프로필과 작품, 신청 상태를 한곳에서 확인할 수 있습니다.</span></div>
-          <div className="artist-current-state"><span>현재 공개 상태</span><strong>{applicationState}</strong><small>{current ? `최근 접수 ${date(current.created_at)}` : "작가 신청서를 먼저 등록해주세요."}</small></div>
+          <div className="artist-current-state"><span>현재 공개 상태</span><strong>{applicationState}</strong><small>{current ? `최근 접수 ${formatDateTime(current.created_at)}` : "작가 신청서를 먼저 등록해주세요."}</small></div>
         </div>
 
         <div className="artist-metrics">
-          <article><span>ACCOUNT STATUS</span><strong>{accountState}</strong><small>작가 계정 상태</small></article>
+          <article><span>ACCOUNT ARTIST_STATUS_LABELS</span><strong>{accountState}</strong><small>작가 계정 상태</small></article>
           <article><span>ARTWORKS</span><strong>{works.length}<em>점</em></strong><small>등록된 대표 작품</small></article>
-          <article><span>LAST LOGIN</span><strong className="date-value">{date(account?.last_login_at || null)}</strong><small>최근 로그인</small></article>
+          <article><span>LAST LOGIN</span><strong className="date-value">{formatDateTime(account?.last_login_at || null)}</strong><small>최근 로그인</small></article>
         </div>
 
         {current ? <div className="artist-dashboard-grid">
@@ -95,7 +91,7 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
             <div className="artist-card-head"><div><p>ARTIST PROFILE</p><h2>등록 프로필</h2></div><em className={`status status-${current.status}`}>{applicationState}</em></div>
             <div className="artist-summary-layout">
               {profile ? <img className="artist-profile-image" src={`${imageApi}?key=${encodeURIComponent(profile.key)}`} alt="작가 프로필"/> : <div className="artist-profile-placeholder">{name.slice(0, 1)}</div>}
-              <div className="artist-profile-copy"><span>{payload.categories?.join(" · ") || "등록 분야 없음"}</span><h3>{current.artist_name}</h3><blockquote>{String(values.tagline || "작가 한 줄 소개가 아직 없습니다.")}</blockquote><p>{String(values.bio || "작가 소개가 아직 없습니다.")}</p><dl><div><dt>신청번호</dt><dd>{current.id}</dd></div><div><dt>접수일</dt><dd>{date(current.created_at)}</dd></div><div><dt>연락처</dt><dd>{current.phone}</dd></div><div><dt>이메일</dt><dd>{current.email || "-"}</dd></div></dl></div>
+              <div className="artist-profile-copy"><span>{payload.categories?.join(" · ") || "등록 분야 없음"}</span><h3>{current.artist_name}</h3><blockquote>{String(values.tagline || "작가 한 줄 소개가 아직 없습니다.")}</blockquote><p>{String(values.bio || "작가 소개가 아직 없습니다.")}</p><dl><div><dt>신청번호</dt><dd>{current.id}</dd></div><div><dt>접수일</dt><dd>{formatDateTime(current.created_at)}</dd></div><div><dt>연락처</dt><dd>{current.phone}</dd></div><div><dt>이메일</dt><dd>{current.email || "-"}</dd></div></dl></div>
             </div>
             {payload.adminReview?.note && <div className="artist-review-note"><strong>운영진 안내</strong><p>{payload.adminReview.note}</p></div>}
           </section>

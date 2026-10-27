@@ -3,12 +3,12 @@ import { redirect } from "next/navigation";
 import { requireArtist } from "../../admin/admin-auth";
 import { artistRowToProfile, type PublicArtistRow } from "../../artists/public-artist";
 import ProfileEditForm from "../ProfileEditForm";
+import { parse } from "../../lib/json";
 
 export const dynamic = "force-dynamic";
 
 type ArtistRow = PublicArtistRow & { payload_json: string; image_keys_json: string };
 type Payload = { values?: Record<string, unknown>; categories?: string[]; works?: Array<{ id?: string; title?: string; status?: string; description?: string }> };
-function parse<T>(value: string, fallback: T): T { try { return JSON.parse(value) as T; } catch { return fallback; } }
 
 export default async function ArtistProfileEditPage() {
   const viewer = await requireArtist();

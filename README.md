@@ -2,10 +2,11 @@
 
 현재 운영 중인 홈페이지의 소스입니다. 별도 시안 프로젝트와 카카오 타일 캡처 도구는 포함하지 않았습니다.
 
-- 홈페이지: `app/landing-sample/`, `app/page.tsx`
+- 홈페이지: `app/home/` (`app/page.tsx`가 불러옴), 신청 폼: `app/apply/`
 - 지도: `app/map/` (지도 앱 번들은 art-map 저장소에서 `public/map-app/`으로 내보냄)
 - 운영자 화면: `app/admin/`
-- 신청·계정 API: `app/api/`
+- 신청·계정·소셜 로그인 API: `app/api/` (소셜 로그인 공통 흐름은 `app/api/auth/social.ts`)
+- 공용 헬퍼: `app/lib/` (JSON 파싱, 날짜·상태 라벨, 신청서 상수·입력 정리, 감천 좌표 범위, 응답·쿠키, 브라우저 이미지 축소)
 - 이미지와 지도 에셋: `public/`
 - DB 스키마: `migrations/*.sql` (Cloudflare D1, `wrangler d1 migrations`로 적용)
 - 테스트: `tests/*.test.mts` (`npm test`, Node 내장 테스트 러너)

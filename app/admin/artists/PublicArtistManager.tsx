@@ -5,14 +5,15 @@ import Link from "next/link";
 import AdminSidebar from "../AdminSidebar";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import ArtistMapFrame, { type MapPlace } from "../../map/ArtistMapFrame";
+import { isLegacyMapPosition, isWithinGamcheon } from "../../lib/geo";
 import "./public-artists.css";
+import { parse } from "../../lib/json";
 
 export type ManagedArtist = { id: string; artist_name: string; payload_json: string; image_keys_json: string; created_at: string };
 type Payload = { values?: Record<string, unknown>; categories?: string[] };
 type ImageRecord = { type?: string; key?: string };
 type AddressSuggestion = { address: string; longitude: number; latitude: number };
 
-function parse<T>(value: string, fallback: T): T { try { return JSON.parse(value) as T; } catch { return fallback; } }
 function details(row: ManagedArtist) {
   const payload = parse<Payload>(row.payload_json, {});
   const values = payload.values || {};
@@ -22,7 +23,7 @@ function details(row: ManagedArtist) {
   const y = Number(values.mapY);
   const longitude = Number(values.mapLongitude);
   const latitude = Number(values.mapLatitude);
-  const positioned = Number.isFinite(longitude) && Number.isFinite(latitude) && longitude >= 128.9998 && longitude <= 129.0174 && latitude >= 35.0867 && latitude <= 35.1023;
+  const positioned = isWithinGamcheon(longitude, latitude);
   return {
     categories: payload.categories?.join(" · ") || "분야 미입력",
     studio: typeof values.studioName === "string" && values.studioName.trim() ? values.studioName : "공방명 미입력",
@@ -30,7 +31,7 @@ function details(row: ManagedArtist) {
     published: values.mapPublished !== false,
     longitude: positioned ? longitude : null,
     latitude: positioned ? latitude : null,
-    legacyPosition: Number.isFinite(x) && Number.isFinite(y) && x >= 5 && x <= 95 && y >= 12 && y <= 78,
+    legacyPosition: isLegacyMapPosition(x, y),
     image: profile ? `/api/admin/images?key=${encodeURIComponent(profile)}` : "",
   };
 }
@@ -47,11 +48,14 @@ export default function PublicArtistManager({ initial, adminName, initialSelecte
   const [addressSearch, setAddressSearch] = useState<{ artistId: string; suggestions: AddressSuggestion[] } | null>(null);
   const [addressMessage, setAddressMessage] = useState<{ artistId: string; text: string } | null>(null);
   const [searchingAddress, setSearchingAddress] = useState(false);
+  // 행마다 payload_json을 다시 파싱하지 않도록 rows가 바뀔 때 한 번만 details를 계산해 둡니다.
+  const detailsById = useMemo(() => new Map(rows.map((row) => [row.id, details(row)] as const)), [rows]);
+  const detailOf = (row: ManagedArtist) => detailsById.get(row.id) ?? details(row);
   const selected = rows.find((row) => row.id === selectedId);
-  const selectedDetails = selected ? details(selected) : null;
+  const selectedDetails = selected ? detailOf(selected) : null;
   const addressQuery = selected ? addressQueries[selected.id] ?? selectedDetails?.address ?? "" : "";
-  const unplacedRows = rows.filter((row) => details(row).longitude === null);
-  const placedRows = rows.filter((row) => details(row).longitude !== null);
+  const unplacedRows = rows.filter((row) => detailOf(row).longitude === null);
+  const placedRows = rows.filter((row) => detailOf(row).longitude !== null);
   const unsavedCount = rows.filter((row) => row.payload_json !== savedPayloads[row.id]).length;
   const selectedUnsaved = !!selected && selected.payload_json !== savedPayloads[selected.id];
   useEffect(() => {
@@ -61,14 +65,14 @@ export default function PublicArtistManager({ initial, adminName, initialSelecte
     return () => window.removeEventListener("beforeunload", warn);
   }, [unsavedCount]);
   const counts = useMemo(() => {
-    const all = rows.map(details);
+    const all = [...detailsById.values()];
     const published = all.filter((item) => item.published);
     return { approved: all.length, published: published.length, publishedPositioned: published.filter((item) => item.longitude !== null).length };
-  }, [rows]);
+  }, [detailsById]);
   const mapPlaces = useMemo(() => rows.flatMap((row): MapPlace[] => {
-    const item = details(row);
+    const item = detailsById.get(row.id) ?? details(row);
     return item.longitude === null || item.latitude === null ? [] : [{ id: row.id, name: row.artist_name, category: "attraction", longitude: item.longitude, latitude: item.latitude }];
-  }), [rows]);
+  }), [rows, detailsById]);
 
   function updateValues(changes: Record<string, unknown>) {
     setRows((current) => current.map((row) => {
@@ -159,7 +163,7 @@ export default function PublicArtistManager({ initial, adminName, initialSelecte
             { key: "placed", title: "배치 완료 작가·공방", items: placedRows },
           ].map((group) => <section className={`public-list-group public-list-group--${group.key}`} key={group.key}>
             <div className="public-list-group-title"><strong>{group.title}</strong><span>{group.items.length}명</span></div>
-            {group.items.length ? group.items.map((row) => { const item = details(row); return <button type="button" disabled={saving} className={`public-artist-entry ${row.id === selectedId ? "is-selected" : ""}`} key={row.id} onClick={() => selectArtist(row.id)}>
+            {group.items.length ? group.items.map((row) => { const item = detailOf(row); return <button type="button" disabled={saving} className={`public-artist-entry ${row.id === selectedId ? "is-selected" : ""}`} key={row.id} onClick={() => selectArtist(row.id)}>
               {item.image ? <img src={item.image} alt=""/> : <i>{row.artist_name.slice(0, 1)}</i>}
               <span><strong>{row.artist_name}</strong><small>공방 · {item.studio}</small><em>{row.payload_json !== savedPayloads[row.id] ? "미저장 · " : ""}{group.key === "waiting" ? "배치 대기" : "배치 완료"} · {item.published ? "공개" : "숨김"}</em></span>
             </button>; }) : <p className="public-list-empty">{group.key === "waiting" ? "배치 대기 중인 작가가 없습니다." : "아직 배치된 작가가 없습니다."}</p>}

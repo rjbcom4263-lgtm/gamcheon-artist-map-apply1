@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { requireAdmin } from "../../../../admin/admin-auth";
+import { forbidden } from "../../../../lib/http";
 
 export const runtime = "edge";
 const allowedStatuses = new Set(["received", "reviewing", "approved", "hold", "rejected", "cancelled"]);
@@ -10,7 +11,7 @@ async function authorized() {
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await authorized()) return Response.json({ error: "권한이 없습니다." }, { status: 403 });
+  if (!await authorized()) return forbidden();
   const { id } = await context.params;
   const body = await request.json() as { status?: string; reviewNote?: string };
   if (!body.status || !allowedStatuses.has(body.status)) return Response.json({ error: "올바르지 않은 상태입니다." }, { status: 400 });
@@ -33,7 +34,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await authorized()) return Response.json({ error: "권한이 없습니다." }, { status: 403 });
+  if (!await authorized()) return forbidden();
   const { id } = await context.params;
   const current = await env.DB.prepare("SELECT image_keys_json FROM artist_applications WHERE id = ?").bind(id).first<{ image_keys_json: string }>();
   if (!current) return Response.json({ error: "신청서를 찾을 수 없습니다." }, { status: 404 });

@@ -1,3 +1,6 @@
+import { isLegacyMapPosition, isWithinGamcheon } from "../lib/geo";
+import { parse } from "../lib/json";
+
 export type ArtistRow = { id: string; artist_name: string; payload_json: string; image_keys_json: string };
 export type ArtistPlace = {
   id: string;
@@ -17,10 +20,6 @@ export type ArtistPlace = {
 type Payload = { values?: Record<string, unknown>; categories?: unknown[] };
 type ImageRecord = { type?: string; workIndex?: number; key?: string };
 
-function parse<T>(value: string, fallback: T): T {
-  try { return JSON.parse(value) as T; } catch { return fallback; }
-}
-
 function text(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -35,12 +34,10 @@ export function artistRowsToPlaces(rows: ArtistRow[]): ArtistPlace[] {
     const imageKey = images.find((image) => image.type === "profile" && image.key)?.key || images.find((image) => image.type === "work" && image.key)?.key;
     const x = Number(values.mapX);
     const y = Number(values.mapY);
-    const position = Number.isFinite(x) && Number.isFinite(y) && x >= 5 && x <= 95 && y >= 12 && y <= 78 ? { x, y } : undefined;
+    const position = isLegacyMapPosition(x, y) ? { x, y } : undefined;
     const longitude = Number(values.mapLongitude);
     const latitude = Number(values.mapLatitude);
-    const geoPosition = Number.isFinite(longitude) && Number.isFinite(latitude)
-      && longitude >= 128.9998 && longitude <= 129.0174 && latitude >= 35.0867 && latitude <= 35.1023
-      ? { longitude, latitude } : undefined;
+    const geoPosition = isWithinGamcheon(longitude, latitude) ? { longitude, latitude } : undefined;
     const exactAddress = text(values.locationPrivacy) === "exact" ? text(values.address || values.studioAddress) : "";
 
     return [{

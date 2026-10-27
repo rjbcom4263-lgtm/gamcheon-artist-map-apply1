@@ -2,12 +2,13 @@ import { env } from "cloudflare:workers";
 import { requireAdmin } from "../../../../admin/admin-auth";
 import { getGuide } from "../../../../work-guides/db";
 import { GUIDE_LANGUAGES, type Translation } from "../../../../work-guides/shared";
+import { forbidden } from "../../../../lib/http";
 
 export const runtime = "edge";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!await requireAdmin()) return Response.json({ error: "운영자 로그인이 필요합니다." }, { status: 403 });
-  if (request.headers.get("origin") && request.headers.get("origin") !== new URL(request.url).origin) return Response.json({ error: "요청 출처를 확인해 주세요." }, { status: 403 });
+  if (!await requireAdmin()) return forbidden("운영자 로그인이 필요합니다.");
+  if (request.headers.get("origin") && request.headers.get("origin") !== new URL(request.url).origin) return forbidden("요청 출처를 확인해 주세요.");
   const { id } = await params;
   let input: Record<string, unknown>;
   try { input = await request.json() as Record<string, unknown>; } catch { return Response.json({ error: "요청 형식이 올바르지 않습니다." }, { status: 400 }); }

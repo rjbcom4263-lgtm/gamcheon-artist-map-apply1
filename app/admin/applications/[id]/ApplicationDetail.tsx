@@ -6,18 +6,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Application } from "../../AdminDashboard";
 import { sanitizeExperiences } from "../../../artist/profile-data";
+import { parse } from "../../../lib/json";
+import { APPLICATION_STATUS_LABELS, formatDateTime } from "../../../lib/format";
 
 type Work = { id?: string; title?: string; status?: string; description?: string };
 type Payload = { values?: Record<string, string | boolean>; categories?: string[]; works?: Work[]; experiences?: unknown[]; adminReview?: { note?: string; processedAt?: string; status?: string } };
 type ImageRecord = { type: string; workIndex?: number; key: string; name: string };
 
-const STATUS = { received: "접수", reviewing: "검토 중", approved: "승인", hold: "보류", rejected: "반려", cancelled: "신청자 취소" } as const;
 
-function parse<T>(value: string, fallback: T): T { try { return JSON.parse(value) as T; } catch { return fallback; } }
-function date(value: string | null) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value + (value.endsWith("Z") ? "" : "Z")));
-}
 
 export default function ApplicationDetail({ application }: { application: Application }) {
   const router = useRouter();
@@ -73,8 +69,8 @@ export default function ApplicationDetail({ application }: { application: Applic
           {images.some((x) => x.type === "profile") && <DetailSection title="작가 프로필 사진" wide><img className="profile-admin-image" src={`/api/admin/images?key=${encodeURIComponent(images.find((x) => x.type === "profile")!.key)}`} alt="작가 프로필"/></DetailSection>}
         </div>
         <aside className="dash-card process-card">
-          <div className="detail-title"><div><span>현재 상태</span><h2>{STATUS[row.status as keyof typeof STATUS] || row.status}</h2></div><select value={row.status} disabled={saving} onChange={(e) => changeStatus(e.target.value)}>{Object.entries(STATUS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
-          <section className="review-panel"><div><strong>운영자 처리</strong><span>반려·취소 시 사유를 기록합니다.</span></div><textarea value={reviewNote} onChange={(e) => setReviewNote(e.target.value)} placeholder="처리 사유 또는 내부 메모"/><div className="review-actions"><button disabled={saving} onClick={() => changeStatus("received")}>접수</button><button disabled={saving} onClick={() => changeStatus("approved")}>승인</button><button className="reject" disabled={saving} onClick={() => changeStatus("rejected")}>반려</button><button className="delete" disabled={saving} onClick={deleteApplication}>삭제</button></div>{payload.adminReview?.processedAt && <small>최근 처리: {date(payload.adminReview.processedAt)}</small>}</section>
+          <div className="detail-title"><div><span>현재 상태</span><h2>{APPLICATION_STATUS_LABELS[row.status as keyof typeof APPLICATION_STATUS_LABELS] || row.status}</h2></div><select value={row.status} disabled={saving} onChange={(e) => changeStatus(e.target.value)}>{Object.entries(APPLICATION_STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
+          <section className="review-panel"><div><strong>운영자 처리</strong><span>반려·취소 시 사유를 기록합니다.</span></div><textarea value={reviewNote} onChange={(e) => setReviewNote(e.target.value)} placeholder="처리 사유 또는 내부 메모"/><div className="review-actions"><button disabled={saving} onClick={() => changeStatus("received")}>접수</button><button disabled={saving} onClick={() => changeStatus("approved")}>승인</button><button className="reject" disabled={saving} onClick={() => changeStatus("rejected")}>반려</button><button className="delete" disabled={saving} onClick={deleteApplication}>삭제</button></div>{payload.adminReview?.processedAt && <small>최근 처리: {formatDateTime(payload.adminReview.processedAt)}</small>}</section>
         </aside>
       </section>
     </main>

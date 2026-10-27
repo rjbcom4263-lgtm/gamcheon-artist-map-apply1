@@ -24,6 +24,13 @@ type Props = {
 
 export default function ArtistMapFrame({ places, selectedId = null, canPick = false, onPick, onSelect, title, className, full = false, compactApp = false }: Props) {
   const frame = useRef<HTMLIFrameElement>(null);
+  // 콜백은 ref로 들고 있어 부모가 렌더마다 새 함수를 넘겨도 effect가 다시 돌지 않습니다.
+  const onPickRef = useRef(onPick);
+  const onSelectRef = useRef(onSelect);
+  useEffect(() => {
+    onPickRef.current = onPick;
+    onSelectRef.current = onSelect;
+  });
 
   useEffect(() => {
     const origin = window.location.origin;
@@ -31,13 +38,15 @@ export default function ArtistMapFrame({ places, selectedId = null, canPick = fa
     const receive = (event: MessageEvent) => {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow || event.data?.source !== "gamcheon-artist-map") return;
       if (event.data.type === "ready") send();
-      if (event.data.type === "select" && typeof event.data.id === "string") onSelect?.(event.data.id);
-      if (event.data.type === "pick" && Number.isFinite(event.data.longitude) && Number.isFinite(event.data.latitude)) onPick?.(event.data.longitude, event.data.latitude);
+      if (event.data.type === "select" && typeof event.data.id === "string") onSelectRef.current?.(event.data.id);
+      if (event.data.type === "pick" && Number.isFinite(event.data.longitude) && Number.isFinite(event.data.latitude)) onPickRef.current?.(event.data.longitude, event.data.latitude);
     };
     window.addEventListener("message", receive);
     send();
     return () => window.removeEventListener("message", receive);
-  }, [places, selectedId, canPick, onPick, onSelect]);
+    // onPick/onSelect는 ref로 읽으므로 의존성에서 뺍니다. 부모가 인라인 함수를 넘겨도 지도에 상태를 다시 보내지 않습니다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [places, selectedId, canPick]);
 
   // 지도 안에서 내 위치와 휴대폰 방향(나침반) 센서를 쓰도록 허락합니다.
   return <iframe ref={frame} className={className} title={title} src={full ? `${MAP_APP_PATH}?mode=full&host=${compactApp ? 'compact' : 'site'}` : MAP_APP_PATH} allow="geolocation; accelerometer; gyroscope; magnetometer" />;

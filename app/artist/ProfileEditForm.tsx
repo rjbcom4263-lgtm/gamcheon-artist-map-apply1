@@ -10,6 +10,7 @@ import { Icon } from "../artists/[id]/ArtistDetail";
 import { profileEditorControl } from "./profile-editor-controls";
 import "../artists/[id]/artist-detail.css";
 import "./visual-profile-editor.css";
+import { MAX_IMAGE_BYTES } from "../lib/application";
 
 type Work = { id?: string; title?: string; status?: string; description?: string };
 type Payload = { values?: Record<string, unknown>; categories?: string[]; works?: Work[] };
@@ -39,7 +40,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
 
   function pickImage(key: string, file?: File) {
     if (!file) return;
-    if (!file.type.startsWith("image/") || file.size > 2 * 1024 * 1024) return setMessage("이미지는 장당 2MB 이하로 선택해주세요.");
+    if (!file.type.startsWith("image/") || file.size > MAX_IMAGE_BYTES) return setMessage("이미지는 장당 2MB 이하로 선택해주세요.");
     const reader = new FileReader();
     reader.onload = () => setPreviews((current) => ({ ...current, [key]: String(reader.result || "") }));
     reader.readAsDataURL(file);

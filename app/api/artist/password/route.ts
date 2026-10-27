@@ -1,11 +1,12 @@
 import { env } from "cloudflare:workers";
 import { hashPassword, requireArtist, verifyPassword } from "../../../admin/admin-auth";
+import { forbidden } from "../../../lib/http";
 
 export const runtime = "edge";
 
 export async function PATCH(request: Request) {
   const artist = await requireArtist();
-  if (!artist) return Response.json({ error: "로그인이 필요합니다." }, { status: 403 });
+  if (!artist) return forbidden("로그인이 필요합니다.");
   const body = await request.json().catch(() => ({})) as { currentPassword?: string; newPassword?: string };
   const currentPassword = typeof body.currentPassword === "string" ? body.currentPassword : "";
   const newPassword = typeof body.newPassword === "string" ? body.newPassword : "";

@@ -1,4 +1,5 @@
 import { sanitizeExperiences, type ArtistExperience } from "../artist/profile-data";
+import { parse } from "../lib/json";
 
 export type PublicArtistRow = { id: string; artist_name: string; payload_json: string; image_keys_json: string };
 export const SAVED_ARTISTS_KEY = "gamcheon-saved-artists";
@@ -13,7 +14,6 @@ type Work = { title?: unknown; description?: unknown; status?: unknown };
 type Payload = { values?: Record<string, unknown>; categories?: unknown[]; works?: Work[]; experiences?: unknown[] };
 type ImageRecord = { type?: string; workIndex?: number; key?: string };
 
-function parse<T>(value: string, fallback: T): T { try { return JSON.parse(value) as T; } catch { return fallback; } }
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function publicUrl(value: unknown) { const url = text(value); return /^https?:\/\//i.test(url) ? url : ""; }
 function imageUrl(key?: string) { return key ? `/api/artists/images?key=${encodeURIComponent(key)}` : ""; }

@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { requireArtist } from "../../../admin/admin-auth";
 import { isAllowedImageFile } from "../../../image-upload";
 import { getGuide, type GuideRow } from "../../../work-guides/db";
+import { MAX_IMAGE_BYTES } from "../../../lib/application";
 
 export const runtime = "edge";
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
   if (existingId && !validId(existingId)) return bad("작품 주소가 올바르지 않습니다.");
   if (sourceIndex !== null && (!Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex > 100)) return bad("가져올 대표 작품을 확인해 주세요.");
   const image = file instanceof File && file.size ? file : null;
-  if (image && (image.size > 2 * 1024 * 1024 || !await isAllowedImageFile(image))) return bad("JPG, PNG, WebP 이미지만 2MB 이하로 올려주세요.");
+  if (image && (image.size > MAX_IMAGE_BYTES || !await isAllowedImageFile(image))) return bad("JPG, PNG, WebP 이미지만 2MB 이하로 올려주세요.");
 
   const application = await env.DB.prepare("SELECT id, artist_name, image_keys_json FROM artist_applications WHERE account_id = ? AND status = 'approved' ORDER BY created_at DESC LIMIT 1")
     .bind(artist.accountId).first<{ id: string; artist_name: string; image_keys_json: string }>();

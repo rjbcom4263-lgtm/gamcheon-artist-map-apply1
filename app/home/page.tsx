@@ -31,7 +31,7 @@ async function getHomeStats() {
   ] as [string, number, string][];
 }
 
-export default async function LandingSamplePage() {
+export default async function HomePage() {
   const user = await requireSession();
   const stats = await getHomeStats();
   return <AgencyHome user={user ? { role: user.role } : null} stats={stats} />;

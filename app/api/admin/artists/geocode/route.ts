@@ -1,11 +1,13 @@
 import { requireAdmin } from "../../../../admin/admin-auth";
+import { forbidden } from "../../../../lib/http";
+import { isWithinGamcheon } from "../../../../lib/geo";
 
 export const runtime = "edge";
 
 type KakaoAddress = { address_name?: string; x?: string; y?: string; road_address?: { address_name?: string } | null };
 
 export async function POST(request: Request) {
-  if (!await requireAdmin()) return Response.json({ error: "권한이 없습니다." }, { status: 403 });
+  if (!await requireAdmin()) return forbidden();
   const body = await request.json().catch(() => null) as { query?: unknown } | null;
   const query = typeof body?.query === "string" ? body.query.trim() : "";
   if (query.length < 4 || query.length > 200) return Response.json({ error: "공방 주소를 4자 이상 입력해주세요." }, { status: 400 });
@@ -30,8 +32,7 @@ export async function POST(request: Request) {
     const suggestions = (data.documents || []).flatMap((item) => {
       const longitude = Number(item.x);
       const latitude = Number(item.y);
-      if (!Number.isFinite(longitude) || !Number.isFinite(latitude)
-        || longitude < 128.9998 || longitude > 129.0174 || latitude < 35.0867 || latitude > 35.1023) return [];
+      if (!isWithinGamcheon(longitude, latitude)) return [];
       return [{ address: item.road_address?.address_name || item.address_name || query, longitude, latitude }];
     });
     return Response.json({ suggestions }, { headers: { "cache-control": "no-store" } });

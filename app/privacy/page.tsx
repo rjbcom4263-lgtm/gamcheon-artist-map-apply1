@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { requireSession } from "../admin/admin-auth";
-import { Header } from "../landing-sample/SectionPage";
-import { site } from "../landing-sample/content";
+import { Header } from "../home/SectionPage";
+import { site } from "../home/content";
 import "./privacy.css";
 
 export const metadata: Metadata = {

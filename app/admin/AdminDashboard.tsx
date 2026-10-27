@@ -3,32 +3,31 @@
 import Link from "next/link";
 import AdminSidebar from "./AdminSidebar";
 import { useMemo, useState } from "react";
+import { parse } from "../lib/json";
+import { ACCOUNT_STATUS_LABELS, APPLICATION_STATUS_LABELS, formatDateTime, statusLabel } from "../lib/format";
 
+/** 상세 페이지가 쓰는 전체 신청서 행. */
 export type Application = { id: string; artist_name: string; phone: string; email: string; status: string; payload_json: string; image_keys_json: string; created_at: string };
+/** 목록 화면용 요약 행. payload_json 대신 분야(categories)만 JSON 문자열로 받습니다. */
+export type ApplicationSummary = Pick<Application, "id" | "artist_name" | "phone" | "email" | "status" | "created_at"> & { categories_json: string | null };
 export type Account = { id: string; login_id: string; role: string; status: string; display_name: string; phone: string; email: string; created_at: string; last_login_at: string | null };
-type Payload = { categories?: string[] };
 type View = "applications" | "accounts";
 
-const STATUS = { received: "접수", reviewing: "검토 중", approved: "승인", hold: "보류", rejected: "반려", cancelled: "신청자 취소" } as const;
-const ACCOUNT_STATUS = { pending: "승인 대기", active: "활성", suspended: "정지", deleted: "삭제됨" } as const;
-
-function parse<T>(value: string, fallback: T): T { try { return JSON.parse(value) as T; } catch { return fallback; } }
-function date(value: string | null) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value + (value.endsWith("Z") ? "" : "Z")));
-}
-
-export default function AdminDashboard({ initial, initialAccounts, adminName, initialView = "applications" }: { initial: Application[]; initialAccounts: Account[]; adminName: string; initialView?: View }) {
+export default function AdminDashboard({ initial, initialAccounts, adminName, initialView = "applications" }: { initial: ApplicationSummary[]; initialAccounts: Account[]; adminName: string; initialView?: View }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const view = initialView;
 
-  const filtered = useMemo(() => initial.filter((row) => {
-    const matchesStatus = filter === "all" || row.status === filter;
+  // 검색어가 바뀔 때마다 행마다 JSON을 다시 파싱하지 않도록 분야 문자열과 검색용 문자열을 한 번만 만듭니다.
+  const rows = useMemo(() => initial.map((row) => ({
+    ...row,
+    categories: parse<string[]>(row.categories_json, []).join(" · ") || "분야 미입력",
+    searchText: `${row.artist_name} ${row.phone} ${row.email} ${row.id}`.toLowerCase(),
+  })), [initial]);
+  const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const matchesQuery = !needle || `${row.artist_name} ${row.phone} ${row.email} ${row.id}`.toLowerCase().includes(needle);
-    return matchesStatus && matchesQuery;
-  }), [initial, filter, query]);
+    return rows.filter((row) => (filter === "all" || row.status === filter) && (!needle || row.searchText.includes(needle)));
+  }, [rows, filter, query]);
   const counts = useMemo(() => ({
     all: initial.length,
     received: initial.filter((x) => x.status === "received").length,
@@ -49,15 +48,15 @@ export default function AdminDashboard({ initial, initialAccounts, adminName, in
       {view === "applications" ? <section className="dash-card dash-table-card admin-list-wide">
         <div className="dash-card-head">
           <div><h2>신청 목록</h2><span>신청서를 누르면 새 상세 페이지에서 운영자 처리를 진행합니다.</span></div>
-          <div className="dash-filters"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="작가명, 연락처, 접수번호"/><select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">전체</option>{Object.entries(STATUS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
+          <div className="dash-filters"><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="작가명, 연락처, 접수번호"/><select value={filter} onChange={(e) => setFilter(e.target.value)}><option value="all">전체</option>{Object.entries(APPLICATION_STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
         </div>
         <div className="application-table">
           <div className="table-row table-head"><span>작가</span><span>분야</span><span>상태</span><span>접수일</span><span>상세</span></div>
           {filtered.length ? filtered.map((row) => <Link key={row.id} className="table-row" href={`/admin/applications/${encodeURIComponent(row.id)}`}>
             <span><strong>{row.artist_name}</strong><small>{row.id}</small></span>
-            <span>{parse<Payload>(row.payload_json, {}).categories?.join(" · ") || "분야 미입력"}</span>
-            <span><em className={`status status-${row.status}`}>{STATUS[row.status as keyof typeof STATUS] || row.status}</em></span>
-            <span>{date(row.created_at)}</span>
+            <span>{row.categories}</span>
+            <span><em className={`status status-${row.status}`}>{statusLabel(APPLICATION_STATUS_LABELS, row.status)}</em></span>
+            <span>{formatDateTime(row.created_at)}</span>
             <span><b className="open-detail">열기</b></span>
           </Link>) : <div className="admin-empty">조건에 맞는 신청서가 없습니다.</div>}
         </div>
@@ -67,7 +66,7 @@ export default function AdminDashboard({ initial, initialAccounts, adminName, in
             <div className="account-row account-head"><span>아이디</span><span>작가명</span><span>연락처</span><span>상태</span><span>가입일</span><span>상세</span></div>
             {initialAccounts.length ? initialAccounts.map((account) => <Link className="account-row account-row-link" key={account.id} href={`/admin/accounts/${encodeURIComponent(account.id)}`}>
               <span><strong>{account.login_id}</strong><small>{account.email || "이메일 없음"}</small></span><span>{account.display_name || "-"}</span><span>{account.phone || "-"}</span>
-              <span><em className={`account-badge account-${account.status}`}>{ACCOUNT_STATUS[account.status as keyof typeof ACCOUNT_STATUS] || account.status}</em></span><span>{date(account.created_at)}</span>
+              <span><em className={`account-badge account-${account.status}`}>{statusLabel(ACCOUNT_STATUS_LABELS, account.status)}</em></span><span>{formatDateTime(account.created_at)}</span>
               <span><b className="open-detail">열기</b></span>
             </Link>) : <div className="admin-empty">회원가입한 작가 계정이 없습니다.</div>}
           </div>

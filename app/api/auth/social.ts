@@ -1,19 +1,61 @@
 import { env } from "cloudflare:workers";
+import { cookies } from "next/headers";
 import { adminCookie, createSession, hashPassword } from "../../admin/admin-auth";
-import { AUTH_NEXT_COOKIE, safeNextPath } from "../../auth-next";
+import { AUTH_NEXT_COOKIE, safeNextCookie, safeNextPath } from "../../auth-next";
+import { clearCookie, cookie, redirectWithCookies } from "../../lib/http";
 
 export type SocialProvider = "google" | "kakao" | "naver";
 type Account = { id: string; login_id: string; role: string; status: string; display_name: string };
 
-export function socialError(origin: string, provider: SocialProvider, code: string, stateCookie: string, nextPath = "/") {
-  const headers = new Headers({ location: `${origin}/login?error=${provider}_${code}&next=${encodeURIComponent(safeNextPath(nextPath, "/"))}` });
-  headers.append("set-cookie", `${stateCookie}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
-  headers.append("set-cookie", `${AUTH_NEXT_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
-  return new Response(null, { status: 303, headers });
+const STATE_COOKIE_MAX_AGE = 600;
+
+export function stateCookieName(provider: SocialProvider) {
+  return `gamcheon_${provider}_state`;
 }
 
-export async function completeSocialLogin(input: { provider: SocialProvider; providerUserId: string; email?: string; displayName?: string; origin: string; stateCookie: string; nextPath?: string }) {
-  const { provider, providerUserId, origin, stateCookie } = input;
+/** 로그인 실패 시 /login으로 돌려보내며 state·next 쿠키를 지웁니다. 오류 코드는 `${provider}_${code}` 형태로 전달됩니다. */
+export function socialError(origin: string, provider: SocialProvider, code: string, nextPath = "/") {
+  return redirectWithCookies(
+    `${origin}/login?error=${provider}_${code}&next=${encodeURIComponent(safeNextPath(nextPath, "/"))}`,
+    [clearCookie(stateCookieName(provider)), clearCookie(AUTH_NEXT_COOKIE)],
+  );
+}
+
+/** 소셜 로그인 시작: state와 돌아올 경로를 쿠키에 담고 제공자 인증 페이지로 보냅니다. 세 제공자의 start 라우트가 공통으로 씁니다. */
+export function startSocialLogin(request: Request, input: { provider: SocialProvider; clientId: string; authorizeUrl: string; params: (state: string, redirectUri: string) => Record<string, string> }) {
+  const requestUrl = new URL(request.url);
+  const origin = requestUrl.origin;
+  const nextPath = safeNextPath(requestUrl.searchParams.get("next"), "/");
+  if (!input.clientId) return Response.redirect(new URL(`/login?error=${input.provider}_config&next=${encodeURIComponent(nextPath)}`, origin), 303);
+
+  const state = crypto.randomUUID();
+  const authorize = new URL(input.authorizeUrl);
+  authorize.search = new URLSearchParams(input.params(state, `${origin}/api/auth/${input.provider}/callback`)).toString();
+  return redirectWithCookies(authorize.toString(), [
+    cookie(stateCookieName(input.provider), state, STATE_COOKIE_MAX_AGE),
+    cookie(AUTH_NEXT_COOKIE, encodeURIComponent(nextPath), STATE_COOKIE_MAX_AGE),
+  ], 302);
+}
+
+/** 콜백 라우트 공통 전처리: state 쿠키 검증, code·next 경로 추출. 실패하면 null. */
+export async function readSocialCallback(request: Request, provider: SocialProvider) {
+  const url = new URL(request.url);
+  const state = url.searchParams.get("state") || "";
+  const cookieStore = await cookies();
+  const expectedState = cookieStore.get(stateCookieName(provider))?.value || "";
+  const nextPath = safeNextCookie(cookieStore.get(AUTH_NEXT_COOKIE)?.value);
+  const code = url.searchParams.get("code") || "";
+  const ok = !!state && !!expectedState && state === expectedState && !!code;
+  return { origin: url.origin, code, state, nextPath, ok };
+}
+
+/**
+ * 제공자 사용자 id로 계정을 찾거나 새로 만들고 세션을 발급합니다.
+ * 이메일로는 기존 계정을 연결하지 않습니다(제공자가 이메일을 검증하지 않을 수 있음).
+ * allowAdmin이면 관리자 계정도 이 제공자로 로그인할 수 있고, 돌아갈 곳이 홈이면 /admin으로 보냅니다.
+ */
+export async function completeSocialLogin(input: { provider: SocialProvider; providerUserId: string; email?: string; displayName?: string; origin: string; nextPath?: string; allowAdmin?: boolean }) {
+  const { provider, providerUserId, origin } = input;
   const nextPath = safeNextPath(input.nextPath, "/");
   const email = input.email?.trim().toLowerCase().slice(0, 150) || "";
   const displayName = input.displayName?.trim().slice(0, 100) || email.split("@")[0] || provider;
@@ -27,15 +69,19 @@ export async function completeSocialLogin(input: { provider: SocialProvider; pro
       .bind(id, loginId, await hashPassword(crypto.randomUUID()), displayName, email).run();
     account = { id, login_id: loginId, role: "artist", status: "pending", display_name: displayName };
   }
-  if (account.role !== "artist" || account.status === "suspended" || account.status === "deleted") return socialError(origin, provider, "account", stateCookie, nextPath);
+  const roleAllowed = account.role === "artist" || (input.allowAdmin && account.role === "admin");
+  if (!roleAllowed || account.status === "suspended" || account.status === "deleted") return socialError(origin, provider, "account", nextPath);
 
   await env.DB.prepare("INSERT OR IGNORE INTO social_accounts (provider, provider_user_id, account_id, email) VALUES (?, ?, ?, ?)").bind(provider, providerUserId, account.id, email).run();
   await env.DB.prepare("UPDATE accounts SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?").bind(account.id).run();
-  const session = await createSession({ accountId: account.id, loginId: account.login_id, role: "artist", displayName: account.display_name || displayName });
-  const headers = new Headers({ location: `${origin}${nextPath}` });
-  headers.append("set-cookie", `${adminCookie.name}=${session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${adminCookie.maxAge}`);
-  headers.append("set-cookie", `${stateCookie}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
-  headers.append("set-cookie", `${AUTH_NEXT_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`);
-  headers.set("cache-control", "no-store");
-  return new Response(null, { status: 303, headers });
+  const role = account.role === "admin" ? "admin" : "artist";
+  const session = await createSession({ accountId: account.id, loginId: account.login_id, role, displayName: account.display_name || displayName });
+  const location = `${origin}${role === "admin" && nextPath === "/" ? "/admin" : nextPath}`;
+  const response = redirectWithCookies(location, [
+    cookie(adminCookie.name, session, adminCookie.maxAge),
+    clearCookie(stateCookieName(provider)),
+    clearCookie(AUTH_NEXT_COOKIE),
+  ]);
+  response.headers.set("cache-control", "no-store");
+  return response;
 }

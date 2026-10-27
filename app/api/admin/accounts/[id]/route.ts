@@ -1,11 +1,12 @@
 import { env } from "cloudflare:workers";
 import { generateTemporaryPassword, hashPassword, requireAdmin } from "../../../../admin/admin-auth";
+import { forbidden } from "../../../../lib/http";
 
 export const runtime = "edge";
 const allowedStatuses = new Set(["pending", "active", "suspended"]);
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await requireAdmin()) return Response.json({ error: "권한이 없습니다." }, { status: 403 });
+  if (!await requireAdmin()) return forbidden();
   const { id } = await context.params;
   const body = await request.json().catch(() => ({})) as { status?: string; resetPassword?: boolean; promoteAdmin?: boolean };
   if (body.promoteAdmin) {
@@ -29,7 +30,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await requireAdmin()) return Response.json({ error: "권한이 없습니다." }, { status: 403 });
+  if (!await requireAdmin()) return forbidden();
   const { id } = await context.params;
   const result = await env.DB.prepare("UPDATE accounts SET status = 'deleted' WHERE id = ? AND role = 'artist'").bind(id).run();
   if (!result.meta.changes) return Response.json({ error: "계정을 찾을 수 없습니다." }, { status: 404 });

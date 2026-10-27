@@ -2,20 +2,17 @@ import { env } from "cloudflare:workers";
 import { requireArtist } from "../../../admin/admin-auth";
 import { sanitizeArtistProfile, type ProfileInput } from "../../../artist/profile-data";
 import { isAllowedImageFile } from "../../../image-upload";
+import { MAX_IMAGE_BYTES, safeFileName } from "../../../lib/application";
+import { forbidden } from "../../../lib/http";
 
 export const runtime = "edge";
 
 type Application = { payload_json: string; image_keys_json: string };
 type ImageRecord = { type: string; workIndex?: number; key: string; name?: string; contentType?: string };
 
-function safeFileName(file: File) {
-  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
-  return `${crypto.randomUUID()}.${ext.slice(0, 8)}`;
-}
-
 export async function PUT(request: Request) {
   const artist = await requireArtist();
-  if (!artist) return Response.json({ error: "로그인이 필요합니다." }, { status: 403 });
+  if (!artist) return forbidden("로그인이 필요합니다.");
 
   const form = await request.formData();
   const applicationId = typeof form.get("applicationId") === "string" ? String(form.get("applicationId")) : "";
@@ -41,7 +38,7 @@ export async function PUT(request: Request) {
   for (const candidate of files) {
     const value = form.get(candidate.name);
     if (!value || typeof value === "string" || !value.size) continue;
-    if (value.size > 2 * 1024 * 1024 || !(await isAllowedImageFile(value))) return Response.json({ error: "JPG, PNG, WebP 이미지만 장당 2MB 이하로 올려주세요." }, { status: 400 });
+    if (value.size > MAX_IMAGE_BYTES || !(await isAllowedImageFile(value))) return Response.json({ error: "JPG, PNG, WebP 이미지만 장당 2MB 이하로 올려주세요." }, { status: 400 });
     replacements.push({ file: value, type: candidate.type, workIndex: candidate.workIndex });
   }
 

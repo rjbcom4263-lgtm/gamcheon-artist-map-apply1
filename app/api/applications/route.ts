@@ -2,9 +2,10 @@ import { env } from "cloudflare:workers";
 import { requireArtist } from "../../admin/admin-auth";
 import { sanitizeExperiences } from "../../artist/profile-data";
 import { isAllowedImageFile, isAllowedImageType } from "../../image-upload";
+import { MAX_IMAGE_BYTES, REQUIRED_WORK_COUNT, applicationId, cleanText, safeFileName } from "../../lib/application";
+import { forbidden } from "../../lib/http";
 
 export const runtime = "edge";
-const REQUIRED_WORK_COUNT = 5;
 
 type Payload = {
   applicationId?: string;
@@ -16,24 +17,11 @@ type Payload = {
   uploadedImages?: Array<{ type?: string; workIndex?: number; key?: string; name?: string; contentType?: string }>;
 };
 
-function cleanText(value: unknown, max: number) {
-  return typeof value === "string" ? value.trim().slice(0, max) : "";
-}
-
-function safeFileName(file: File) {
-  const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
-  return `${crypto.randomUUID()}.${ext.slice(0, 8)}`;
-}
-
-function applicationId(value: unknown) {
-  return typeof value === "string" && /^GA-\d{8}-[A-F0-9]{6}$/.test(value) ? value : "";
-}
-
 export async function POST(request: Request) {
   const uploaded: string[] = [];
   try {
     const user = await requireArtist();
-    if (!user) return Response.json({ error: "회원가입 또는 로그인 후 신청해주세요." }, { status: 403 });
+    if (!user) return forbidden("회원가입 또는 로그인 후 신청해주세요.");
     const form = await request.formData();
     const raw = form.get("payload");
     if (typeof raw !== "string" || raw.length > 150_000) return Response.json({ error: "신청서 내용이 너무 큽니다." }, { status: 400 });
@@ -53,7 +41,7 @@ export async function POST(request: Request) {
     if (!id) return Response.json({ error: "신청 번호를 다시 확인해주세요." }, { status: 400 });
     const draft = await env.DB.prepare("SELECT id FROM artist_applications WHERE id = ? AND account_id = ? AND status = 'draft'")
       .bind(id, user.accountId).first<{ id: string }>();
-    if (!draft) return Response.json({ error: "이 계정의 신청서가 아니거나 이미 제출된 신청서입니다." }, { status: 403 });
+    if (!draft) return forbidden("이 계정의 신청서가 아니거나 이미 제출된 신청서입니다.");
     const imageRecords: Array<{ type: string; workIndex?: number; key: string; name: string; contentType: string }> = [];
     const imageSlots = new Set<string>();
     if (Array.isArray(payload.uploadedImages)) {
@@ -77,7 +65,7 @@ export async function POST(request: Request) {
     for (const candidate of candidates) {
       const item = form.get(candidate.key);
       if (!item || typeof item === "string" || typeof item.size !== "number" || !item.size) continue;
-      if (item.size > 2 * 1024 * 1024 || !(await isAllowedImageFile(item))) return Response.json({ error: "JPG, PNG, WebP 이미지만 장당 2MB 이하로 올려주세요." }, { status: 400 });
+      if (item.size > MAX_IMAGE_BYTES || !(await isAllowedImageFile(item))) return Response.json({ error: "JPG, PNG, WebP 이미지만 장당 2MB 이하로 올려주세요." }, { status: 400 });
       const slot = candidate.type === "profile" ? "profile" : `work:${candidate.workIndex}`;
       if (imageSlots.has(slot)) return Response.json({ error: "같은 위치의 이미지가 중복되었습니다." }, { status: 400 });
       const key = `applications/${id}/${safeFileName(item)}`;

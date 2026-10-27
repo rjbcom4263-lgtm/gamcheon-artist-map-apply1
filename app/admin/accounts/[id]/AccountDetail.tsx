@@ -5,19 +5,15 @@ import AdminSidebar from "../../AdminSidebar";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Account, Application } from "../../AdminDashboard";
+import { parse } from "../../../lib/json";
+import { APPLICATION_STATUS_LABELS, formatDateTime } from "../../../lib/format";
 
 type Work = { id?: string; title?: string; status?: string; description?: string };
 type Payload = { values?: Record<string, string | boolean>; categories?: string[]; works?: Work[] };
 type ImageRecord = { type: string; workIndex?: number; key: string; name?: string };
 
 const ACCOUNT_STATUS = { pending: "승인 대기", active: "활성", suspended: "정지", deleted: "삭제됨" } as const;
-const STATUS = { received: "접수", reviewing: "검토 중", approved: "승인", hold: "보류", rejected: "반려", cancelled: "신청자 취소" } as const;
 
-function parse<T>(value: string, fallback: T): T { try { return JSON.parse(value) as T; } catch { return fallback; } }
-function date(value: string | null) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value + (value.endsWith("Z") ? "" : "Z")));
-}
 
 export default function AccountDetail({ account, application }: { account: Account; application: Application | null }) {
   const router = useRouter();
@@ -77,9 +73,9 @@ export default function AccountDetail({ account, application }: { account: Accou
       </header>
       <section className="detail-page-grid">
         <div className="dash-card detail-main-card">
-          <DetailSection title="계정 정보"><Info label="아이디" value={row.login_id}/><Info label="작가명" value={row.display_name || "-"}/><Info label="휴대전화" value={row.phone || "-"}/><Info label="이메일" value={row.email || "-"}/><Info label="가입일" value={date(row.created_at)}/><Info label="최근 로그인" value={date(row.last_login_at)}/></DetailSection>
+          <DetailSection title="계정 정보"><Info label="아이디" value={row.login_id}/><Info label="작가명" value={row.display_name || "-"}/><Info label="휴대전화" value={row.phone || "-"}/><Info label="이메일" value={row.email || "-"}/><Info label="가입일" value={formatDateTime(row.created_at)}/><Info label="최근 로그인" value={formatDateTime(row.last_login_at)}/></DetailSection>
           {application ? <>
-            <DetailSection title="연결된 신청서"><Info label="접수번호" value={application.id}/><Info label="신청 상태" value={STATUS[application.status as keyof typeof STATUS] || application.status}/><Info label="분야" value={payload.categories?.join(", ") || "-"}/><Info label="한 줄 소개" value={String(payload.values?.tagline || "-")}/></DetailSection>
+            <DetailSection title="연결된 신청서"><Info label="접수번호" value={application.id}/><Info label="신청 상태" value={APPLICATION_STATUS_LABELS[application.status as keyof typeof APPLICATION_STATUS_LABELS] || application.status}/><Info label="분야" value={payload.categories?.join(", ") || "-"}/><Info label="한 줄 소개" value={String(payload.values?.tagline || "-")}/></DetailSection>
             <DetailSection title="지도 카드 미리보기" wide>
               <div className="map-preview-card account-detail-map-card">
                 {profileImage ? <img src={`/api/admin/images?key=${encodeURIComponent(profileImage.key)}`} alt="지도 카드 대표 이미지"/> : <div className="map-preview-empty">대표 이미지 없음</div>}
