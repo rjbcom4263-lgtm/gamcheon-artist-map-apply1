@@ -13,6 +13,15 @@
 
 Node.js 22.13 이상에서 `npm ci` 후 `npm run dev`로 실행합니다. 배포에는 기존 D1·R2 설정과 운영 환경 변수가 필요합니다.
 
+## 검사 명령
+
+```powershell
+npm run typecheck   # tsc. Cloudflare 바인딩 타입은 worker-configuration.d.ts(wrangler types 산출물)에서 옵니다
+npm run lint        # eslint
+npm test            # Node 내장 테스트 러너
+npm run types       # wrangler.jsonc를 바꾼 뒤 worker-configuration.d.ts 다시 생성
+```
+
 ## DB 스키마와 마이그레이션
 
 테이블은 `migrations/0001_init.sql`에 정의되어 있습니다. 예전에는 각 라우트가 요청마다 `CREATE TABLE IF NOT EXISTS`를 실행했는데, 이제는 코드에서 DDL을 실행하지 않습니다.

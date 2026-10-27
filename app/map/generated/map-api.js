@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at 826a20f + uncommitted changes.
+// Bundled from https://github.com/InSeok211/art-map at 7d67684 + uncommitted changes.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -90,13 +90,15 @@ async function saveTrail(request, env) {
   if (!body || typeof body.id !== "string" || !body.id || body.id.length > 80 || typeof body.startedAt !== "string" || Number.isNaN(Date.parse(body.startedAt)) || !Array.isArray(body.points) || body.points.length > MAX_TRAIL_POINTS) {
     return error(`\uAE30\uB85D \uD615\uC2DD\uC774 \uB9DE\uC9C0 \uC54A\uAC70\uB098 \uB108\uBB34 \uAE41\uB2C8\uB2E4(\uCD5C\uB300 ${MAX_TRAIL_POINTS}\uC810).`, 400);
   }
-  const points2 = body.points.flatMap((point) => {
+  const kept = body.points.flatMap((point) => {
     if (!Array.isArray(point) || point.length !== 4 || !point.every((part) => typeof part === "number" && Number.isFinite(part))) return [];
     const [lng, lat, accuracy, time] = point;
     return insideWorkArea(lng, lat) ? [[round7(lng), round7(lat), Math.round(accuracy * 10) / 10, Math.round(time)]] : [];
   });
-  if (points2.length < 5) return error("\uAC10\uCC9C \uC791\uC5C5 \uBC94\uC704 \uC548\uC5D0\uC11C \uAE30\uB85D\uD55C \uC704\uCE58\uAC00 \uB108\uBB34 \uC801\uC2B5\uB2C8\uB2E4.", 400);
-  const startedAt = new Date(body.startedAt).toISOString();
+  if (kept.length < 5) return error("\uAC10\uCC9C \uC791\uC5C5 \uBC94\uC704 \uC548\uC5D0\uC11C \uAE30\uB85D\uD55C \uC704\uCE58\uAC00 \uB108\uBB34 \uC801\uC2B5\uB2C8\uB2E4.", 400);
+  const first = Math.min(...kept.map((point) => point[3]));
+  const points2 = kept.map(([lng, lat, accuracy, time]) => [lng, lat, accuracy, time - first]);
+  const startedAt = new Date(body.startedAt).toISOString().slice(0, 10);
   await env.DB.prepare(`INSERT INTO gps_trails (id, started_at, points_json) VALUES (?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET points_json = excluded.points_json`).bind(body.id, startedAt, JSON.stringify(points2)).run();
   return json({ trail: { id: body.id, startedAt, points: points2 } });
@@ -492,7 +494,76 @@ function sanitizeWorkshopInfo(value) {
   return Object.keys(info).length ? info : null;
 }
 
+// server/images.ts
+var PREFIX = "map-images/";
+var MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+var photoKey = (id) => `${PREFIX}${id}`;
+var newPhotoId = () => `i-${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`;
+function photoType(bytes) {
+  if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return "image/jpeg";
+  if (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71) return "image/png";
+  const text = (start, end) => String.fromCharCode(...bytes.slice(start, end));
+  if (text(0, 4) === "RIFF" && text(8, 12) === "WEBP") return "image/webp";
+  return null;
+}
+async function uploadPhoto(request, env) {
+  if (Number(request.headers.get("content-length") || 0) > MAX_PHOTO_BYTES + 64 * 1024) return error("\uC0AC\uC9C4\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4(\uCD5C\uB300 2MB).", 413);
+  const form = await request.formData().catch(() => null);
+  const file = form?.get("file");
+  if (!file || typeof file === "string" || !file.size) return error("\uC0AC\uC9C4 \uD30C\uC77C\uC744 \uACE8\uB77C \uC8FC\uC138\uC694.", 400);
+  if (file.size > MAX_PHOTO_BYTES) return error("\uC0AC\uC9C4\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4(\uCD5C\uB300 2MB).", 413);
+  const buffer = await file.arrayBuffer();
+  const type = photoType(new Uint8Array(buffer, 0, Math.min(16, buffer.byteLength)));
+  if (!type) return error("JPEG\xB7PNG\xB7WebP \uC0AC\uC9C4\uB9CC \uC62C\uB9B4 \uC218 \uC788\uC2B5\uB2C8\uB2E4.", 400);
+  const id = newPhotoId();
+  await env.MODELS.put(photoKey(id), buffer, { httpMetadata: { contentType: type } });
+  return json({ photo: id });
+}
+async function deletePhoto(id, env) {
+  if (!PHOTO_FILE_ID.test(id)) return error("\uC0AC\uC9C4 \uBC88\uD638\uAC00 \uB9DE\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.", 400);
+  const { draft, published } = await readBothVersions(env);
+  if (published.workshop?.photo === id) return error("\uACF5\uAC1C \uC9C0\uB3C4\uC5D0 \uB454 \uC0AC\uC9C4\uC785\uB2C8\uB2E4. \uB2E4\uB978 \uC0AC\uC9C4\uC73C\uB85C \uBC14\uAFD4 \uACF5\uAC1C\uD55C \uB4A4 \uC9C0\uC6CC \uC8FC\uC138\uC694.", 409);
+  if (draft.workshop?.photo === id) return error("\uCD08\uC548\uC5D0 \uB454 \uC0AC\uC9C4\uC785\uB2C8\uB2E4. \uBA3C\uC800 \uB2E4\uB978 \uC0AC\uC9C4\uC73C\uB85C \uBC14\uAFD4 \uC8FC\uC138\uC694.", 409);
+  await env.MODELS.delete(photoKey(id));
+  return json({ ok: true });
+}
+async function deleteUnusedPhotos(env) {
+  if (typeof env.MODELS.list !== "function") return 0;
+  const { draft, published } = await readBothVersions(env);
+  const keep = new Set([draft.workshop?.photo, published.workshop?.photo].filter((photo) => !!photo));
+  const unused = [];
+  let cursor;
+  do {
+    const page = await env.MODELS.list({ prefix: PREFIX, cursor });
+    for (const object of page.objects) if (!keep.has(object.key.slice(PREFIX.length))) unused.push(object.key);
+    cursor = page.truncated ? page.cursor : void 0;
+  } while (cursor);
+  if (unused.length) await env.MODELS.delete(unused);
+  return unused.length;
+}
+async function getPhoto(id, request, env) {
+  if (!PHOTO_FILE_ID.test(id)) return new Response("Not found", { status: 404 });
+  const published = (await readPublished(env)).workshop?.photo === id;
+  if (!published && !await env.isAdmin(request)) return new Response("Not found", { status: 404 });
+  const object = await env.MODELS.get(photoKey(id));
+  if (!object) return new Response("Not found", { status: 404 });
+  return new Response(object.body, {
+    headers: {
+      "content-type": object.httpMetadata?.contentType ?? "image/jpeg",
+      "cache-control": published ? "public, max-age=3600" : "private, no-store",
+      "x-content-type-options": "nosniff"
+    }
+  });
+}
+
 // server/buildings.ts
+async function cleanupPhotos(env) {
+  try {
+    await deleteUnusedPhotos(env);
+  } catch (cause) {
+    console.error("unused photo cleanup failed", cause);
+  }
+}
 async function read(env, id) {
   const row = await env.DB.prepare("SELECT edits_json, updated_at FROM map_building_edits WHERE id = ?").bind(id).first();
   return { edits: row ? sanitizeBuildingEdits(JSON.parse(row.edits_json)) : EMPTY_BUILDING_EDITS, updatedAt: row?.updated_at ?? null, exists: Boolean(row) };
@@ -523,16 +594,19 @@ async function saveDraft(request, env) {
   }
   if (draft.workshop?.photo?.startsWith("data:")) return error("\uACF5\uBC29 \uC0AC\uC9C4\uC740 \uC11C\uBC84\uC5D0 \uC62C\uB9B0 \uB4A4 \uC800\uC7A5\uD574 \uC8FC\uC138\uC694. \uAE30\uC874 \uCD08\uC548\uC740 \uC720\uC9C0\uB429\uB2C8\uB2E4.", 400);
   await write(env, "draft", draft);
+  await cleanupPhotos(env);
   return json({ draft });
 }
 async function publish(env) {
   const { draft } = await readBothVersions(env);
   await write(env, "published", draft);
+  await cleanupPhotos(env);
   return json({ published: draft });
 }
 async function discard(env) {
   const published = await readPublished(env);
   await write(env, "draft", published);
+  await cleanupPhotos(env);
   return json({ draft: published });
 }
 
@@ -564,17 +638,17 @@ function checkGlb(buffer) {
 }
 
 // server/models.ts
-var PREFIX = "map-models/";
+var PREFIX2 = "map-models/";
 var isModelId = (value) => typeof value === "string" && MODEL_FILE_ID.test(value);
-var modelKey = (id) => `${PREFIX}${id}.glb`;
+var modelKey = (id) => `${PREFIX2}${id}.glb`;
 var newModelId = () => `m-${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`;
 async function listModels(env) {
   const files = [];
   let cursor;
   do {
-    const page = await env.MODELS.list({ prefix: PREFIX, cursor });
+    const page = await env.MODELS.list({ prefix: PREFIX2, cursor });
     for (const object of page.objects) {
-      const id = object.key.slice(PREFIX.length).replace(/\.glb$/, "");
+      const id = object.key.slice(PREFIX2.length).replace(/\.glb$/, "");
       if (isModelId(id)) files.push({ id, name: object.customMetadata?.name || id, size: object.size, uploaded: object.uploaded.toISOString() });
     }
     cursor = page.truncated ? page.cursor : void 0;
@@ -612,47 +686,7 @@ async function getModel(id, request, env) {
   return new Response(object.body, {
     headers: {
       "content-type": "model/gltf-binary",
-      "cache-control": published ? "public, max-age=86400" : "private, no-store",
-      "x-content-type-options": "nosniff"
-    }
-  });
-}
-
-// server/images.ts
-var PREFIX2 = "map-images/";
-var MAX_PHOTO_BYTES = 2 * 1024 * 1024;
-var photoKey = (id) => `${PREFIX2}${id}`;
-var newPhotoId = () => `i-${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`;
-function photoType(bytes) {
-  if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return "image/jpeg";
-  if (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71) return "image/png";
-  const text = (start, end) => String.fromCharCode(...bytes.slice(start, end));
-  if (text(0, 4) === "RIFF" && text(8, 12) === "WEBP") return "image/webp";
-  return null;
-}
-async function uploadPhoto(request, env) {
-  if (Number(request.headers.get("content-length") || 0) > MAX_PHOTO_BYTES + 64 * 1024) return error("\uC0AC\uC9C4\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4(\uCD5C\uB300 2MB).", 413);
-  const form = await request.formData().catch(() => null);
-  const file = form?.get("file");
-  if (!file || typeof file === "string" || !file.size) return error("\uC0AC\uC9C4 \uD30C\uC77C\uC744 \uACE8\uB77C \uC8FC\uC138\uC694.", 400);
-  if (file.size > MAX_PHOTO_BYTES) return error("\uC0AC\uC9C4\uC774 \uB108\uBB34 \uD07D\uB2C8\uB2E4(\uCD5C\uB300 2MB).", 413);
-  const buffer = await file.arrayBuffer();
-  const type = photoType(new Uint8Array(buffer, 0, Math.min(16, buffer.byteLength)));
-  if (!type) return error("JPEG\xB7PNG\xB7WebP \uC0AC\uC9C4\uB9CC \uC62C\uB9B4 \uC218 \uC788\uC2B5\uB2C8\uB2E4.", 400);
-  const id = newPhotoId();
-  await env.MODELS.put(photoKey(id), buffer, { httpMetadata: { contentType: type } });
-  return json({ photo: id });
-}
-async function getPhoto(id, request, env) {
-  if (!PHOTO_FILE_ID.test(id)) return new Response("Not found", { status: 404 });
-  const published = (await readPublished(env)).workshop?.photo === id;
-  if (!published && !await env.isAdmin(request)) return new Response("Not found", { status: 404 });
-  const object = await env.MODELS.get(photoKey(id));
-  if (!object) return new Response("Not found", { status: 404 });
-  return new Response(object.body, {
-    headers: {
-      "content-type": object.httpMetadata?.contentType ?? "image/jpeg",
-      "cache-control": published ? "public, max-age=86400" : "private, no-store",
+      "cache-control": published ? "public, max-age=3600" : "private, no-store",
       "x-content-type-options": "nosniff"
     }
   });
@@ -1928,6 +1962,8 @@ var busStopIdsFor = (placeId) => stopIds.get(placeId);
 // server/busArrivals.ts
 var cache = /* @__PURE__ */ new Map();
 var pending = /* @__PURE__ */ new Map();
+var failedUntil = /* @__PURE__ */ new Map();
+var CACHE_MS = 3e4;
 var decode = (s) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
 function field(xml, tag) {
   return decode(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`).exec(xml)?.[1]?.trim() ?? "").slice(0, 100);
@@ -1951,24 +1987,32 @@ function parseBusArrivals(xml) {
 async function stopArrivals(key, stopId) {
   const saved = cache.get(stopId);
   if (saved && saved.until > Date.now()) return saved.value;
+  const failed = failedUntil.get(stopId);
+  if (failed && failed > Date.now()) throw new Error("upstream recently failed");
   let job = pending.get(stopId);
   if (!job) {
     job = (async () => {
-      let decodedKey = key;
       try {
-        decodedKey = decodeURIComponent(key);
-      } catch {
+        let decodedKey = key;
+        try {
+          decodedKey = decodeURIComponent(key);
+        } catch {
+        }
+        const upstream = new URL("https://apis.data.go.kr/6260000/BusanBIMS/stopArrByBstopid");
+        upstream.searchParams.set("serviceKey", decodedKey);
+        upstream.searchParams.set("bstopid", stopId);
+        const response = await fetch(upstream, { signal: AbortSignal.timeout(8e3) });
+        if (!response.ok) throw new Error("upstream request failed");
+        const xml = await response.text();
+        if (xml.length > 1e6) throw new Error("upstream response too large");
+        const value = { stopId, arrivals: parseBusArrivals(xml), updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+        cache.set(stopId, { until: Date.now() + CACHE_MS, value });
+        failedUntil.delete(stopId);
+        return value;
+      } catch (cause) {
+        failedUntil.set(stopId, Date.now() + CACHE_MS);
+        throw cause;
       }
-      const upstream = new URL("https://apis.data.go.kr/6260000/BusanBIMS/stopArrByBstopid");
-      upstream.searchParams.set("serviceKey", decodedKey);
-      upstream.searchParams.set("bstopid", stopId);
-      const response = await fetch(upstream, { signal: AbortSignal.timeout(8e3) });
-      if (!response.ok) throw new Error("upstream request failed");
-      const xml = await response.text();
-      if (xml.length > 1e6) throw new Error("upstream response too large");
-      const value = { stopId, arrivals: parseBusArrivals(xml), updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
-      cache.set(stopId, { until: Date.now() + 3e4, value });
-      return value;
     })();
     pending.set(stopId, job);
     const settled = job;
@@ -2017,7 +2061,8 @@ var routes = [
   ["POST", /^\/api\/admin\/map-models$/, true, (request, env) => uploadModel(request, env)],
   ["DELETE", /^\/api\/admin\/map-models\/([\w-]+)$/, true, (_request, env, _url, [id]) => deleteModel(id, env)],
   ["GET", /^\/api\/map-images\/([\w-]+)$/, false, (request, env, _url, [id]) => getPhoto(id, request, env)],
-  ["POST", /^\/api\/admin\/map-images$/, true, (request, env) => uploadPhoto(request, env)]
+  ["POST", /^\/api\/admin\/map-images$/, true, (request, env) => uploadPhoto(request, env)],
+  ["DELETE", /^\/api\/admin\/map-images\/([\w-]+)$/, true, (_request, env, _url, [id]) => deletePhoto(id, env)]
 ];
 var MAP_API_PATHS = routes.map(([, pattern]) => pattern.source);
 async function handleApi(request, env, url = new URL(request.url)) {

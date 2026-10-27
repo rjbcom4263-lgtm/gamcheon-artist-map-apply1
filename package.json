@@ -14,7 +14,9 @@
     "deploy": "powershell -NoProfile -File scripts/deploy.ps1",
     "backup": "powershell -NoProfile -File scripts/backup.ps1",
     "test": "node --experimental-strip-types --no-warnings=ExperimentalWarning --test \"tests/*.test.mts\"",
-    "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p .",
+    "types": "wrangler types",
     "db:migrate": "wrangler d1 migrations apply gamcheon-artist-map-apply-db --remote",
     "db:migrate:local": "wrangler d1 migrations apply gamcheon-artist-map-apply-db --local"
   },

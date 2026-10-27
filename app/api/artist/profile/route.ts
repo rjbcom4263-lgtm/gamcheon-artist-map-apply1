@@ -39,7 +39,7 @@ export async function PUT(request: Request) {
     const value = form.get(candidate.name);
     if (!value || typeof value === "string" || !value.size) continue;
     if (value.size > MAX_IMAGE_BYTES || !(await isAllowedImageFile(value))) return Response.json({ error: "JPG, PNG, WebP 이미지만 장당 2MB 이하로 올려주세요." }, { status: 400 });
-    replacements.push({ file: value, type: candidate.type, workIndex: candidate.workIndex });
+    replacements.push({ file: value, type: candidate.type, workIndex: "workIndex" in candidate ? candidate.workIndex : undefined });
   }
 
   const uploaded: string[] = [];

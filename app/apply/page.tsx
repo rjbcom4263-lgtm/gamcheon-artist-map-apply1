@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { MAX_EXPERIENCES, REQUIRED_WORK_COUNT } from "../lib/application";
 import { compressImage } from "../lib/image-client";
@@ -42,7 +43,8 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/applications/current", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((result: { application?: { status?: string } } | null) => {
+    fetch("/api/applications/current", { cache: "no-store" }).then((response) => response.ok ? response.json() : null).then((value: unknown) => {
+      const result = value as { application?: { status?: string } } | null;
       if (!cancelled && result?.application && result.application.status !== "draft") window.location.replace("/artist");
     }).catch(() => {});
     return () => { cancelled = true; };
@@ -143,7 +145,7 @@ export default function Home() {
         const item = allImages[i];
         if (!item.image) continue;
         setSaveLabel(`사진 저장 중 ${i + 1} / ${allImages.length}`);
-        uploadedImages.push(await uploadApplicationImage(init.id, item.image, item.type, item.workIndex));
+        uploadedImages.push(await uploadApplicationImage(init.id, item.image, item.type, item.type === "work" ? item.workIndex : undefined));
       }
 
       setSaveLabel("신청서 저장 중...");
@@ -151,8 +153,9 @@ export default function Home() {
       data.set("payload", JSON.stringify({ applicationId: init.id, values: { ...values, consentVersion: APPLY_CONSENT_VERSION, experience: experiences.length ? "있음" : "없음", experienceDesc: experiences.map(({ title, description }) => `${title}${description ? `: ${description}` : ""}`).join("\n") }, categories, works: works.map(({ id, title, status, description }) => ({ id, title, status, description })), experiences, expectedImages: { profile: Boolean(profileImage), works: works.map((work) => Boolean(work.image)) }, uploadedImages }));
       const response = await fetch("/api/applications", { method: "POST", body: data });
       const contentType = response.headers.get("content-type") || "";
-      const result = contentType.includes("application/json") ? await response.json() : { error: await response.text() };
+      const result = (contentType.includes("application/json") ? await response.json() : { error: await response.text() }) as { id?: string; error?: string };
       if (!response.ok) throw new Error(result.error || "접수 중 오류가 발생했습니다.");
+      if (!result.id) throw new Error("접수번호를 받지 못했습니다. 잠시 뒤 다시 시도해주세요.");
       clearDraft(); setSubmittedId(result.id);
     } catch (err) { setError(err instanceof Error ? err.message : "접수 중 오류가 발생했습니다."); }
     finally { setSubmitting(false); }
@@ -161,7 +164,7 @@ export default function Home() {
   const summary = useMemo(() => ({ artist: String(values.artistName || "-"), categories: categories.join(", ") || "-", works: works.length }), [values.artistName, categories, works.length]);
 
   return <div className="app apply-make-theme">
-    <header className="topbar"><div className="topbar-inner"><a className="apply-brand" href="/">GAMCHEON ARTISTS<small>LOCAL ARTS AGENCY</small></a><div className="apply-header-actions"><a href="/">프로젝트 홈</a><div className="save-state"><i />{saveLabel}</div></div></div></header>
+    <header className="topbar"><div className="topbar-inner"><Link className="apply-brand" href="/">GAMCHEON ARTISTS<small>LOCAL ARTS AGENCY</small></Link><div className="apply-header-actions"><Link href="/">프로젝트 홈</Link><div className="save-state"><i />{saveLabel}</div></div></div></header>
     <main>
       {SHOW_REGISTRATION_INTRO && <section className="hero">
         <div className="hero-card"><div className="eyebrow">ARTIST REGISTRATION</div><h1>작가님의 작업과<br />이야기를 등록해주세요.</h1><p>등록한 정보는 운영진 확인 후 작가 프로필과 감천 작가 지도에 연결됩니다. 앞으로 전시, 굿즈, 협업을 제안할 때 활용할 기본 프로필이 됩니다.</p><div className="hero-note"><span className="pill">약 10분</span><span className="pill">대표작 5점 준비</span><span className="pill">자동 임시 저장</span></div></div>
@@ -207,6 +210,6 @@ export default function Home() {
         </section>
       </div>
     </main>
-    <footer className="site-footer"><span>GAMCHEON ARTISTS · 작가와 지역의 다음 기회를 연결합니다.</span><div><a href="/">프로젝트 홈</a><a href="/login">작가 로그인</a><a href="/privacy">개인정보 처리방침</a><a href="/third-party-notices.txt">오픈소스·지도 데이터 출처</a></div></footer>
+    <footer className="site-footer"><span>GAMCHEON ARTISTS · 작가와 지역의 다음 기회를 연결합니다.</span><div><Link href="/">프로젝트 홈</Link><Link href="/login">작가 로그인</Link><Link href="/privacy">개인정보 처리방침</Link><a href="/third-party-notices.txt">오픈소스·지도 데이터 출처</a></div></footer>
   </div>;
 }
