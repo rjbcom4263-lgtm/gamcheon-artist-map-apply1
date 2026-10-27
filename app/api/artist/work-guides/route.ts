@@ -1,8 +1,7 @@
 import { env } from "cloudflare:workers";
 import { requireArtist } from "../../../admin/admin-auth";
-import { ensureApplicationsTable } from "../../../applications-db";
 import { isAllowedImageFile } from "../../../image-upload";
-import { ensureWorkGuidesTable, getGuide, type GuideRow } from "../../../work-guides/db";
+import { getGuide, type GuideRow } from "../../../work-guides/db";
 
 export const runtime = "edge";
 
@@ -12,7 +11,6 @@ const validId = (id: string) => /^WG-[0-9a-f-]{36}$/.test(id);
 export async function GET() {
   const artist = await requireArtist();
   if (!artist) return bad("로그인이 필요합니다.", 403);
-  await ensureWorkGuidesTable();
   const rows = await env.DB.prepare("SELECT * FROM artwork_guides WHERE account_id = ? ORDER BY created_at DESC")
     .bind(artist.accountId).all<GuideRow>();
   return Response.json({ guides: rows.results }, { headers: { "cache-control": "no-store" } });
@@ -38,8 +36,6 @@ export async function POST(request: Request) {
   const image = file instanceof File && file.size ? file : null;
   if (image && (image.size > 2 * 1024 * 1024 || !await isAllowedImageFile(image))) return bad("JPG, PNG, WebP 이미지만 2MB 이하로 올려주세요.");
 
-  await ensureApplicationsTable();
-  await ensureWorkGuidesTable();
   const application = await env.DB.prepare("SELECT id, artist_name, image_keys_json FROM artist_applications WHERE account_id = ? AND status = 'approved' ORDER BY created_at DESC LIMIT 1")
     .bind(artist.accountId).first<{ id: string; artist_name: string; image_keys_json: string }>();
   if (!application) return bad("승인된 작가 정보가 필요합니다.", 403);

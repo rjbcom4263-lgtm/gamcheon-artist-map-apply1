@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { requireAdmin } from "../../../../admin/admin-auth";
-import { ensureWorkGuidesTable, getGuide } from "../../../../work-guides/db";
+import { getGuide } from "../../../../work-guides/db";
 import { GUIDE_LANGUAGES, type Translation } from "../../../../work-guides/shared";
 
 export const runtime = "edge";
@@ -28,7 +28,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!translatedTitle || translatedTitle.length > 150 || !translatedDescription || translatedDescription.length > 3000) return Response.json({ error: "번역 제목과 해설을 함께 입력해 주세요." }, { status: 400 });
     translations[code] = { title: translatedTitle, description: translatedDescription };
   }
-  await ensureWorkGuidesTable();
   const guide = await getGuide(id);
   if (!guide || (!guide.pending_title && !guide.published_title)) return Response.json({ error: "검수할 작품을 찾을 수 없습니다." }, { status: 404 });
   const nextImageKey = guide.pending_image_key || guide.published_image_key;

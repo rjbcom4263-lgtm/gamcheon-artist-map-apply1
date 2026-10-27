@@ -13,12 +13,6 @@ function parse(value: string) {
 }
 
 async function getArtists() {
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS artist_applications (
-    id TEXT PRIMARY KEY, artist_name TEXT NOT NULL, phone TEXT NOT NULL,
-    email TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'received',
-    payload_json TEXT NOT NULL, image_keys_json TEXT NOT NULL DEFAULT '[]',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`).run();
   const result = await env.DB.prepare("SELECT id, artist_name, email, payload_json, image_keys_json FROM artist_applications WHERE status = 'approved' ORDER BY created_at DESC").all<ArtistRow>();
   return result.results || [];
 }

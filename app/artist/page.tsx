@@ -7,7 +7,6 @@ import { artistRowToProfile } from "../artists/public-artist";
 import PasswordChangeForm from "./PasswordChangeForm";
 import ProfileEditForm from "./ProfileEditForm";
 import { EDITABLE_APPLICATION_QUERY, PROFILE_EDITOR_ID, profileEditorControl } from "./profile-editor-controls";
-import { ensureApplicationsTable } from "../applications-db";
 import { LogoutButton } from "../LogoutButton";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +37,6 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
   const account = await env.DB.prepare("SELECT id, login_id, status, display_name, phone, email, created_at, last_login_at FROM accounts WHERE id = ?")
     .bind(accountId).first<Account>();
   if (!account) redirect(isAdmin ? "/admin" : "/login");
-  await ensureApplicationsTable();
   const name = account.display_name || account.login_id;
   const applicationsQuery = env.DB.prepare(`SELECT id, artist_name, phone, email, status, payload_json, image_keys_json, created_at
     FROM artist_applications

@@ -1,7 +1,7 @@
 ﻿# 감천 작가 지도 — Windows 빌드·배포 스크립트
 #
 # 사용법 (프로젝트 폴더에서):
-#   npm run deploy                 # 설치(필요할 때만) → 빌드 → Cloudflare 배포
+#   npm run deploy                 # 설치(필요할 때만) → 빌드 → D1 마이그레이션 → Cloudflare 배포
 #   npm run deploy -- -BuildOnly   # 빌드까지만
 #   npm run deploy -- -SkipInstall # npm ci 건너뛰기
 #
@@ -86,8 +86,10 @@ try {
     return
   }
 
-  # 3. 배포 (계정 확인 → deploy)
+  # 3. 배포 (계정 확인 → DB 마이그레이션 → deploy)
+  #    migrations/*.sql 중 아직 적용되지 않은 것만 운영 D1에 적용합니다. 새 파일이 있으면 wrangler가 목록을 보여 주고 확인을 받습니다.
   Invoke-Checked "wrangler whoami" { node node_modules\wrangler\bin\wrangler.js whoami }
+  Invoke-Checked "d1 migrations apply" { node node_modules\wrangler\bin\wrangler.js d1 migrations apply gamcheon-artist-map-apply-db --remote }
   Invoke-Checked "wrangler deploy" { node node_modules\wrangler\bin\wrangler.js deploy }
   Write-Host "[deploy] 배포 완료: https://artist-map.com/"
 }

@@ -1,11 +1,10 @@
 import QRCode from "qrcode";
-import { ensureWorkGuidesTable, getGuide } from "../../../../work-guides/db";
+import { getGuide } from "../../../../work-guides/db";
 
 export const runtime = "edge";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await ensureWorkGuidesTable();
   const guide = await getGuide(id);
   if (!guide?.published_title) return new Response("Not found", { status: 404 });
   const url = `${new URL(request.url).origin}/w/${encodeURIComponent(id)}`;

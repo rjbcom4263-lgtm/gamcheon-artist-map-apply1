@@ -1,7 +1,6 @@
 import { env } from "cloudflare:workers";
 import { requireArtist } from "../../../admin/admin-auth";
 import { sanitizeArtistProfile, type ProfileInput } from "../../../artist/profile-data";
-import { ensureApplicationsTable } from "../../../applications-db";
 import { isAllowedImageFile } from "../../../image-upload";
 
 export const runtime = "edge";
@@ -28,7 +27,6 @@ export async function PUT(request: Request) {
   const cleaned = sanitizeArtistProfile(input);
   if ("error" in cleaned) return Response.json(cleaned, { status: 400 });
 
-  await ensureApplicationsTable();
   const current = await env.DB.prepare(`SELECT payload_json, image_keys_json FROM artist_applications
     WHERE id = ? AND status = 'approved' AND account_id = ?`)
     .bind(applicationId, artist.accountId).first<Application>();

@@ -1,12 +1,11 @@
 import { env } from "cloudflare:workers";
 import { requireAdmin } from "../../../admin/admin-auth";
-import { ensureWorkGuidesTable, type GuideRow } from "../../../work-guides/db";
+import { type GuideRow } from "../../../work-guides/db";
 
 export const runtime = "edge";
 
 export async function GET(request: Request) {
   if (!await requireAdmin()) return Response.json({ error: "운영자 로그인이 필요합니다." }, { status: 403 });
-  await ensureWorkGuidesTable();
   if (new URL(request.url).searchParams.get("count") === "1") {
     const result = await env.DB.prepare("SELECT COUNT(*) AS count FROM artwork_guides WHERE pending_title IS NOT NULL").first<{ count: number }>();
     return Response.json({ count: result?.count || 0 }, { headers: { "cache-control": "no-store" } });

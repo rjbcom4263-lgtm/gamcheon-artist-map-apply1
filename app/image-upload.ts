@@ -11,6 +11,12 @@ export function isAllowedImageBytes(contentType: string, bytes: Uint8Array) {
   return false;
 }
 
+/** R2 키 `applications/{신청서 id}/{파일명}`에서 신청서 id를 꺼냅니다. 형식이 다르면 null. */
+export function applicationIdFromImageKey(key: string) {
+  const match = /^applications\/([A-Za-z0-9_-]+)\/[^/]+$/.exec(key);
+  return match && !key.includes("..") ? match[1] : null;
+}
+
 export async function isAllowedImageFile(file: Blob) {
   if (!isAllowedImageType(file.type)) return false;
   return isAllowedImageBytes(file.type, new Uint8Array(await file.slice(0, 12).arrayBuffer()));

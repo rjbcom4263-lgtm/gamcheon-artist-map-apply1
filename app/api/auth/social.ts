@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { adminCookie, createSession, ensureAccountTables, hashPassword } from "../../admin/admin-auth";
+import { adminCookie, createSession, hashPassword } from "../../admin/admin-auth";
 import { AUTH_NEXT_COOKIE, safeNextPath } from "../../auth-next";
 
 export type SocialProvider = "google" | "kakao" | "naver";
@@ -17,17 +17,6 @@ export async function completeSocialLogin(input: { provider: SocialProvider; pro
   const nextPath = safeNextPath(input.nextPath, "/");
   const email = input.email?.trim().toLowerCase().slice(0, 150) || "";
   const displayName = input.displayName?.trim().slice(0, 100) || email.split("@")[0] || provider;
-
-  await ensureAccountTables();
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS social_accounts (
-    provider TEXT NOT NULL,
-    provider_user_id TEXT NOT NULL,
-    account_id TEXT NOT NULL,
-    email TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (provider, provider_user_id)
-  )`).run();
-  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_social_accounts_account ON social_accounts (account_id)").run();
 
   let account = await env.DB.prepare(`SELECT a.id, a.login_id, a.role, a.status, a.display_name FROM social_accounts s
     JOIN accounts a ON a.id = s.account_id WHERE s.provider = ? AND s.provider_user_id = ?`).bind(provider, providerUserId).first<Account>();

@@ -1,6 +1,5 @@
 import { env } from "cloudflare:workers";
 import { requireArtist } from "../../admin/admin-auth";
-import { ensureApplicationsTable } from "../../applications-db";
 import { sanitizeExperiences } from "../../artist/profile-data";
 import { isAllowedImageFile, isAllowedImageType } from "../../image-upload";
 
@@ -52,7 +51,6 @@ export async function POST(request: Request) {
 
     const id = applicationId(payload.applicationId);
     if (!id) return Response.json({ error: "신청 번호를 다시 확인해주세요." }, { status: 400 });
-    await ensureApplicationsTable();
     const draft = await env.DB.prepare("SELECT id FROM artist_applications WHERE id = ? AND account_id = ? AND status = 'draft'")
       .bind(id, user.accountId).first<{ id: string }>();
     if (!draft) return Response.json({ error: "이 계정의 신청서가 아니거나 이미 제출된 신청서입니다." }, { status: 403 });

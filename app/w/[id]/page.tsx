@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { ensureWorkGuidesTable, getGuide, parseTranslations } from "../../work-guides/db";
+import { getGuide, parseTranslations } from "../../work-guides/db";
 import { GUIDE_LANGUAGES } from "../../work-guides/shared";
 import GuideStory from "./GuideStory";
 import "./work-guide.css";
@@ -10,7 +10,6 @@ export const dynamic = "force-dynamic";
 export default async function WorkGuidePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!/^WG-[0-9a-f-]{36}$/.test(id)) notFound();
-  await ensureWorkGuidesTable();
   const guide = await getGuide(id);
   if (!guide?.published_title || !guide.published_description || !guide.published_image_key) notFound();
   const translations = parseTranslations(guide.translations_json);

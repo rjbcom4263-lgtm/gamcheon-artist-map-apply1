@@ -12,7 +12,8 @@
     {
       "binding": "DB",
       "database_name": "gamcheon-artist-map-apply-db",
-      "database_id": "96173dee-429c-4513-8630-8ea3f4323bd2"
+      "database_id": "96173dee-429c-4513-8630-8ea3f4323bd2",
+      "migrations_dir": "migrations"
     }
   ],
   "r2_buckets": [

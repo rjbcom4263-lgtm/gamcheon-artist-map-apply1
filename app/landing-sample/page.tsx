@@ -3,45 +3,31 @@ import { env } from "cloudflare:workers";
 import { requireSession } from "../admin/admin-auth";
 import { statLabels } from "./content";
 
-type ApplicationRow = { artist_name: string; phone: string; email: string; status: string; payload_json: string };
-type ApplicationPayload = { values?: Record<string, string | boolean>; works?: unknown[] };
+type HomeStatsRow = { artists: number; works: number; spaces: number; preparing: number };
 
-function parsePayload(value: string): ApplicationPayload {
-  try { return JSON.parse(value) as ApplicationPayload; } catch { return {}; }
-}
-
-function text(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
+// 홈 통계는 SQL에서 바로 집계합니다. 예전에는 전체 신청서의 payload_json을 매 요청 내려받아 JS에서 세었습니다.
+// - artists: 승인 신청서를 이메일 → 전화 → 작가명 순으로 식별해 소문자로 묶은 수
+// - works: 승인 신청서 payload의 works 배열 길이 합
+// - spaces: 승인 신청서의 공방명 → 주소 순으로 식별해 소문자로 묶은 수
+// - preparing: 접수·심사·보류 상태인 신청 수
+const HOME_STATS_SQL = `SELECT
+  (SELECT COUNT(DISTINCT lower(COALESCE(NULLIF(trim(email), ''), NULLIF(trim(phone), ''), NULLIF(trim(artist_name), ''))))
+     FROM artist_applications WHERE status = 'approved') AS artists,
+  (SELECT COALESCE(SUM(CASE WHEN json_valid(payload_json) AND json_type(payload_json, '$.works') = 'array'
+                            THEN json_array_length(payload_json, '$.works') ELSE 0 END), 0)
+     FROM artist_applications WHERE status = 'approved') AS works,
+  (SELECT COUNT(DISTINCT lower(COALESCE(NULLIF(trim(json_extract(payload_json, '$.values.studioName')), ''),
+                                        NULLIF(trim(json_extract(payload_json, '$.values.address')), ''))))
+     FROM artist_applications WHERE status = 'approved' AND json_valid(payload_json)) AS spaces,
+  (SELECT COUNT(*) FROM artist_applications WHERE status IN ('received', 'reviewing', 'hold')) AS preparing`;
 
 async function getHomeStats() {
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS artist_applications (
-    id TEXT PRIMARY KEY, artist_name TEXT NOT NULL, phone TEXT NOT NULL,
-    email TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'received',
-    payload_json TEXT NOT NULL, image_keys_json TEXT NOT NULL DEFAULT '[]',
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`).run();
-  const result = await env.DB.prepare("SELECT artist_name, phone, email, status, payload_json FROM artist_applications").all<ApplicationRow>();
-  const rows = result.results || [];
-  const approved = rows.filter((row) => row.status === "approved");
-  const artistKeys = new Set<string>();
-  const spaces = new Set<string>();
-  let works = 0;
-  for (const row of approved) {
-    const payload = parsePayload(row.payload_json);
-    const artistKey = text(row.email) || text(row.phone) || text(row.artist_name);
-    if (artistKey) artistKeys.add(artistKey.toLowerCase());
-    works += Array.isArray(payload.works) ? payload.works.length : 0;
-    const values = payload.values || {};
-    const space = text(values.studioName) || text(values.address);
-    if (space) spaces.add(space.toLowerCase());
-  }
-  const preparingProjects = rows.filter((row) => ["received", "reviewing", "hold"].includes(row.status)).length;
+  const row = await env.DB.prepare(HOME_STATS_SQL).first<HomeStatsRow>();
   return [
-    [statLabels[0][0], artistKeys.size, statLabels[0][1]],
-    [statLabels[1][0], works, statLabels[1][1]],
-    [statLabels[2][0], spaces.size, statLabels[2][1]],
-    [statLabels[3][0], preparingProjects, statLabels[3][1]],
+    [statLabels[0][0], row?.artists ?? 0, statLabels[0][1]],
+    [statLabels[1][0], row?.works ?? 0, statLabels[1][1]],
+    [statLabels[2][0], row?.spaces ?? 0, statLabels[2][1]],
+    [statLabels[3][0], row?.preparing ?? 0, statLabels[3][1]],
   ] as [string, number, string][];
 }
 

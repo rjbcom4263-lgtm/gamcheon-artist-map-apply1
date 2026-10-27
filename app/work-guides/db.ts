@@ -9,27 +9,7 @@ export type GuideRow = {
   pending_revision: number; created_at: string;
 };
 
-export async function ensureWorkGuidesTable() {
-  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS artwork_guides (
-    id TEXT PRIMARY KEY NOT NULL,
-    account_id TEXT NOT NULL,
-    application_id TEXT NOT NULL,
-    artist_name TEXT NOT NULL,
-    pending_title TEXT,
-    pending_description TEXT,
-    pending_image_key TEXT,
-    published_title TEXT,
-    published_description TEXT,
-    published_image_key TEXT,
-    translations_json TEXT NOT NULL DEFAULT '{}',
-    submitted_at TEXT,
-    published_at TEXT,
-    pending_revision INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  )`).run();
-  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_artwork_guides_account ON artwork_guides (account_id)").run();
-  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_artwork_guides_submitted ON artwork_guides (submitted_at)").run();
-}
+// artwork_guides 테이블 스키마는 migrations/0001_init.sql에 있습니다.
 
 export async function getGuide(id: string) {
   return env.DB.prepare("SELECT * FROM artwork_guides WHERE id = ?").bind(id).first<GuideRow>();

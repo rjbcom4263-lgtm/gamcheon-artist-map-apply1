@@ -14,7 +14,8 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-// Packages Sites metadata and migrations after Vite finishes compiling.
+// Vite 빌드가 끝난 뒤 Sites(클라우드 배포) 메타데이터를 dist/.openai에 복사합니다.
+// DB 스키마는 migrations/*.sql을 wrangler d1 migrations로 적용하므로 여기서 다루지 않습니다.
 export function sites(): Plugin {
   let root = process.cwd();
 
@@ -27,18 +28,12 @@ export function sites(): Plugin {
     async closeBundle() {
       const outputDirectory = resolve(root, "dist", ".openai");
       const hostingConfig = resolve(root, ".openai", "hosting.json");
-      const drizzleSource = resolve(root, "drizzle");
 
       await rm(outputDirectory, { recursive: true, force: true });
       await mkdir(outputDirectory, { recursive: true });
 
       if (await exists(hostingConfig)) {
         await cp(hostingConfig, resolve(outputDirectory, "hosting.json"));
-      }
-      if (await exists(drizzleSource)) {
-        await cp(drizzleSource, resolve(outputDirectory, "drizzle"), {
-          recursive: true,
-        });
       }
     },
   };

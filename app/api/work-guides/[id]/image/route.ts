@@ -1,12 +1,11 @@
 import { env } from "cloudflare:workers";
 import { requireSession } from "../../../../admin/admin-auth";
-import { ensureWorkGuidesTable, getGuide } from "../../../../work-guides/db";
+import { getGuide } from "../../../../work-guides/db";
 
 export const runtime = "edge";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await ensureWorkGuidesTable();
   const guide = await getGuide(id);
   if (!guide) return new Response("Not found", { status: 404 });
   const pending = new URL(request.url).searchParams.get("variant") === "pending";

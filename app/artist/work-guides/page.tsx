@@ -1,7 +1,6 @@
 import { env } from "cloudflare:workers";
 import { redirect } from "next/navigation";
 import { requireArtist } from "../../admin/admin-auth";
-import { ensureApplicationsTable } from "../../applications-db";
 import type { SourceWork } from "../../work-guides/sources";
 import ArtistWorkGuides from "./ArtistWorkGuides";
 import "./work-guides.css";
@@ -9,7 +8,6 @@ import "./work-guides.css";
 export default async function ArtistWorkGuidesPage() {
   const artist = await requireArtist();
   if (!artist) redirect("/login?next=/artist/work-guides");
-  await ensureApplicationsTable();
   const application = await env.DB.prepare("SELECT payload_json, image_keys_json FROM artist_applications WHERE account_id = ? AND status = 'approved' ORDER BY created_at DESC LIMIT 1")
     .bind(artist.accountId).first<{ payload_json: string; image_keys_json: string }>();
   let sources: SourceWork[] = [];

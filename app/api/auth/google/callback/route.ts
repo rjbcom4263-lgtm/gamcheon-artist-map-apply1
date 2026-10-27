@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { cookies } from "next/headers";
-import { adminCookie, createSession, ensureAccountTables, hashPassword } from "../../../../admin/admin-auth";
+import { adminCookie, createSession, hashPassword } from "../../../../admin/admin-auth";
 import { AUTH_NEXT_COOKIE, safeNextCookie } from "../../../../auth-next";
 
 const STATE_COOKIE = "gamcheon_google_state";
@@ -41,17 +41,6 @@ export async function GET(request: Request) {
     const profile = await profileResponse.json() as GoogleUser;
     const email = profile.email?.trim().toLowerCase() || "";
     if (!profileResponse.ok || !profile.sub || !email || profile.email_verified !== true) return redirectError(origin, "google_profile", nextPath);
-
-    await ensureAccountTables();
-    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS social_accounts (
-      provider TEXT NOT NULL,
-      provider_user_id TEXT NOT NULL,
-      account_id TEXT NOT NULL,
-      email TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (provider, provider_user_id)
-    )`).run();
-    await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_social_accounts_account ON social_accounts (account_id)").run();
 
     let account = await env.DB.prepare(`SELECT a.id, a.login_id, a.role, a.status, a.display_name FROM social_accounts s
       JOIN accounts a ON a.id = s.account_id WHERE s.provider = 'google' AND s.provider_user_id = ?`).bind(profile.sub).first<Account>();
