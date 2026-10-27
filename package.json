@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "bash scripts/build-verified.sh",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
+    "deploy": "powershell -NoProfile -File scripts/deploy.ps1",
     "test": "npm run build && node --test \"tests/*.test.mjs\"",
     "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate"
