@@ -57,6 +57,34 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 수동으로 할 때는 `npx vinext build` 뒤 `npx wrangler deploy`입니다(한글 경로에서는 위와 같이 드라이브 매핑이 필요합니다).
 
+## 운영 환경
+
+### 백업
+
+```powershell
+npm run backup            # D1 전체 → backups/d1-<날짜>.sql, rclone이 있으면 R2 → backups/r2-<날짜>/
+npm run backup -- -SkipR2 # D1만
+```
+
+- D1에는 신청서·계정·작품 해설이, R2에는 작품 이미지가 있습니다. D1만 받으면 이미지가 빠집니다.
+- R2는 rclone으로 받습니다. Cloudflare 대시보드 → R2 → Manage R2 API Tokens에서 읽기 전용 토큰을 만들고, `rclone config`로 S3 호환 remote를 `gamcheon-r2` 이름으로 추가하세요(provider Cloudflare, endpoint `https://<계정 ID>.r2.cloudflarestorage.com`).
+- 복원: `wrangler d1 execute gamcheon-artist-map-apply-db --remote --file backups/d1-<날짜>.sql`. 운영 DB에 바로 넣기 전에 로컬(`--local`)에서 먼저 확인하세요.
+- `backups/`는 Git에 올라가지 않습니다. 개인정보가 들어 있으니 안전한 저장소로 옮기고 복사본은 지우세요. 주 1회 정도 받아 두길 권합니다.
+
+### 로그인 속도 제한 (Cloudflare 대시보드)
+
+코드에는 속도 제한이 없습니다. Cloudflare 대시보드 → artist-map.com → Security → WAF → Rate limiting rules에서 다음 규칙을 추가하세요.
+
+| 규칙 | 조건 | 제한 |
+| --- | --- | --- |
+| 로그인 | URI Path equals `/api/auth/login`, Method POST | 같은 IP 10회 / 1분 → Block 10분 |
+| 가입 | URI Path equals `/api/auth/signup`, Method POST | 같은 IP 5회 / 10분 → Block 1시간 |
+| 소셜 로그인 시작 | URI Path starts with `/api/auth/` and ends with `/start` | 같은 IP 20회 / 1분 → Block 10분 |
+
+### 폴더 이름
+
+프로젝트 폴더 경로에 한글이 들어가면 wrangler·vinext·tsc가 Node 접근 위반으로 종료됩니다(이 PC의 Node 22.13 기준). 폴더 이름은 영문으로 두세요. 배포·백업 스크립트는 한글 경로를 만나면 드라이브 문자에 매핑해 우회하지만, `npx wrangler ...`를 직접 치는 경우는 우회되지 않습니다.
+
 ### 걸리는 시간 기준 (이 PC, 2026-10-27 측정)
 
 | 단계 | 시간 |
