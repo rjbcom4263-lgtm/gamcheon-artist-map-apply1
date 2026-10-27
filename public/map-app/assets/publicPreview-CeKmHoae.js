@@ -1,0 +1,1 @@
+var e=`gamcheon-map-alleys-v1`;export{e as t};
