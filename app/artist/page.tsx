@@ -7,7 +7,8 @@ import { artistRowToProfile } from "../artists/public-artist";
 import PasswordChangeForm from "./PasswordChangeForm";
 import ProfileEditForm from "./ProfileEditForm";
 import { EDITABLE_APPLICATION_QUERY, PROFILE_EDITOR_ID, profileEditorControl } from "./profile-editor-controls";
-import { ensureApplicationsTable, linkLegacyApplication } from "../applications-db";
+import { ensureApplicationsTable } from "../applications-db";
+import { LogoutButton } from "../LogoutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -39,9 +40,6 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
   if (!account) redirect(isAdmin ? "/admin" : "/login");
   await ensureApplicationsTable();
   const name = account.display_name || account.login_id;
-  const phone = account?.phone || "";
-  const email = account?.email || "";
-  if (!isAdmin) await linkLegacyApplication({ id: account.id, displayName: name, phone, email });
   const applicationsQuery = env.DB.prepare(`SELECT id, artist_name, phone, email, status, payload_json, image_keys_json, created_at
     FROM artist_applications
     WHERE account_id = ?
@@ -77,7 +75,7 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
         <a href="#channels"><b>{canEdit ? "05" : "04"}</b>방문·채널</a>
         <a href="#account"><b>{canEdit ? "06" : "05"}</b>계정 관리</a>
       </nav>
-      <div className="artist-sidebar-foot">{isAdmin && <Link href={accountUrl}>관리자 화면으로 ↗</Link>}<Link href="/">프로젝트 홈 ↗</Link><a href={isAdmin ? "/api/admin/logout" : "/api/auth/logout"}>로그아웃</a></div>
+      <div className="artist-sidebar-foot">{isAdmin && <Link href={accountUrl}>관리자 화면으로 ↗</Link>}<Link href="/">프로젝트 홈 ↗</Link><LogoutButton admin={isAdmin}/></div>
     </aside>
 
     <div className="artist-stage">

@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { cookies } from "next/headers";
-import { adminCookie, createSession, ensureAccountTables, sha256Hex } from "../../../../admin/admin-auth";
+import { adminCookie, createSession, ensureAccountTables, hashPassword } from "../../../../admin/admin-auth";
 import { AUTH_NEXT_COOKIE, safeNextCookie } from "../../../../auth-next";
 
 const STATE_COOKIE = "gamcheon_google_state";
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       const loginId = `google_${profile.sub}`;
       const displayName = profile.name?.trim().slice(0, 100) || email.split("@")[0];
       await env.DB.prepare("INSERT INTO accounts (id, login_id, password_hash, role, status, display_name, phone, email) VALUES (?, ?, ?, 'artist', 'pending', ?, '', ?)")
-        .bind(id, loginId, await sha256Hex(crypto.randomUUID()), displayName, email).run();
+        .bind(id, loginId, await hashPassword(crypto.randomUUID()), displayName, email).run();
       account = { id, login_id: loginId, role: "artist", status: "pending", display_name: displayName };
     }
     if ((account.role !== "artist" && account.role !== "admin") || account.status === "suspended" || account.status === "deleted") return redirectError(origin, "google_account", nextPath);

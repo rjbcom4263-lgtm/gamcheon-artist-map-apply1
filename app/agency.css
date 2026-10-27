@@ -38,7 +38,7 @@ body.agency-active { background: #fff; color: #171717; }
 .agency-desktop-nav a:hover::after { right:0; }
 .agency-desktop-nav a.is-active::after { right:0; background:#171717; }
 .agency-utility { display:flex; justify-content:flex-end; align-items:center; gap:18px; color:#aaa; font-size:11px; }
-.agency-utility button { width:28px; height:28px; border:0; background:none; font-size:20px; }
+.agency-utility button:not(.logout-button) { width:28px; height:28px; border:0; background:none; font-size:20px; }
 .agency-account-menu { position:relative; }
 .agency-account-menu summary { cursor:pointer; list-style:none; }
 .agency-account-menu summary::-webkit-details-marker { display:none; }

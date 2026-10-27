@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LogoutButton } from "../LogoutButton";
 import "./admin-layout.css";
 
 // 모든 운영자 화면이 함께 쓰는 왼쪽 메뉴입니다. 화면마다 따로 만들던 메뉴를 하나로 모아, 어느 화면에서든
@@ -46,8 +47,8 @@ export default function AdminSidebar({ active, adminName = "운영자" }: { acti
       </div>)}
       <div className="nav-group"><p>바로가기</p><Link className="sidebar-link" href="/map" target="_blank"><span aria-hidden="true">↗</span>공개 지도 보기</Link>
         {/* 좁은 화면에서는 아래 계정 카드가 숨으므로 메뉴 끝에 로그아웃을 둡니다. */}
-        <a className="sidebar-link sidebar-logout" href="/api/admin/logout">로그아웃</a></div>
+        <LogoutButton admin className="sidebar-link sidebar-logout"/></div>
     </nav>
-    <div className="dash-sidebar-card"><strong>{adminName}</strong><span>운영자 계정</span><a href="/api/admin/logout">로그아웃</a></div>
+    <div className="dash-sidebar-card"><strong>{adminName}</strong><span>운영자 계정</span><LogoutButton admin/></div>
   </aside>;
 }

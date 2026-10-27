@@ -1,4 +1,10 @@
-# Cloudflare 정적 파일 응답 헤더입니다.
+# Cloudflare 정적 파일 응답 헤더입니다. 동적 응답의 보안 헤더는 worker/index.ts에서 붙입니다.
+
+/*
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
 
 # 감천 골목지도(art-map 저장소에서 npm run export:site로 넣음): 공개 지도와 편집 앱은 이 사이트 안에서만 끼워 씁니다.
 /map-app/*

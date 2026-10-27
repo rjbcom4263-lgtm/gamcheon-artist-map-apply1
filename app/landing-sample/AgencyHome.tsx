@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { chooseLoaderVariant, goods, heroSlides, loaderBrandLines, news, site } from "./content";
+import { LogoutButton } from "../LogoutButton";
 
 type HomeStat = readonly [string, number, string];
 type HeroDirection = 1 | -1;
@@ -163,11 +164,11 @@ export default function AgencyHome({ user, stats }: { user: { role: "admin" | "a
     <header className="agency-header">
       <Link className="agency-brand" href="/"><b>{site.brand}</b><small>{site.subBrand}</small></Link>
       <nav className="agency-desktop-nav" aria-label="주요 메뉴">{site.nav.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}</nav>
-      <div className="agency-utility">{user ? <>{user.role === "admin" ? <details className="agency-account-menu"><summary>내 정보</summary><div><Link href="/admin">관리자 페이지</Link><Link href="/admin?view=accounts">작가 페이지</Link></div></details> : <Link href="/artist">내 정보</Link>}<a href={user.role === "admin" ? "/api/admin/logout" : "/api/auth/logout"}>로그아웃</a></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}<button aria-label="검색">⌕</button></div>
+      <div className="agency-utility">{user ? <>{user.role === "admin" ? <details className="agency-account-menu"><summary>내 정보</summary><div><Link href="/admin">관리자 페이지</Link><Link href="/admin?view=accounts">작가 페이지</Link></div></details> : <Link href="/artist">내 정보</Link>}<LogoutButton admin={user.role === "admin"}/></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}<button aria-label="검색">⌕</button></div>
       <button className={`agency-menu-button ${menuOpen ? "is-open" : ""}`} aria-label="메뉴" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><i /><i /></button>
     </header>
 
-    <aside className={`agency-mobile-menu ${menuOpen ? "is-open" : ""}`}>{site.nav.map(([label, href], index) => <Link key={label} href={href} onClick={() => setMenuOpen(false)}><span>0{index + 1}</span>{label}</Link>)}<div className="agency-mobile-auth">{user ? <>{user.role === "admin" ? <><Link href="/admin">관리자 페이지</Link><Link href="/admin?view=accounts">작가 페이지</Link></> : <Link href="/artist">내 정보</Link>}<a href={user.role === "admin" ? "/api/admin/logout" : "/api/auth/logout"}>로그아웃</a></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}</div><Link className="agency-mobile-apply" href="/apply">작가 참여 신청 <Arrow /></Link></aside>
+    <aside className={`agency-mobile-menu ${menuOpen ? "is-open" : ""}`}>{site.nav.map(([label, href], index) => <Link key={label} href={href} onClick={() => setMenuOpen(false)}><span>0{index + 1}</span>{label}</Link>)}<div className="agency-mobile-auth">{user ? <>{user.role === "admin" ? <><Link href="/admin">관리자 페이지</Link><Link href="/admin?view=accounts">작가 페이지</Link></> : <Link href="/artist">내 정보</Link>}<LogoutButton admin={user.role === "admin"}/></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}</div><Link className="agency-mobile-apply" href="/apply">작가 참여 신청 <Arrow /></Link></aside>
 
     <section ref={heroElement} className={`agency-hero ${heroMotionClass}`} aria-label="주요 프로젝트" onPointerDown={handleHeroPointerDown} onPointerMove={handleHeroPointerMove} onPointerUp={finishHeroPointer} onPointerCancel={(event) => finishHeroPointer(event, true)} onDragStart={(event) => event.preventDefault()}>
       {heroSlides.map((item, index) => <article key={item.title} className={`agency-hero-slide ${slide === index ? "is-active" : ""} ${heroTransition?.mode !== "snap" && heroTransition?.from === index ? "is-leaving" : ""} ${peekDirection && (slide + peekDirection + heroSlides.length) % heroSlides.length === index ? "is-peeking" : ""}`} aria-hidden={slide !== index}>

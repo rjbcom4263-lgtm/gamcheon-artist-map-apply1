@@ -3,7 +3,12 @@ import { requireAdmin } from "../../../../admin/admin-auth";
 
 export const runtime = "edge";
 
-function csv(value: unknown) { return `"${String(value ?? "").replaceAll('"', '""')}"`; }
+// Excel·시트가 수식으로 해석하는 선행 문자(= + - @ 탭 CR)는 작은따옴표를 앞에 붙여 글자로 고정합니다.
+function csv(value: unknown) {
+  let text = String(value ?? "");
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return `"${text.replaceAll('"', '""')}"`;
+}
 
 export async function GET() {
   if (!await requireAdmin()) return new Response("Forbidden", { status: 403 });

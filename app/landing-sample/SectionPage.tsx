@@ -2,6 +2,7 @@ import Link from "next/link";
 import { env } from "cloudflare:workers";
 import { requireSession } from "../admin/admin-auth";
 import { news, site } from "./content";
+import { LogoutButton } from "../LogoutButton";
 
 type SectionKind = "project" | "artists" | "passport" | "news" | "contact";
 type ArtistRow = { id: string; artist_name: string; email: string; payload_json: string; image_keys_json: string };
@@ -28,7 +29,7 @@ export function Header({ user, activeHref }: { user: { role: "admin" | "artist" 
   return <header className="agency-header section-header">
     <Link className="agency-brand" href="/"><b>{site.brand}</b><small>{site.subBrand}</small></Link>
     <nav className="agency-desktop-nav" aria-label="주요 메뉴">{site.nav.map(([label, href]) => <Link className={href === activeHref ? "is-active" : undefined} key={label} href={href}>{label}</Link>)}</nav>
-    <div className="agency-utility">{user ? <><Link href={user.role === "admin" ? "/admin" : "/artist"}>내 정보</Link><a href={user.role === "admin" ? "/api/admin/logout" : "/api/auth/logout"}>로그아웃</a></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}<button aria-label="검색">⌕</button></div>
+    <div className="agency-utility">{user ? <><Link href={user.role === "admin" ? "/admin" : "/artist"}>내 정보</Link><LogoutButton admin={user.role === "admin"}/></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}<button aria-label="검색">⌕</button></div>
   </header>;
 }
 
