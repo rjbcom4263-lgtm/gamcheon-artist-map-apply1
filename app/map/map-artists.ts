@@ -55,7 +55,7 @@ export function artistRowsToPlaces(rows: ArtistRow[]): ArtistPlace[] {
       hours: status ? `${status.label} · ${status.detail}` : text(values.hours) || "운영시간 확인 필요",
       visitType,
       ...(status ? { status: { state: status.state, label: status.label } } : {}),
-      image: imageKey ? `/api/artists/images?key=${encodeURIComponent(imageKey)}` : index % 2 ? "/assets/home/artist-goods.png" : "/assets/home/hero-artist-studio.png",
+      image: imageKey ? `/api/artists/images?key=${encodeURIComponent(imageKey)}` : index % 2 ? "/assets/home/artist-goods.webp" : "/assets/home/hero-artist-studio.webp",
       detailHref: `/artists/${encodeURIComponent(row.id)}`,
       ...(position ? { position } : {}),
       ...(geoPosition ? { geoPosition } : {}),

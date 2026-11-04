@@ -43,7 +43,7 @@ export default function SignupForm({ nextPath = "/artist" }: { nextPath?: string
       <div className="auth-consent-item">
         <label className="auth-consent-check"><input type="checkbox" checked={consentRequired} onChange={(event) => setConsentRequired(event.target.checked)} required/><span>[필수] 개인정보 수집·이용에 동의합니다.</span></label>
         <details className="auth-consent-details"><summary>필수 정보 수집·이용 내용 보기</summary>
-          <dl><div><dt>목적</dt><dd>회원 식별, 로그인, 계정 관리 및 작가 신청 관련 연락</dd></div><div><dt>항목</dt><dd>작가명·활동명, 휴대전화, 아이디, 비밀번호의 해시값, 계정번호, 가입·로그인 일시, 동의 내역</dd></div><div><dt>보유기간</dt><dd>회원 탈퇴 또는 동의 철회 처리 시까지</dd></div></dl>
+          <dl><div><dt>목적</dt><dd>회원 식별, 로그인, 계정 관리 및 작가 신청 관련 연락</dd></div><div><dt>항목</dt><dd>작가명·활동명, 휴대전화, 아이디, 비밀번호의 해시값, 계정번호, 가입·로그인 일시, 동의 내역</dd></div><div><dt>보유기간</dt><dd>회원 탈퇴 또는 동의 철회 요청을 처리할 때까지. 처리 후 지체 없이 삭제하며, 법령에 따라 보존해야 하는 기록은 그 기간 동안만 분리 보관합니다.</dd></div><div><dt>처리 위탁</dt><dd>계정 정보는 Cloudflare(미국)의 서버에 저장됩니다. 자세한 내용은 <a href="/privacy" target="_blank" rel="noopener noreferrer">개인정보 처리방침</a>을 확인해 주세요.</dd></div></dl>
           <p>동의를 거부할 수 있으나, 거부하면 회원가입이 제한됩니다.</p>
         </details>
       </div>

@@ -53,12 +53,12 @@ function ProjectContent() {
     </section>
     <section className="project-about-service" id="agency-service">
       <div className="project-about-heading"><p className="project-about-kicker">AGENCY SERVICE</p><h2>작가의 작업이<br />더 멀리 닿도록</h2><span>프로필과 작품을 정리하는 것에서 시작해, 전시·체험·굿즈·지역 협업까지 작가의 다음 기회를 설계합니다.</span></div>
-      <div className="project-about-image"><img src="/assets/home/artist-goods.png" alt="작가 작품과 협업 상품" /></div>
+      <div className="project-about-image"><img src="/assets/home/artist-goods.webp" alt="작가 작품과 협업 상품" /></div>
       <div className="project-about-cards"><article><b>01</b><strong>작가 프로필</strong><span>작가의 이야기와 작업 분야, 대표 작품을 하나의 페이지로 소개합니다.</span></article><article><b>02</b><strong>작품 아카이브</strong><span>작품의 이미지와 설명을 기록해 작가의 활동을 오래 보존합니다.</span></article><article><b>03</b><strong>협업 연결</strong><span>전시, 체험, 브랜드 협업과 새로운 방문 기회를 연결합니다.</span></article></div>
     </section>
     <section className="project-about-map" id="artist-map">
       <div><p className="project-about-kicker">ARTIST MAP</p><h2>골목의 정보가<br /><em>사람의 이야기</em>가 됩니다.</h2><span>작가의 위치와 작업실, 방문 가능 여부를 지도 위에 기록합니다. 앞으로 GPS·QR·Art Passport와 연결해 온라인에서 발견한 작가를 실제 공간에서 만나도록 하겠습니다.</span><Link className="section-button" href="/map">작가 지도 보기 <Arrow /></Link></div>
-      <div className="project-about-map-card"><img src="/gamcheon-map-concept.png" alt="감천 작가 지도 콘셉트" /><span>MAP · GPS · QR · PASSPORT</span></div>
+      <div className="project-about-map-card"><img src="/gamcheon-map-concept.webp" alt="감천 작가 지도 콘셉트" /><span>MAP · GPS · QR · PASSPORT</span></div>
     </section>
     <section className="project-about-join" id="join-project"><p className="project-about-kicker">JOIN THE PROJECT</p><h2>당신의 작업과 이야기를<br />감천에서 들려주세요.</h2><span>작가님의 정보는 운영진 검토 후 작가 소개와 지도 콘텐츠에 연결됩니다.</span><Link className="project-about-pill" href="/apply">작가 참여 신청</Link></section>
   </div>;

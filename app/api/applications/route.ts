@@ -4,6 +4,7 @@ import { sanitizeExperiences } from "../../artist/profile-data";
 import { isAllowedImageFile, isAllowedImageType } from "../../image-upload";
 import { MAX_IMAGE_BYTES, REQUIRED_WORK_COUNT, applicationId, cleanText, listApplicationImageKeys, safeFileName } from "../../lib/application";
 import { forbidden } from "../../lib/http";
+import { APPLY_CONSENT_VERSION } from "../../signup/privacy-consent";
 
 export const runtime = "edge";
 
@@ -36,6 +37,8 @@ export async function POST(request: Request) {
     if (!artistName || !phone || !categories.length || works.length !== REQUIRED_WORK_COUNT || works.some((work) => !work.title)) return Response.json({ error: "대표 작품 5점의 필수 정보를 모두 입력해주세요." }, { status: 400 });
     if (payload.experiences !== undefined && (!Array.isArray(payload.experiences) || payload.experiences.length > 20 || experiences.some((experience) => !experience.title))) return Response.json({ error: "체험 프로그램 이름을 확인해주세요." }, { status: 400 });
     if (!values.consentInfo || !values.consentImage || !values.consentPrivacy) return Response.json({ error: "필수 동의가 필요합니다." }, { status: 400 });
+    // 동의 문구가 바뀐 뒤 옛 화면에서 보낸 신청은 받지 않습니다. 어떤 문구에 동의했는지는 values.consentVersion으로 남습니다.
+    if (values.consentVersion !== APPLY_CONSENT_VERSION) return Response.json({ error: "동의 안내가 바뀌었습니다. 페이지를 새로고침한 뒤 동의 항목을 다시 확인해 주세요." }, { status: 400 });
 
     const id = applicationId(payload.applicationId);
     if (!id) return Response.json({ error: "신청 번호를 다시 확인해주세요." }, { status: 400 });

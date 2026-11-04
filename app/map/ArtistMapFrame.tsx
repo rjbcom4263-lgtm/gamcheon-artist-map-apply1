@@ -45,7 +45,6 @@ export default function ArtistMapFrame({ places, selectedId = null, canPick = fa
     send();
     return () => window.removeEventListener("message", receive);
     // onPick/onSelect는 ref로 읽으므로 의존성에서 뺍니다. 부모가 인라인 함수를 넘겨도 지도에 상태를 다시 보내지 않습니다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [places, selectedId, canPick]);
 
   // 지도 안에서 내 위치와 휴대폰 방향(나침반) 센서를 쓰도록 허락합니다.

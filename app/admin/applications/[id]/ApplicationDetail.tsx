@@ -33,7 +33,7 @@ export default function ApplicationDetail({ application }: { application: Applic
     try {
       const response = await fetch(`/api/admin/applications/${encodeURIComponent(row.id)}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ status, reviewNote }) });
       if (!response.ok) throw new Error("상태를 저장하지 못했습니다.");
-      const result = await response.json();
+      const result = await response.json() as { payload_json: string };
       setRow((current) => ({ ...current, status, payload_json: result.payload_json }));
       if (status === "approved") router.push(`/admin/artists?artist=${encodeURIComponent(row.id)}`);
     } catch {

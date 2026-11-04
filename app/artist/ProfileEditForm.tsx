@@ -38,7 +38,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
   const ScrollContainer = modal ? "div" : "main";
   const categoryList = categories.split(",").map((item) => item.trim()).filter(Boolean);
   const update = (key: string, value: string) => setValues((current) => ({ ...current, [key]: value }));
-  const workImage = (index: number) => previews[`workImage${index}`] || artist.works[index]?.image || "/assets/home/hero-artist-studio.png";
+  const workImage = (index: number) => previews[`workImage${index}`] || artist.works[index]?.image || "/assets/home/hero-artist-studio.webp";
   const status = studioHours ? studioStatus(studioHours, values.visitType) : null;
   const publicAddress = values.locationPrivacy === "exact" && values.address ? values.address : "감천문화마을 일대";
 

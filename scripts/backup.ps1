@@ -47,6 +47,13 @@ try {
   New-Item -ItemType Directory -Force $OutDir | Out-Null
   $sqlPath = Join-Path $OutDir "d1-$stamp.sql"
   Invoke-Checked "D1 내보내기 → $sqlPath" { node node_modules\wrangler\bin\wrangler.js d1 export $dbName --remote --output $sqlPath }
+  # gps_trails(운영자가 올린 GPS 이동 기록)는 개인정보라 백업에서 뺍니다. 지도 골목은 map_alleys에 따로 저장되어 있어
+  # 복원에 영향이 없습니다. 테이블 정의(CREATE TABLE)는 남기고 INSERT 줄만 지웁니다.
+  $lines = Get-Content $sqlPath
+  $kept = $lines | Where-Object { $_ -notmatch '^\s*INSERT INTO "?gps_trails"?' }
+  $removed = $lines.Count - $kept.Count
+  Set-Content -Path $sqlPath -Value $kept -Encoding utf8
+  if ($removed -gt 0) { Write-Host "[backup] gps_trails 행 $removed 개를 백업에서 제외했습니다" }
   $size = (Get-Item $sqlPath).Length
   Write-Host ("[backup] D1 백업 크기: {0:N0} bytes" -f $size)
 

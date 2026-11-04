@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 이 프로젝트의 산출물·생성 파일
+    "dist/**",
+    "public/map-app/**",
+    "app/map/generated/**",
+    "worker-configuration.d.ts",
   ]),
 ]);
 
