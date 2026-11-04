@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { notFound } from "next/navigation";
 import ArtistDetail from "./ArtistDetail";
+import StatBeacon from "../../StatBeacon";
 import { artistRowToProfile, type PublicArtistRow } from "../public-artist";
 
 export const dynamic = "force-dynamic";
@@ -11,5 +12,5 @@ export default async function PublicArtistPage({ params }: { params: Promise<{ i
     FROM artist_applications WHERE id = ? AND status = 'approved'`).bind(id).first<PublicArtistRow>();
   const artist = row ? artistRowToProfile(row) : null;
   if (!artist) notFound();
-  return <ArtistDetail artist={artist}/>;
+  return <><ArtistDetail artist={artist}/><StatBeacon kind="view" id={artist.id}/></>;
 }

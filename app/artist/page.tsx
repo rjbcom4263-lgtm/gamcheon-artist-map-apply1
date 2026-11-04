@@ -12,6 +12,8 @@ import { parse } from "../lib/json";
 import { ARTIST_STATUS_LABELS, formatDateTime } from "../lib/format";
 import { formatWeekly, readStudioHours, studioStatus } from "../lib/studio-hours";
 import { StatusBadge } from "../artists/[id]/ArtistDetail";
+import { STAT_WINDOW_DAYS, koreaDay, summarizeStats, type StatRow } from "../lib/artist-stats";
+import StatsCard from "./StatsCard";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +59,13 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
   const editablePayload = editableApplication ? parse<Payload>(editableApplication.payload_json, {}) : {};
   const publicArtist = editableApplication ? artistRowToProfile(editableApplication, true) : null;
   const canEdit = !!editableApplication && !!publicArtist;
+  const statsApplicationId = editableApplication?.id || (current?.status === "approved" ? current.id : "");
+  const [statRows, guideRows] = statsApplicationId ? await Promise.all([
+    env.DB.prepare("SELECT day, kind, target, count FROM artist_daily_stats WHERE application_id = ? AND day >= ?").bind(statsApplicationId, koreaDay(STAT_WINDOW_DAYS - 1)).all<StatRow>(),
+    env.DB.prepare("SELECT id, published_title FROM artwork_guides WHERE application_id = ?").bind(statsApplicationId).all<{ id: string; published_title: string | null }>(),
+  ]) : [null, null];
+  const stats = statRows ? summarizeStats(statRows.results || []) : null;
+  const guideTitles = Object.fromEntries((guideRows?.results || []).map((guide) => [guide.id, guide.published_title || "작품 해설"]));
   const studioHours = readStudioHours(payload.studioHours);
   const studioState = studioHours ? studioStatus(studioHours, String(values.visitType || "")) : null;
 
@@ -89,6 +98,8 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
           <article><span>ARTWORKS</span><strong>{works.length}<em>점</em></strong><small>등록된 대표 작품</small></article>
           <article><span>LAST LOGIN</span><strong className="date-value">{formatDateTime(account?.last_login_at || null)}</strong><small>최근 로그인</small></article>
         </div>
+
+        {stats && <StatsCard stats={stats} guideTitles={guideTitles}/>}
 
         {current ? <div className="artist-dashboard-grid">
           <section className="artist-card artist-profile-card" id="profile">

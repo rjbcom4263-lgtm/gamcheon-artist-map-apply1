@@ -868,3 +868,197 @@
   font-weight: 800;
   cursor: pointer;
 }
+
+.artist-stats-card {
+  margin-bottom: 18px;
+}
+
+.artist-stats-card .artist-card-head > span {
+  color: #999;
+  font-size: 10px;
+}
+
+.artist-stats-numbers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.artist-stats-numbers article {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #e4e4e4;
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.artist-stats-numbers span {
+  color: #666;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.artist-stats-numbers strong {
+  color: #171717;
+  font-size: 28px;
+  letter-spacing: -.04em;
+}
+
+.artist-stats-numbers strong em {
+  margin-left: 5px;
+  color: #888;
+  font-size: 11px;
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+.artist-stats-numbers small {
+  color: #999;
+  font-size: 10px;
+}
+
+.artist-stats-empty {
+  margin: 16px 0 0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f6f7f6;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.artist-stats-legend {
+  display: flex;
+  gap: 14px;
+  margin: 18px 0 8px;
+  color: #555;
+  font-size: 11px;
+}
+
+.artist-stats-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.artist-stats-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.artist-stats-chart {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 4px;
+  border-bottom: 1px solid #e4e4e4;
+}
+
+.artist-stats-day {
+  display: grid;
+  grid-template-rows: 110px auto;
+  min-width: 0;
+  border-radius: 6px;
+  padding: 4px 0 0;
+  cursor: default;
+}
+
+.artist-stats-day:hover {
+  background: #f4f6f8;
+}
+
+.artist-stats-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+.artist-stats-bars i {
+  width: min(8px, 30%);
+  min-height: 0;
+  border-radius: 4px 4px 0 0;
+}
+
+.artist-stats-day small {
+  padding: 5px 0;
+  color: #999;
+  font-size: 9px;
+  text-align: center;
+}
+
+.artist-stats-day:not(:first-child):not(:last-child):not(:nth-child(7n)) small {
+  visibility: hidden;
+}
+
+.artist-stats-card .is-view {
+  background: #4b5fd6;
+}
+
+.artist-stats-card .is-qr {
+  background: #1d8a6c;
+}
+
+.artist-stats-table {
+  margin-top: 10px;
+  color: #555;
+  font-size: 11px;
+}
+
+.artist-stats-table summary {
+  cursor: pointer;
+  color: #666;
+  font-weight: 800;
+}
+
+.artist-stats-table table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.artist-stats-table th,
+.artist-stats-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #eee;
+  text-align: right;
+}
+
+.artist-stats-table th:first-child,
+.artist-stats-table td:first-child {
+  text-align: left;
+}
+
+.artist-stats-top {
+  margin-top: 16px;
+  font-size: 12px;
+}
+
+.artist-stats-top ol {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.artist-stats-top li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: #f6f7f6;
+}
+
+.artist-stats-top li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .artist-stats-numbers {
+    grid-template-columns: 1fr;
+  }
+}
