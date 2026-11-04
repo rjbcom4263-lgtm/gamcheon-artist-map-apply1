@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SAVED_ARTISTS_KEY, type PublicArtist } from "../public-artist";
+import type { StudioStatus } from "../../lib/studio-hours";
 import "./artist-detail.css";
 
 type IconName = "back" | "heart" | "share" | "pin" | "clock" | "visit" | "close" | "grid";
@@ -74,7 +75,7 @@ export default function ArtistDetail({ artist }: { artist: PublicArtist }) {
 
         <section className="artist-visit-section">
           <div className="artist-detail-heading"><div><span>STUDIO VISIT</span><h2>화실 방문 정보</h2></div></div>
-          <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{artist.studio}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{artist.address}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{artist.hours}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{artist.visitType}</dd></div></dl>
+          <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{artist.studio}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{artist.address}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{artist.status && <StatusBadge status={artist.status}/>}{artist.hours}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{artist.visitType}</dd></div></dl>
           {artist.experiences.map((experience) => <div className="artist-experience" key={experience.id}><span>{experience.title} · {experience.status}</span><p>{experience.description || "체험 프로그램의 자세한 내용은 작가에게 문의해주세요."}</p></div>)}
         </section>
 
@@ -86,4 +87,8 @@ export default function ArtistDetail({ artist }: { artist: PublicArtist }) {
       {work && <div className="work-lightbox" role="dialog" aria-modal="true" aria-label={`${work.title} 작품 상세`}><button className="work-lightbox-close" type="button" onClick={() => setWorkIndex(null)} aria-label="닫기"><Icon name="close"/></button><div className="work-lightbox-content"><img src={work.image} alt={work.title}/><article><span>WORK {String(workIndex! + 1).padStart(2, "0")} {work.status && `· ${work.status}`}</span><h2>{work.title}</h2><p>{work.description}</p></article></div></div>}
     </div>
   </div>;
+}
+
+export function StatusBadge({ status }: { status: StudioStatus }) {
+  return <span className={`studio-badge studio-badge--${status.state}`}><b>{status.label}</b>{status.detail}</span>;
 }

@@ -1,6 +1,8 @@
+import { sanitizeStudioHours } from "../lib/studio-hours";
+
 export type EditableWork = { id?: string; title?: string; status?: string; description?: string };
 export type ArtistExperience = { id: string; title: string; status: "운영 중" | "준비 중"; description: string };
-export type ProfileInput = { artistName?: string; categories?: unknown[]; values?: Record<string, unknown>; works?: EditableWork[]; experiences?: unknown[] };
+export type ProfileInput = { artistName?: string; categories?: unknown[]; values?: Record<string, unknown>; works?: EditableWork[]; experiences?: unknown[]; studioHours?: unknown };
 
 const fields: Record<string, number> = {
   tagline: 200, bio: 4000, studioName: 150, address: 300, locationPrivacy: 30,
@@ -29,5 +31,8 @@ export function sanitizeArtistProfile(input: ProfileInput) {
   if (!artistName || !values.tagline || !categories.length) return { error: "작가명, 분야, 한 줄 소개를 입력해주세요." } as const;
   if (!works.length || works.some((work) => !work.title)) return { error: "모든 작품의 이름을 입력해주세요." } as const;
   if (input.experiences !== undefined && (!Array.isArray(input.experiences) || input.experiences.length > 20 || experiences?.some((experience) => !experience.title))) return { error: "체험 프로그램 이름을 확인해주세요." } as const;
-  return { artistName, categories, values, works, experiences };
+  // undefined: 그대로 둠, null: 요일별 시간 지우고 글자 운영시간만 사용
+  const studioHours = input.studioHours === undefined ? undefined : input.studioHours === null ? null : sanitizeStudioHours(input.studioHours);
+  if (studioHours && "error" in studioHours) return { error: studioHours.error } as const;
+  return { artistName, categories, values, works, experiences, studioHours };
 }

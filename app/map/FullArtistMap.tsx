@@ -21,7 +21,7 @@ export default function FullArtistMap({ initialPlaces, initialArtistId }: { init
   const mapPlaces = useMemo(() => mapped.map((place): MapPlace => ({
     id: place.id, name: place.name, category: "attraction", ...place.geoPosition!,
     address: `${place.studio} · ${place.address}`,
-    description: `${place.type} · ${place.hours} · ${place.visitType}`,
+    description: place.status ? `${place.type} · ${place.hours}` : `${place.type} · ${place.hours} · ${place.visitType}`,
   })), [mapped]);
   const categories = useMemo(() => ["전체", ...Array.from(new Set(initialPlaces.flatMap(place => place.categories)))], [initialPlaces]);
   const visible = useMemo(() => initialPlaces.filter(place =>
@@ -54,6 +54,7 @@ export default function FullArtistMap({ initialPlaces, initialArtistId }: { init
         <div className="artist-app__list">{visible.map(place => <article className="artist-app__artist" key={place.id}>
           <Link className="artist-app__photo" href={place.detailHref} aria-label={`${place.name} 작가 소개`}><img src={place.image} alt={`${place.name} 작가`} loading="lazy"/></Link>
           <div className="artist-app__artist-info"><Link href={place.detailHref}><h2>{place.name}</h2></Link><p>{place.categories.join(" · ") || "감천 참여 작가"}</p><small>{place.studio}</small>
+            {place.status && <span className={`studio-badge studio-badge--${place.status.state}`}><b>{place.status.label}</b></span>}
             {place.geoPosition ? <button type="button" onClick={() => { select(place.id); setView("home"); }}>지도에서 보기 ↗</button> : <span className="artist-app__pending">위치 확인 중</span>}
           </div><Link className="artist-app__arrow" href={place.detailHref} aria-label={`${place.name} 상세 보기`}>↗</Link>
         </article>)}</div>

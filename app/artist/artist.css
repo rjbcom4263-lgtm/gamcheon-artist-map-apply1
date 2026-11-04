@@ -842,3 +842,29 @@
     transition: none !important;
   }
 }
+
+.artist-closure-quick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #fbf3ee;
+  color: #6b5248;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.artist-closure-quick button {
+  flex: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 14px;
+  background: #c8553a;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}

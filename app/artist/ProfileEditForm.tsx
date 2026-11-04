@@ -6,11 +6,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { PublicArtist } from "../artists/public-artist";
 import type { ArtistExperience } from "./profile-data";
-import { Icon } from "../artists/[id]/ArtistDetail";
+import { Icon, StatusBadge } from "../artists/[id]/ArtistDetail";
 import { profileEditorControl } from "./profile-editor-controls";
 import "../artists/[id]/artist-detail.css";
 import "./visual-profile-editor.css";
 import { MAX_IMAGE_BYTES } from "../lib/application";
+import { formatWeekly, studioStatus, type StudioHours } from "../lib/studio-hours";
+import StudioHoursEditor from "./StudioHoursEditor";
 
 type Work = { id?: string; title?: string; status?: string; description?: string };
 type Payload = { values?: Record<string, unknown>; categories?: string[]; works?: Work[] };
@@ -26,6 +28,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
   const [values, setValues] = useState<Values>(Object.fromEntries(fields.map((key) => [key, typeof payload.values?.[key] === "string" ? String(payload.values[key]) : ""])));
   const [works, setWorks] = useState<Work[]>(payload.works || []);
   const [experiences, setExperiences] = useState<ArtistExperience[]>(artist.experiences);
+  const [studioHours, setStudioHours] = useState<StudioHours | null>(artist.studioHours || null);
   const [files, setFiles] = useState<Record<string, File>>({});
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [panel, setPanel] = useState<Panel>(null);
@@ -36,6 +39,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
   const categoryList = categories.split(",").map((item) => item.trim()).filter(Boolean);
   const update = (key: string, value: string) => setValues((current) => ({ ...current, [key]: value }));
   const workImage = (index: number) => previews[`workImage${index}`] || artist.works[index]?.image || "/assets/home/hero-artist-studio.png";
+  const status = studioHours ? studioStatus(studioHours, values.visitType) : null;
   const publicAddress = values.locationPrivacy === "exact" && values.address ? values.address : "감천문화마을 일대";
 
   function pickImage(key: string, file?: File) {
@@ -54,7 +58,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
     setMessage("");
     const form = new FormData();
     form.set("applicationId", applicationId);
-    form.set("profile", JSON.stringify({ artistName, categories: categoryList, values: { ...values, experience: experiences.length ? "있음" : "없음", experienceDesc: experiences.map(({ title, description }) => `${title}${description ? `: ${description}` : ""}`).join("\n") }, works, experiences }));
+    form.set("profile", JSON.stringify({ artistName, categories: categoryList, values: { ...values, experience: experiences.length ? "있음" : "없음", experienceDesc: experiences.map(({ title, description }) => `${title}${description ? `: ${description}` : ""}`).join("\n") }, works, experiences, studioHours }));
     for (const [key, file] of Object.entries(files)) form.set(key, file);
     const response = await fetch("/api/artist/profile", { method: "PUT", body: form });
     const result = await response.json().catch(() => ({})) as { error?: string };
@@ -91,7 +95,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
 
         <section className="artist-visit-section editable-section">
           <div className="artist-detail-heading"><div><span>STUDIO VISIT</span><h2>화실 방문 정보</h2></div></div><button className="inline-edit-button section-edit" type="button" onClick={() => setPanel("visit")}>방문 정보 수정</button>
-          <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{values.studioName || "감천 작업실"}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{publicAddress}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{values.hours || "방문 전 확인"}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{values.visitType || "방문 전 문의"}</dd></div></dl>
+          <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{values.studioName || "감천 작업실"}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{publicAddress}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{status && <StatusBadge status={status}/>}{studioHours ? formatWeekly(studioHours) : values.hours || "방문 전 확인"}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{values.visitType || "방문 전 문의"}</dd></div></dl>
           {experiences.map((experience) => <div className="artist-experience" key={experience.id}><span>{experience.title || "체험 프로그램"} · {experience.status}</span><p>{experience.description || "체험 내용을 준비하고 있습니다."}</p></div>)}
         </section>
 
@@ -108,7 +112,8 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
           <Field label="작업실 이름"><input maxLength={150} value={values.studioName} onChange={(event) => update("studioName", event.target.value)}/></Field>
           <Field label="주소"><input maxLength={300} value={values.address} onChange={(event) => update("address", event.target.value)}/></Field>
           <Field label="주소 공개 범위"><select value={values.locationPrivacy || "nearby"} onChange={(event) => update("locationPrivacy", event.target.value)}><option value="exact">정확한 주소 공개</option><option value="nearby">감천문화마을 일대로 표시</option><option value="reservation">예약 방문객에게만 안내</option></select></Field>
-          <Field label="운영시간"><textarea maxLength={500} rows={3} value={values.hours} onChange={(event) => update("hours", event.target.value)}/></Field>
+          <div className="studio-hours-field"><span>운영시간</span><StudioHoursEditor hours={studioHours} onChange={setStudioHours}/></div>
+          {!studioHours && <Field label="운영시간 (글자로 적기)"><textarea maxLength={500} rows={3} value={values.hours} onChange={(event) => update("hours", event.target.value)}/></Field>}
           <Field label="방문 방식"><select value={values.visitType} onChange={(event) => update("visitType", event.target.value)}>{["자유 방문 가능", "운영시간 내 방문 가능", "사전 예약 필요", "일반 방문 불가"].map((item) => <option key={item}>{item}</option>)}</select></Field>
           <div className="visual-experience-heading"><strong>체험 프로그램</strong><button type="button" disabled={experiences.length >= 20} onClick={() => setExperiences((current) => [...current, { id: crypto.randomUUID(), title: "", status: "운영 중", description: "" }])}>＋ 추가</button></div>
           {experiences.map((experience, index) => <div className="visual-experience-card" key={experience.id}><header><strong>체험 {index + 1}</strong><button type="button" onClick={() => setExperiences((current) => current.filter((item) => item.id !== experience.id))}>삭제</button></header><Field label="체험명"><input maxLength={100} value={experience.title} onChange={(event) => setExperiences((current) => current.map((item) => item.id === experience.id ? { ...item, title: event.target.value } : item))}/></Field><Field label="운영 상태"><select value={experience.status} onChange={(event) => setExperiences((current) => current.map((item) => item.id === experience.id ? { ...item, status: event.target.value as ArtistExperience["status"] } : item))}><option>운영 중</option><option>준비 중</option></select></Field><Field label="체험 설명"><textarea maxLength={500} rows={3} value={experience.description} onChange={(event) => setExperiences((current) => current.map((item) => item.id === experience.id ? { ...item, description: event.target.value } : item))}/></Field></div>)}

@@ -10,13 +10,15 @@ import { EDITABLE_APPLICATION_QUERY, PROFILE_EDITOR_ID, profileEditorControl } f
 import { LogoutButton } from "../LogoutButton";
 import { parse } from "../lib/json";
 import { ARTIST_STATUS_LABELS, formatDateTime } from "../lib/format";
+import { formatWeekly, readStudioHours, studioStatus } from "../lib/studio-hours";
+import { StatusBadge } from "../artists/[id]/ArtistDetail";
 
 export const dynamic = "force-dynamic";
 
 type Account = { id: string; login_id: string; status: string; display_name: string; phone: string; email: string; created_at: string; last_login_at: string | null };
 type Application = { id: string; artist_name: string; phone: string; email: string; status: string; payload_json: string; image_keys_json: string; created_at: string };
 type Work = { id?: string; title?: string; status?: string; description?: string };
-type Payload = { values?: Record<string, string | boolean>; categories?: string[]; works?: Work[]; adminReview?: { note?: string; processedAt?: string; status?: string } };
+type Payload = { values?: Record<string, string | boolean>; categories?: string[]; works?: Work[]; studioHours?: unknown; adminReview?: { note?: string; processedAt?: string; status?: string } };
 type ImageRecord = { type: string; workIndex?: number; key: string; name: string; contentType?: string };
 
 const ACCOUNT_STATUS = { pending: "승인 대기", active: "활성", suspended: "정지", deleted: "삭제됨" } as const;
@@ -55,6 +57,8 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
   const editablePayload = editableApplication ? parse<Payload>(editableApplication.payload_json, {}) : {};
   const publicArtist = editableApplication ? artistRowToProfile(editableApplication, true) : null;
   const canEdit = !!editableApplication && !!publicArtist;
+  const studioHours = readStudioHours(payload.studioHours);
+  const studioState = studioHours ? studioStatus(studioHours, String(values.visitType || "")) : null;
 
   return <main className="artist-shell">
     <aside className="artist-sidebar">
@@ -115,10 +119,15 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
               <div><dt>공방·작업실</dt><dd>{String(values.studioName || "-")}</dd></div>
               <div><dt>주소</dt><dd>{String(values.address || "-")}</dd></div>
               <div><dt>방문 방식</dt><dd>{String(values.visitType || "-")}</dd></div>
-              <div><dt>운영시간</dt><dd>{String(values.hours || "-")}</dd></div>
+              <div><dt>운영시간</dt><dd>{studioState && <StatusBadge status={studioState}/>}{studioHours ? formatWeekly(studioHours) : String(values.hours || "-")}</dd></div>
               <div><dt>Instagram</dt><dd>{String(values.instagram || "-")}</dd></div>
               <div><dt>홈페이지</dt><dd>{String(values.website || "-")}</dd></div>
             </dl>
+            {!isAdmin && canEdit && <form className="artist-closure-quick" method="post" action="/api/artist/closure">
+              {!studioHours ? <><span>요일별 운영시간을 설정하면 지도에 &lsquo;방문 가능 / 휴무&rsquo;가 표시됩니다.</span><button {...profileEditorControl("show")}>운영시간 설정</button></>
+                : studioState?.state === "closure" ? <><span>지금 임시 휴무로 표시되고 있어요.</span><button type="submit" name="action" value="clear">임시 휴무 해제</button></>
+                : <><span>갑자기 쉬게 되면 한 번에 지도에 알릴 수 있어요.</span><button type="submit" name="action" value="today">오늘 임시 휴무</button></>}
+            </form>}
           </section>
           {isAdmin ? <section className="artist-empty-card" id="account"><span>ADMIN PREVIEW</span><h2>관리자 미리보기 화면입니다.</h2><p>작가 계정으로 전환하지 않고 실제 작가 페이지의 등록 정보를 확인하고 있습니다.</p><Link href={accountUrl}>계정 관리로 돌아가기 <b>→</b></Link></section> : <section className="artist-card artist-account-card" id="account"><PasswordChangeForm /></section>}
         </div> : <div className="artist-dashboard-grid">

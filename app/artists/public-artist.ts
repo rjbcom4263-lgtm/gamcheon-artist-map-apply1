@@ -1,5 +1,6 @@
 import { sanitizeExperiences, type ArtistExperience } from "../artist/profile-data";
 import { parse } from "../lib/json";
+import { formatWeekly, readStudioHours, studioStatus, type StudioHours, type StudioStatus } from "../lib/studio-hours";
 
 export type PublicArtistRow = { id: string; artist_name: string; payload_json: string; image_keys_json: string };
 export const SAVED_ARTISTS_KEY = "gamcheon-saved-artists";
@@ -8,10 +9,11 @@ export type PublicArtist = {
   id: string; name: string; categories: string[]; tagline: string; bio: string; studio: string; address: string;
   hours: string; visitType: string; experience: string; experienceDesc: string; experiences: ArtistExperience[]; profile: string;
   instagram: string; website: string; shopUrl: string; works: PublicWork[];
+  studioHours?: StudioHours; status?: StudioStatus;
 };
 
 type Work = { title?: unknown; description?: unknown; status?: unknown };
-type Payload = { values?: Record<string, unknown>; categories?: unknown[]; works?: Work[]; experiences?: unknown[] };
+type Payload = { values?: Record<string, unknown>; categories?: unknown[]; works?: Work[]; experiences?: unknown[]; studioHours?: unknown };
 type ImageRecord = { type?: string; workIndex?: number; key?: string };
 
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
@@ -29,6 +31,9 @@ export function artistRowToProfile(row: PublicArtistRow, includeHidden = false):
     ? [{ id: "legacy", title: "체험 프로그램", status: text(values.experience) === "준비 중" ? "준비 중" : "운영 중", description: text(values.experienceDesc) } as ArtistExperience]
     : sanitizeExperiences(payload.experiences).filter((experience) => experience.title);
 
+  const studioHours = readStudioHours(payload.studioHours);
+  const visitType = text(values.visitType) || "방문 전 문의";
+
   return {
     id: row.id,
     name: row.artist_name,
@@ -37,8 +42,9 @@ export function artistRowToProfile(row: PublicArtistRow, includeHidden = false):
     bio: text(values.bio) || "작가의 작업 세계와 감천에서의 이야기를 준비하고 있습니다.",
     studio: text(values.studioName) || "감천 작업실",
     address: exactAddress || "감천문화마을 일대",
-    hours: text(values.hours) || "방문 전 운영시간을 확인해주세요.",
-    visitType: text(values.visitType) || "방문 전 문의",
+    hours: studioHours ? formatWeekly(studioHours) : text(values.hours) || "방문 전 운영시간을 확인해주세요.",
+    visitType,
+    ...(studioHours ? { studioHours, status: studioStatus(studioHours, visitType) } : {}),
     experience: text(values.experience),
     experienceDesc: text(values.experienceDesc),
     experiences,
