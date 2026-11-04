@@ -27,6 +27,8 @@ export default function ArtistDetail({ artist }: { artist: PublicArtist }) {
   const [saved, setSaved] = useState(false);
   const [workIndex, setWorkIndex] = useState<number | null>(null);
   const work = workIndex === null ? null : artist.works[workIndex];
+  const [photoIndex, setPhotoIndex] = useState<number | null>(null);
+  const photo = photoIndex === null ? null : artist.gallery[photoIndex];
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -73,6 +75,11 @@ export default function ArtistDetail({ artist }: { artist: PublicArtist }) {
 
         <section className="artist-story-section"><span>ARTIST STORY</span><h2>작가의 이야기</h2><blockquote>“{artist.tagline}”</blockquote><p>{artist.bio}</p></section>
 
+        {artist.gallery.length > 0 && <section className="artist-gallery-section">
+          <div className="artist-detail-heading"><div><span>STUDIO PHOTOS</span><h2>작업실 풍경</h2></div><small>{artist.gallery.length}장</small></div>
+          <StudioGallery photos={artist.gallery} onOpen={setPhotoIndex}/>
+        </section>}
+
         <section className="artist-visit-section">
           <div className="artist-detail-heading"><div><span>STUDIO VISIT</span><h2>화실 방문 정보</h2></div></div>
           <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{artist.studio}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{artist.address}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{artist.status && <StatusBadge status={artist.status}/>}{artist.hours}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{artist.visitType}</dd></div></dl>
@@ -84,6 +91,7 @@ export default function ArtistDetail({ artist }: { artist: PublicArtist }) {
 
       <nav className="artist-detail-actions"><Link href={`/map?artist=${encodeURIComponent(artist.id)}`}><Icon name="pin"/>지도에서 보기</Link><button className={saved ? "is-saved" : ""} type="button" onClick={toggleSaved}><Icon name="heart"/>{saved ? "저장됨" : "저장"}</button></nav>
 
+      {photo && <div className="work-lightbox" role="dialog" aria-modal="true" aria-label="작업실 사진 크게 보기"><button className="work-lightbox-close" type="button" onClick={() => setPhotoIndex(null)} aria-label="닫기"><Icon name="close"/></button><div className="work-lightbox-content"><img src={photo.image} alt={photo.caption || "작업실 사진"}/><article><span>STUDIO {String(photoIndex! + 1).padStart(2, "0")} / {String(artist.gallery.length).padStart(2, "0")}</span>{photo.caption && <p>{photo.caption}</p>}</article></div></div>}
       {work && <div className="work-lightbox" role="dialog" aria-modal="true" aria-label={`${work.title} 작품 상세`}><button className="work-lightbox-close" type="button" onClick={() => setWorkIndex(null)} aria-label="닫기"><Icon name="close"/></button><div className="work-lightbox-content"><img src={work.image} alt={work.title}/><article><span>WORK {String(workIndex! + 1).padStart(2, "0")} {work.status && `· ${work.status}`}</span><h2>{work.title}</h2><p>{work.description}</p></article></div></div>}
     </div>
   </div>;
@@ -91,4 +99,8 @@ export default function ArtistDetail({ artist }: { artist: PublicArtist }) {
 
 export function StatusBadge({ status }: { status: StudioStatus }) {
   return <span className={`studio-badge studio-badge--${status.state}`}><b>{status.label}</b>{status.detail}</span>;
+}
+
+export function StudioGallery({ photos, onOpen }: { photos: Array<{ image: string; caption: string }>; onOpen?: (index: number) => void }) {
+  return <div className="artist-gallery-strip">{photos.map((item, index) => <button type="button" key={`${item.image}-${index}`} onClick={() => onOpen?.(index)} aria-label={`작업실 사진 ${index + 1}${item.caption ? `: ${item.caption}` : ""} 크게 보기`}><img src={item.image} alt={item.caption || `작업실 사진 ${index + 1}`} loading="lazy"/>{item.caption && <span>{item.caption}</span>}</button>)}</div>;
 }

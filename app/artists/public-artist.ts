@@ -1,20 +1,22 @@
 import { sanitizeExperiences, type ArtistExperience } from "../artist/profile-data";
 import { parse } from "../lib/json";
+import { galleryRecords } from "../lib/studio-gallery";
 import { formatWeekly, readStudioHours, studioStatus, type StudioHours, type StudioStatus } from "../lib/studio-hours";
 
 export type PublicArtistRow = { id: string; artist_name: string; payload_json: string; image_keys_json: string };
 export const SAVED_ARTISTS_KEY = "gamcheon-saved-artists";
 export type PublicWork = { title: string; description: string; status: string; image: string };
+export type PublicPhoto = { key: string; image: string; caption: string };
 export type PublicArtist = {
   id: string; name: string; categories: string[]; tagline: string; bio: string; studio: string; address: string;
   hours: string; visitType: string; experience: string; experienceDesc: string; experiences: ArtistExperience[]; profile: string;
   instagram: string; website: string; shopUrl: string; works: PublicWork[];
-  studioHours?: StudioHours; status?: StudioStatus;
+  studioHours?: StudioHours; status?: StudioStatus; gallery: PublicPhoto[];
 };
 
 type Work = { title?: unknown; description?: unknown; status?: unknown };
 type Payload = { values?: Record<string, unknown>; categories?: unknown[]; works?: Work[]; experiences?: unknown[]; studioHours?: unknown };
-type ImageRecord = { type?: string; workIndex?: number; key?: string };
+type ImageRecord = { type?: string; workIndex?: number; key?: string; caption?: string };
 
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function publicUrl(value: unknown) { const url = text(value); return /^https?:\/\//i.test(url) ? url : ""; }
@@ -45,6 +47,7 @@ export function artistRowToProfile(row: PublicArtistRow, includeHidden = false):
     hours: studioHours ? formatWeekly(studioHours) : text(values.hours) || "방문 전 운영시간을 확인해주세요.",
     visitType,
     ...(studioHours ? { studioHours, status: studioStatus(studioHours, visitType) } : {}),
+    gallery: galleryRecords(images).map((photo) => ({ key: photo.key, image: imageUrl(photo.key), caption: text(photo.caption) })),
     experience: text(values.experience),
     experienceDesc: text(values.experienceDesc),
     experiences,
