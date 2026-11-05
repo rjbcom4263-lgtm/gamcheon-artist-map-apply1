@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ArtistMapFrame, { type MapPlace } from "./ArtistMapFrame";
 import type { ArtistPlace } from "./map-artists";
+import { refreshPlaceStatuses } from "../lib/studio-hours";
 import "./full-art-map.css";
 
 function TabIcon({ artists = false }: { artists?: boolean }) {
@@ -12,23 +13,40 @@ function TabIcon({ artists = false }: { artists?: boolean }) {
   </svg>;
 }
 
+// 지도를 오래 열어 둬도 영업 시작·마감·자정에 맞춰 방문 상태가 바뀌게 합니다. 백그라운드에서는 타이머가 늦어지므로 화면으로 돌아올 때도 계산합니다.
+function useLivePlaces(initialPlaces: ArtistPlace[]) {
+  const [places, setPlaces] = useState(initialPlaces);
+  useEffect(() => {
+    const refresh = () => setPlaces((current) => refreshPlaceStatuses(current));
+    const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
+    const timer = window.setInterval(refresh, 60_000);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+  return places;
+}
+
 export default function FullArtistMap({ initialPlaces, initialArtistId }: { initialPlaces: ArtistPlace[]; initialArtistId?: string }) {
+  const places = useLivePlaces(initialPlaces);
   const [selectedId, setSelectedId] = useState<string | null>(initialArtistId ?? null);
   const [view, setView] = useState<"home" | "artists">("home");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("전체");
-  const mapped = useMemo(() => initialPlaces.filter(place => place.geoPosition), [initialPlaces]);
+  const mapped = useMemo(() => places.filter(place => place.geoPosition), [places]);
   const mapPlaces = useMemo(() => mapped.map((place): MapPlace => ({
     id: place.id, name: place.name, category: "attraction", ...place.geoPosition!,
     address: `${place.studio} · ${place.address}`,
     description: place.status ? `${place.type} · ${place.hours}` : `${place.type} · ${place.hours} · ${place.visitType}`,
   })), [mapped]);
-  const categories = useMemo(() => ["전체", ...Array.from(new Set(initialPlaces.flatMap(place => place.categories)))], [initialPlaces]);
-  const visible = useMemo(() => initialPlaces.filter(place =>
+  const categories = useMemo(() => ["전체", ...Array.from(new Set(places.flatMap(place => place.categories)))], [places]);
+  const visible = useMemo(() => places.filter(place =>
     (category === "전체" || place.categories.includes(category)) &&
     `${place.name} ${place.studio} ${place.categories.join(" ")}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
-  ), [initialPlaces, query, category]);
-  const selected = initialPlaces.find(place => place.id === selectedId);
+  ), [places, query, category]);
+  const selected = places.find(place => place.id === selectedId);
   const select = useCallback((id: string) => {
     setSelectedId(id);
     const url = new URL(window.location.href);
@@ -47,7 +65,7 @@ export default function FullArtistMap({ initialPlaces, initialArtistId }: { init
         <ArtistMapFrame full compactApp className="artist-app__frame" title="감천 작가 지도" places={mapPlaces} selectedId={selectedId} onSelect={select}/>
       </div>
       {view === "artists" && <section className="artist-app__directory" aria-label="작가 목록">
-        <div className="artist-app__directory-head"><p>MEET THE ARTISTS</p><h1>작가 목록<span>{initialPlaces.length}</span></h1></div>
+        <div className="artist-app__directory-head"><p>MEET THE ARTISTS</p><h1>작가 목록<span>{places.length}</span></h1></div>
         <label className="artist-app__search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 5 5"/></svg><input type="search" placeholder="이름 또는 공방 검색" aria-label="이름 또는 공방 검색" value={query} onChange={event => setQuery(event.target.value)}/></label>
         <div className="artist-app__filters" role="group" aria-label="작가 분야 분류">{categories.map(item => <button type="button" key={item} aria-pressed={category === item} onClick={() => setCategory(item)}>{item}</button>)}</div>
         <p className="artist-app__results" aria-live="polite">{visible.length}명의 작가</p>
@@ -58,7 +76,7 @@ export default function FullArtistMap({ initialPlaces, initialArtistId }: { init
             {place.geoPosition ? <button type="button" onClick={() => { select(place.id); setView("home"); }}>지도에서 보기 ↗</button> : <span className="artist-app__pending">위치 확인 중</span>}
           </div><Link className="artist-app__arrow" href={place.detailHref} aria-label={`${place.name} 상세 보기`}>↗</Link>
         </article>)}</div>
-        {!visible.length && <div className="artist-app__empty"><strong>{initialPlaces.length ? "검색 결과가 없습니다." : "작가를 소개할 준비를 하고 있어요."}</strong><p>{initialPlaces.length ? "다른 이름이나 분야로 찾아보세요." : "등록된 작가가 공개되면 이곳에서 만날 수 있습니다."}</p>{initialPlaces.length > 0 && <button type="button" onClick={() => { setQuery(""); setCategory("전체"); }}>전체 작가 보기</button>}</div>}
+        {!visible.length && <div className="artist-app__empty"><strong>{places.length ? "검색 결과가 없습니다." : "작가를 소개할 준비를 하고 있어요."}</strong><p>{places.length ? "다른 이름이나 분야로 찾아보세요." : "등록된 작가가 공개되면 이곳에서 만날 수 있습니다."}</p>{places.length > 0 && <button type="button" onClick={() => { setQuery(""); setCategory("전체"); }}>전체 작가 보기</button>}</div>}
       </section>}
     </section>
     <nav className="artist-app__nav" aria-label="모바일 앱 메뉴">

@@ -14,6 +14,7 @@ export type StudioStatus = { state: StudioState; label: string; detail: string }
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const KST_OFFSET = 9 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function text(value: unknown, max: number) { return typeof value === "string" ? value.trim().slice(0, max) : ""; }
 
@@ -83,18 +84,51 @@ export function studioStatus(hours: StudioHours, visitType: string, now = new Da
   const day = hours.weekly[today.day];
   const todayText = day.closed ? "오늘 정기 휴무" : `오늘 ${day.open}–${day.close}`;
   if (visitType === "사전 예약 필요") return { state: "reservation", label: "예약 방문", detail: `${todayText} · 사전 예약 후 방문` };
-  if (day.closed) return { state: "dayoff", label: "오늘 휴무", detail: nextOpening(hours, today.day) };
+  if (day.closed) return { state: "dayoff", label: "오늘 휴무", detail: nextOpening(hours, today.date) };
   if (today.time < day.open) return { state: "before", label: "영업 전", detail: `${day.open}에 열어요` };
-  if (today.time >= day.close) return { state: "after", label: "영업 종료", detail: nextOpening(hours, today.day) };
+  if (today.time >= day.close) return { state: "after", label: "영업 종료", detail: nextOpening(hours, today.date) };
   return { state: "open", label: "방문 가능", detail: `${day.close}까지` };
 }
 
-function nextOpening(hours: StudioHours, from: Day) {
-  const start = DAYS.indexOf(from);
-  for (let step = 1; step <= 7; step += 1) {
-    const day = DAYS[(start + step) % 7];
+/** 오늘 다음으로 문을 여는 날을 찾습니다. 임시 휴무 날짜는 건너뛰고, 그 뒤로 한 주를 보면 운영일 유무를 알 수 있습니다. */
+function nextOpening(hours: StudioHours, fromDate: string) {
+  const start = Date.parse(`${fromDate}T00:00:00Z`);
+  const closure = hours.closure;
+  let step = 1;
+  for (let checked = 0; checked < 7; step += 1) {
+    const moment = new Date(start + step * DAY_MS);
+    const date = moment.toISOString().slice(0, 10);
+    if (closure && closure.from <= date && date <= closure.until) {
+      step = Math.round((Date.parse(`${closure.until}T00:00:00Z`) - start) / DAY_MS);
+      continue;
+    }
+    checked += 1;
+    const day = DAYS[(moment.getUTCDay() + 6) % 7];
     const item = hours.weekly[day];
-    if (!item.closed) return `${step === 1 ? "내일" : `${DAY_LABELS[day]}요일`} ${item.open}에 열어요`;
+    if (item.closed) continue;
+    const when = step === 1 ? "내일" : step < 7 ? `${DAY_LABELS[day]}요일` : `${shortDate(date)}(${DAY_LABELS[day]})`;
+    return `${when} ${item.open}에 열어요`;
   }
   return "운영일이 정해지지 않았어요";
+}
+
+/** 지도 한 줄 표시용 상태 문구. */
+export function placeStatusFields(hours: StudioHours, visitType: string, now = new Date()) {
+  const status = studioStatus(hours, visitType, now);
+  return { hours: `${status.label} · ${status.detail}`, status: { state: status.state, label: status.label } };
+}
+
+export type LivePlace = { visitType: string; hours: string; studioHours?: StudioHours; status?: { state: StudioState; label: string } };
+
+/** 지금 시각으로 상태를 다시 계산합니다. 문구가 그대로면 같은 배열을 돌려줘 지도에 다시 보내지 않게 합니다. */
+export function refreshPlaceStatuses<T extends LivePlace>(places: T[], now = new Date()): T[] {
+  let changed = false;
+  const next = places.map((place) => {
+    if (!place.studioHours) return place;
+    const fields = placeStatusFields(place.studioHours, place.visitType, now);
+    if (fields.hours === place.hours) return place;
+    changed = true;
+    return { ...place, ...fields };
+  });
+  return changed ? next : places;
 }

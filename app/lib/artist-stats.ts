@@ -41,3 +41,20 @@ export function summarizeStats(rows: StatRow[], now = new Date(), chartDays = 14
 export function statSeenKey(kind: StatKind, id: string, day: string) {
   return `gamcheon-stat:${kind}:${id}:${day}`;
 }
+
+type SeenStore = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
+/**
+ * 하루 한 번만 신호를 보냅니다. 중복을 막으려고 보내기 전에 표시하고, 실패하면 지워 다음 방문 때 다시 보냅니다.
+ * 저장 공간이 막혀 있으면(getStore가 오류) 그냥 보냅니다.
+ */
+export async function recordStatOnce(key: string, getStore: () => SeenStore, send: () => Promise<{ ok: boolean }>) {
+  try {
+    const store = getStore();
+    if (store.getItem(key)) return;
+    store.setItem(key, "1");
+  } catch {}
+  const ok = await send().then((response) => response.ok, () => false);
+  if (ok) return;
+  try { getStore().removeItem(key); } catch {}
+}

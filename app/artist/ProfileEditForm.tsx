@@ -40,6 +40,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
   const [panel, setPanel] = useState<Panel>(null);
   const [workIndex, setWorkIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [preparingPhotos, setPreparingPhotos] = useState(0);
   const [message, setMessage] = useState("");
   const ScrollContainer = modal ? "div" : "main";
   const categoryList = categories.split(",").map((item) => item.trim()).filter(Boolean);
@@ -62,6 +63,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
     const picked = Array.from(list || []).filter((file) => file.type.startsWith("image/")).slice(0, MAX_GALLERY_PHOTOS - gallery.length);
     if (!picked.length) return;
     setMessage("사진을 준비하고 있습니다…");
+    setPreparingPhotos((count) => count + 1);
     try {
       const drafts = await Promise.all(picked.map(async (original) => {
         const file = await compressImage(original);
@@ -71,6 +73,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
       setGallery((current) => [...current, ...drafts].slice(0, MAX_GALLERY_PHOTOS));
       setMessage("");
     } catch { setMessage("사진을 줄이지 못했습니다. 2MB 이하 JPG·PNG·WebP로 다시 골라주세요."); }
+    finally { setPreparingPhotos((count) => count - 1); }
   }
   const moveGallery = (index: number, step: number) => setGallery((current) => {
     const next = [...current];
@@ -139,9 +142,9 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
         <section className="artist-channel-section editable-section"><span>작가 채널</span><button className="inline-edit-button section-edit" type="button" onClick={() => setPanel("channels")}>채널 수정</button><div>{values.instagram && <i>Instagram</i>}{values.website && <i>Website</i>}{values.shopUrl && <i>작품 구매</i>}{!values.instagram && !values.website && !values.shopUrl && <small>등록된 채널이 없습니다.</small>}</div></section>
       </ScrollContainer>
 
-      <nav className="visual-editor-actions">{modal ? <button className="visual-editor-exit" {...profileEditorControl("hide")}>나가기</button> : <Link href="/artist">나가기</Link>}<span className={message ? (message.includes("반영") ? "is-ok" : "is-error") : ""} role="status">{message || "수정할 영역을 눌러보세요."}</span><button type="submit" disabled={saving}>{saving ? "반영 중…" : "공개 반영"}</button></nav>
+      <nav className="visual-editor-actions">{modal ? <button className="visual-editor-exit" {...profileEditorControl("hide")}>나가기</button> : <Link href="/artist">나가기</Link>}<span className={message ? (message.includes("반영") ? "is-ok" : "is-error") : ""} role="status">{message || "수정할 영역을 눌러보세요."}</span><button type="submit" disabled={saving || preparingPhotos > 0}>{saving ? "반영 중…" : "공개 반영"}</button></nav>
 
-      {panel && <section className="visual-edit-sheet" aria-label="공개 프로필 편집 패널"><header><div><span>LIVE PREVIEW</span><h2>{({ profile: "프로필 수정", work: "대표 작품 수정", story: "작가 이야기 수정", visit: "화실 방문 정보", gallery: "작업실 사진", channels: "온라인 채널" } as const)[panel]}</h2></div><button type="button" aria-label="편집 패널 닫기" onClick={() => setPanel(null)}>×</button></header><div className="visual-sheet-body">
+      {panel && <section className="visual-edit-sheet" aria-label="공개 프로필 편집 패널"><header><div><span>LIVE PREVIEW</span><h2>{({ profile: "프로필 수정", work: "대표 작품 수정", story: "작가 이야기 수정", visit: "화실 방문 정보", gallery: "작업실 사진", channels: "온라인 채널" } as const)[panel]}</h2></div><button type="button" aria-label="편집 패널 닫기" onClick={() => setPanel(null)}>×</button></header><div className="visual-sheet-body"><fieldset className="visual-sheet-fields" disabled={saving}>
         {panel === "profile" && <><Field label="작가명"><input required maxLength={100} value={artistName} onChange={(event) => setArtistName(event.target.value)}/></Field><Field label="작품 분야"><input required value={categories} placeholder="회화, 일러스트" onChange={(event) => setCategories(event.target.value)}/></Field><Field label="한 줄 소개"><textarea required maxLength={200} rows={3} value={values.tagline} onChange={(event) => update("tagline", event.target.value)}/></Field><ImagePicker label="프로필 이미지" preview={previews.profileImage || artist.profile} onChange={(file) => pickImage("profileImage", file)}/></>}
         {panel === "work" && <><div className="work-selector">{works.map((_, index) => <button className={index === workIndex ? "is-active" : ""} type="button" key={index} onClick={() => setWorkIndex(index)}>{index + 1}</button>)}</div><ImagePicker label="작품 이미지" preview={workImage(workIndex)} onChange={(file) => pickImage(`workImage${workIndex}`, file)}/><Field label="작품명"><input required maxLength={150} value={works[workIndex]?.title || ""} onChange={(event) => setWorks((current) => current.map((item, index) => index === workIndex ? { ...item, title: event.target.value } : item))}/></Field><Field label="작품 상태"><select value={works[workIndex]?.status || "문의 필요"} onChange={(event) => setWorks((current) => current.map((item, index) => index === workIndex ? { ...item, status: event.target.value } : item))}>{statuses.map((status) => <option key={status}>{status}</option>)}</select></Field><Field label="작품 설명"><textarea maxLength={1200} rows={4} value={works[workIndex]?.description || ""} onChange={(event) => setWorks((current) => current.map((item, index) => index === workIndex ? { ...item, description: event.target.value } : item))}/></Field></>}
         {panel === "story" && <Field label="작가 이야기"><textarea maxLength={4000} rows={9} value={values.bio} onChange={(event) => update("bio", event.target.value)}/></Field>}
@@ -167,7 +170,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
           {gallery.length < MAX_GALLERY_PHOTOS && <label className="gallery-editor-add">＋ 사진 추가 <small>여러 장 선택 가능 · 큰 사진은 자동으로 줄어듭니다</small><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { void addPhotos(event.target.files); event.target.value = ""; }}/></label>}
         </div>}
         {panel === "channels" && <><Field label="Instagram"><input type="url" value={values.instagram} placeholder="https://instagram.com/..." onChange={(event) => update("instagram", event.target.value)}/></Field><Field label="홈페이지"><input type="url" value={values.website} placeholder="https://..." onChange={(event) => update("website", event.target.value)}/></Field><Field label="온라인 판매처"><input type="url" value={values.shopUrl} placeholder="https://..." onChange={(event) => update("shopUrl", event.target.value)}/></Field></>}
-      </div><footer><span>입력 내용이 화면에 바로 미리보기 됩니다.</span><button type="button" onClick={() => setPanel(null)}>미리보기 적용</button></footer></section>}
+      </fieldset></div><footer><span>입력 내용이 화면에 바로 미리보기 됩니다.</span><button type="button" onClick={() => setPanel(null)}>미리보기 적용</button></footer></section>}
     </div>
   </form>;
 }

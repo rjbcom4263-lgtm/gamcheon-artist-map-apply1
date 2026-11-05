@@ -1,6 +1,6 @@
 import { isLegacyMapPosition, isWithinGamcheon } from "../lib/geo";
 import { parse } from "../lib/json";
-import { readStudioHours, studioStatus, type StudioState } from "../lib/studio-hours";
+import { placeStatusFields, readStudioHours, type StudioHours, type StudioState } from "../lib/studio-hours";
 
 export type ArtistRow = { id: string; artist_name: string; payload_json: string; image_keys_json: string };
 export type ArtistPlace = {
@@ -13,6 +13,8 @@ export type ArtistPlace = {
   hours: string;
   visitType: string;
   status?: { state: StudioState; label: string };
+  /** 지도를 오래 열어 둘 때 브라우저에서 상태를 다시 계산하는 데 씁니다. */
+  studioHours?: StudioHours;
   image: string;
   detailHref: string;
   position?: { x: number; y: number };
@@ -43,7 +45,7 @@ export function artistRowsToPlaces(rows: ArtistRow[]): ArtistPlace[] {
     const exactAddress = text(values.locationPrivacy) === "exact" ? text(values.address || values.studioAddress) : "";
     const visitType = text(values.visitType) || "방문 전 문의";
     const studioHours = readStudioHours(payload.studioHours);
-    const status = studioHours ? studioStatus(studioHours, visitType) : undefined;
+    const live = studioHours ? placeStatusFields(studioHours, visitType) : undefined;
 
     return [{
       id: row.id,
@@ -52,9 +54,9 @@ export function artistRowsToPlaces(rows: ArtistRow[]): ArtistPlace[] {
       categories,
       studio: text(values.studioName) || "작업실 정보 준비 중",
       address: exactAddress || "감천문화마을 일대",
-      hours: status ? `${status.label} · ${status.detail}` : text(values.hours) || "운영시간 확인 필요",
+      hours: live?.hours || text(values.hours) || "운영시간 확인 필요",
       visitType,
-      ...(status ? { status: { state: status.state, label: status.label } } : {}),
+      ...(live ? { studioHours, status: live.status } : {}),
       image: imageKey ? `/api/artists/images?key=${encodeURIComponent(imageKey)}` : index % 2 ? "/assets/home/artist-goods.webp" : "/assets/home/hero-artist-studio.webp",
       detailHref: `/artists/${encodeURIComponent(row.id)}`,
       ...(position ? { position } : {}),

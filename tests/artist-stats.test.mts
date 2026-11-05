@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { koreaDay, statSeenKey, summarizeStats, type StatRow } from "../app/lib/artist-stats.ts";
+import { koreaDay, recordStatOnce, statSeenKey, summarizeStats, type StatRow } from "../app/lib/artist-stats.ts";
 
 // 2026-11-04 12:00 한국 시간
 const now = new Date("2026-11-04T12:00:00+09:00");
@@ -27,6 +27,47 @@ test("7일·30일 합계, 14일 막대, QR 많이 찍힌 작품을 묶는다", (
   assert.equal(stats.days[0].day, "2026-10-22");
   assert.deepEqual(stats.days.at(-1), { day: "2026-11-04", views: 3, qr: 2 });
   assert.deepEqual(stats.topGuides, [{ target: "WG-b", count: 4 }, { target: "WG-a", count: 2 }]);
+});
+
+function memoryStore() {
+  const items = new Map<string, string>();
+  return { items, getItem: (key: string) => items.get(key) ?? null, setItem: (key: string, value: string) => void items.set(key, value), removeItem: (key: string) => void items.delete(key) };
+}
+
+test("성공하면 하루 표시를 남겨 다음 방문은 보내지 않는다", async () => {
+  const store = memoryStore();
+  let sent = 0;
+  const send = async () => { sent += 1; return { ok: true }; };
+  await recordStatOnce("k", () => store, send);
+  await recordStatOnce("k", () => store, send);
+  assert.equal(sent, 1);
+  assert.equal(store.items.has("k"), true);
+});
+
+test("보내는 동안 다시 불려도 한 번만 보낸다", async () => {
+  const store = memoryStore();
+  let sent = 0;
+  const send = async () => { sent += 1; return { ok: true }; };
+  await Promise.all([recordStatOnce("k", () => store, send), recordStatOnce("k", () => store, send)]);
+  assert.equal(sent, 1);
+});
+
+test("네트워크 오류나 서버 오류면 표시를 지워 다음 방문에 다시 보낸다", async () => {
+  const store = memoryStore();
+  await recordStatOnce("k", () => store, async () => { throw new Error("offline"); });
+  assert.equal(store.items.has("k"), false);
+  await recordStatOnce("k", () => store, async () => ({ ok: false }));
+  assert.equal(store.items.has("k"), false);
+  let sent = 0;
+  await recordStatOnce("k", () => store, async () => { sent += 1; return { ok: true }; });
+  assert.equal(sent, 1);
+  assert.equal(store.items.has("k"), true);
+});
+
+test("저장 공간이 막혀 있어도 신호는 보내고 오류를 내지 않는다", async () => {
+  let sent = 0;
+  await recordStatOnce("k", () => { throw new Error("blocked"); }, async () => { sent += 1; return { ok: false }; });
+  assert.equal(sent, 1);
 });
 
 test("기록이 없으면 모두 0이고 막대는 빈 날짜로 채운다", () => {
