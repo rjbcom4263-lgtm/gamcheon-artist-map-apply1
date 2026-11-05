@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { MAX_EXPERIENCES, REQUIRED_WORK_COUNT } from "../lib/application";
 import { compressImage } from "../lib/image-client";
+import { APPLICATION_TEXT_LIMITS } from "./application-values";
 import { openDaumPostcode } from "./daum-postcode";
 import { APPLICATION_RETENTION_TEXT, APPLY_CONSENT_VERSION } from "../signup/privacy-consent";
 import {
@@ -72,9 +73,9 @@ export default function Home() {
     setCustomCategory("");
   };
   const input = (name: string, type = "text", placeholder = "", required = false) => (
-    <input type={type} name={name} value={String(values[name] || "")} placeholder={placeholder} required={required} onChange={(e) => update(name, e.target.value)} />
+    <input type={type} name={name} value={String(values[name] || "")} maxLength={APPLICATION_TEXT_LIMITS[name]} placeholder={placeholder} required={required} onChange={(e) => update(name, e.target.value)} />
   );
-  const textArea = (name: string, placeholder = "") => <textarea name={name} value={String(values[name] || "")} placeholder={placeholder} onChange={(e) => update(name, e.target.value)} />;
+  const textArea = (name: string, placeholder = "") => <textarea name={name} value={String(values[name] || "")} maxLength={APPLICATION_TEXT_LIMITS[name]} placeholder={placeholder} onChange={(e) => update(name, e.target.value)} />;
   const select = (name: string, options: string[]) => <select name={name} value={String(values[name])} onChange={(e) => update(name, e.target.value)}>{options.map((o) => <option key={o}>{o}</option>)}</select>;
 
   async function pickImage(e: ChangeEvent<HTMLInputElement>, kind: "profile" | "work", workId?: string) {

@@ -39,11 +39,13 @@ function sqliteD1() {
 
 function memoryBucket() {
   const objects = new Map<string, unknown>();
+  const metadata = new Map<string, unknown>();
   return {
     keys: () => [...objects.keys()],
-    async put(key: string, body: unknown) { objects.set(key, body); },
+    async put(key: string, body: unknown, options?: unknown) { objects.set(key, body); metadata.set(key, options); },
     async get(key: string) { return objects.has(key) ? { body: objects.get(key) } : null; },
-    async delete(keys: string | string[]) { for (const key of [keys].flat()) objects.delete(key); },
+    async head(key: string) { return objects.has(key) ? { ...(metadata.get(key) as object) } : null; },
+    async delete(keys: string | string[]) { for (const key of [keys].flat()) { objects.delete(key); metadata.delete(key); } },
     // 2개씩 나눠 돌려줘 이어 읽기(cursor)까지 함께 시험합니다.
     async list({ prefix, cursor }: { prefix: string; cursor?: string }) {
       const all = [...objects.keys()].filter((key) => key.startsWith(prefix)).map((key) => ({ key }));

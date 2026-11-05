@@ -1,5 +1,5 @@
 // 신청 폼의 상수·타입과 임시 저장(localStorage) 직렬화. 화면 로직은 page.tsx에 있습니다.
-import { MAX_EXPERIENCES, REQUIRED_WORK_COUNT } from "../lib/application";
+import { MAX_EXPERIENCES, REQUIRED_WORK_COUNT } from "../lib/application.ts";
 
 export const STEPS = ["작가 정보", "대표 작품", "활동 공간", "연락·채널", "참여 의견", "확인·제출"];
 export const STEP_TITLES = ["프로필 기본 정보", "대표 작품 등록", "활동 공간과 방문", "연락처와 온라인 채널", "프로젝트 참여 의향", "공개 범위와 최종 확인"];
