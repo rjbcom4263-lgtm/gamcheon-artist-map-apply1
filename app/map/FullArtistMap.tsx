@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import ArtistMapFrame, { type MapPlace } from "./ArtistMapFrame";
 import type { ArtistPlace } from "./map-artists";
 import { refreshPlaceStatuses } from "../lib/studio-hours";
+import { useMinuteTick } from "../lib/useMinuteTick";
 import "./full-art-map.css";
 
 function TabIcon({ artists = false }: { artists?: boolean }) {
@@ -13,19 +14,10 @@ function TabIcon({ artists = false }: { artists?: boolean }) {
   </svg>;
 }
 
-// 지도를 오래 열어 둬도 영업 시작·마감·자정에 맞춰 방문 상태가 바뀌게 합니다. 백그라운드에서는 타이머가 늦어지므로 화면으로 돌아올 때도 계산합니다.
+// 지도를 오래 열어 둬도 방문 상태가 바뀌게 합니다. 문구가 그대로면 같은 배열이 유지돼 지도에 다시 보내지 않습니다.
 function useLivePlaces(initialPlaces: ArtistPlace[]) {
   const [places, setPlaces] = useState(initialPlaces);
-  useEffect(() => {
-    const refresh = () => setPlaces((current) => refreshPlaceStatuses(current));
-    const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
-    const timer = window.setInterval(refresh, 60_000);
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, []);
+  useMinuteTick(() => setPlaces((current) => refreshPlaceStatuses(current)));
   return places;
 }
 

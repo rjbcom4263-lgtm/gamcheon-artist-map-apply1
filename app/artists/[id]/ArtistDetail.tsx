@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SAVED_ARTISTS_KEY, type PublicArtist } from "../public-artist";
-import type { StudioStatus } from "../../lib/studio-hours";
+import { studioStatus, type StudioStatus } from "../../lib/studio-hours";
+import { useMinuteTick } from "../../lib/useMinuteTick";
 import "./artist-detail.css";
 
 // 원본 구조(폰 프레임·섹션 순서·크림/그린 색)는 그대로 두고, Bunzee 설계(장소 상세)에서
@@ -49,6 +50,10 @@ export default function ArtistDetail({ artist, guides = [] }: { artist: PublicAr
   const [saved, setSaved] = useState(false);
   const [workIndex, setWorkIndex] = useState<number | null>(null);
   const [entry, setEntry] = useState(0);
+  // 페이지를 열어 둬도 방문 상태가 바뀌게 합니다. 첫 화면은 서버가 계산한 값을 그대로 씁니다.
+  const [now, setNow] = useState<Date | null>(null);
+  useMinuteTick(() => setNow(new Date()));
+  const status = artist.studioHours && now ? studioStatus(artist.studioHours, artist.visitType, now) : artist.status;
   const work = workIndex === null ? null : artist.works[workIndex];
   const [photoIndex, setPhotoIndex] = useState<number | null>(null);
   const photo = photoIndex === null ? null : artist.gallery[photoIndex];
@@ -114,7 +119,7 @@ export default function ArtistDetail({ artist, guides = [] }: { artist: PublicAr
 
         <section className="artist-visit-section">
           <div className="artist-detail-heading"><div><span>STUDIO VISIT</span><h2>화실 방문 정보</h2></div></div>
-          <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{artist.studio}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{artist.address}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{artist.status && <StatusBadge status={artist.status}/>}{artist.hours}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{artist.visitType}</dd></div><div><dt><Icon name={verified ? "check" : "warning"}/>정보 확인</dt><dd>{verified ? `${verified} 현장 확인` : "현장 확인 전"}{registered && <small>{registered} 작가 등록</small>}</dd></div></dl>
+          <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{artist.studio}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{artist.address}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{status && <StatusBadge status={status}/>}{artist.hours}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{artist.visitType}</dd></div><div><dt><Icon name={verified ? "check" : "warning"}/>정보 확인</dt><dd>{verified ? `${verified} 현장 확인` : "현장 확인 전"}{registered && <small>{registered} 작가 등록</small>}</dd></div></dl>
           <p className={`artist-visit-note${verified ? "" : " is-unverified"}`}><Icon name="warning"/>임시 휴무와 체험 가능 시간은 달라질 수 있어요. 방문 전 작가 채널에서 다시 확인해주세요.</p>
           {artist.experiences.map((experience) => <div className="artist-experience" key={experience.id}><span>{experience.title} · {experience.status}</span><p>{experience.description || "체험 프로그램의 자세한 내용은 작가에게 문의해주세요."}</p></div>)}
           <Link className="artist-report-link" href="/contact"><Icon name="pencil"/>정보가 달라졌나요? 변경 제보하기</Link>
