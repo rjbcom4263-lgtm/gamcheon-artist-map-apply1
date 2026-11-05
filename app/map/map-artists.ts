@@ -1,6 +1,7 @@
-import { isLegacyMapPosition, isWithinGamcheon } from "../lib/geo";
-import { parse } from "../lib/json";
-import { placeStatusFields, readStudioHours, type StudioHours, type StudioState } from "../lib/studio-hours";
+import { isLegacyMapPosition, isWithinGamcheon } from "../lib/geo.ts";
+import { parse } from "../lib/json.ts";
+import { publicMapPosition, type LocationMode } from "../lib/location-privacy.ts";
+import { placeStatusFields, readStudioHours, type StudioHours, type StudioState } from "../lib/studio-hours.ts";
 
 export type ArtistRow = { id: string; artist_name: string; payload_json: string; image_keys_json: string };
 export type ArtistPlace = {
@@ -17,6 +18,8 @@ export type ArtistPlace = {
   studioHours?: StudioHours;
   image: string;
   detailHref: string;
+  /** 작가가 고른 위치 공개 범위를 적용한 결과입니다. 정확한 좌표는 exact일 때만 나갑니다. */
+  locationMode: LocationMode;
   position?: { x: number; y: number };
   geoPosition?: { longitude: number; latitude: number };
 };
@@ -36,13 +39,14 @@ export function artistRowsToPlaces(rows: ArtistRow[]): ArtistPlace[] {
     const categories = (payload.categories || []).filter((value): value is string => typeof value === "string" && !!value.trim()).map((value) => value.trim());
     const images = parse<ImageRecord[]>(row.image_keys_json, []);
     const imageKey = images.find((image) => image.type === "profile" && image.key)?.key || images.find((image) => image.type === "work" && image.key)?.key;
+    const privacy = text(values.locationPrivacy);
     const x = Number(values.mapX);
     const y = Number(values.mapY);
-    const position = isLegacyMapPosition(x, y) ? { x, y } : undefined;
+    const position = privacy === "exact" && isLegacyMapPosition(x, y) ? { x, y } : undefined;
     const longitude = Number(values.mapLongitude);
     const latitude = Number(values.mapLatitude);
-    const geoPosition = isWithinGamcheon(longitude, latitude) ? { longitude, latitude } : undefined;
-    const exactAddress = text(values.locationPrivacy) === "exact" ? text(values.address || values.studioAddress) : "";
+    const location = isWithinGamcheon(longitude, latitude) ? publicMapPosition(privacy, longitude, latitude) : { mode: "unplaced" as const };
+    const exactAddress = privacy === "exact" ? text(values.address || values.studioAddress) : "";
     const visitType = text(values.visitType) || "방문 전 문의";
     const studioHours = readStudioHours(payload.studioHours);
     const live = studioHours ? placeStatusFields(studioHours, visitType) : undefined;
@@ -59,8 +63,9 @@ export function artistRowsToPlaces(rows: ArtistRow[]): ArtistPlace[] {
       ...(live ? { studioHours, status: live.status } : {}),
       image: imageKey ? `/api/artists/images?key=${encodeURIComponent(imageKey)}` : index % 2 ? "/assets/home/artist-goods.webp" : "/assets/home/hero-artist-studio.webp",
       detailHref: `/artists/${encodeURIComponent(row.id)}`,
+      locationMode: location.mode,
       ...(position ? { position } : {}),
-      ...(geoPosition ? { geoPosition } : {}),
+      ...(location.position ? { geoPosition: location.position } : {}),
     }];
   });
 }

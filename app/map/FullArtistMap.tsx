@@ -30,7 +30,7 @@ export default function FullArtistMap({ initialPlaces, initialArtistId }: { init
   const mapped = useMemo(() => places.filter(place => place.geoPosition), [places]);
   const mapPlaces = useMemo(() => mapped.map((place): MapPlace => ({
     id: place.id, name: place.name, category: "attraction", ...place.geoPosition!,
-    address: `${place.studio} · ${place.address}`,
+    address: place.locationMode === "approximate" ? `${place.studio} · ${place.address} · 대략적인 위치` : `${place.studio} · ${place.address}`,
     description: place.status ? `${place.type} · ${place.hours}` : `${place.type} · ${place.hours} · ${place.visitType}`,
   })), [mapped]);
   const categories = useMemo(() => ["전체", ...Array.from(new Set(places.flatMap(place => place.categories)))], [places]);
@@ -65,7 +65,7 @@ export default function FullArtistMap({ initialPlaces, initialArtistId }: { init
           <Link className="artist-app__photo" href={place.detailHref} aria-label={`${place.name} 작가 소개`}><img src={place.image} alt={`${place.name} 작가`} loading="lazy"/></Link>
           <div className="artist-app__artist-info"><Link href={place.detailHref}><h2>{place.name}</h2></Link><p>{place.categories.join(" · ") || "감천 참여 작가"}</p><small>{place.studio}</small>
             {place.status && <span className={`studio-badge studio-badge--${place.status.state}`}><b>{place.status.label}</b></span>}
-            {place.geoPosition ? <button type="button" onClick={() => { select(place.id); setView("home"); }}>지도에서 보기 ↗</button> : <span className="artist-app__pending">위치 확인 중</span>}
+            {place.geoPosition ? <button type="button" onClick={() => { select(place.id); setView("home"); }}>지도에서 보기 ↗</button> : <span className="artist-app__pending">{place.locationMode === "hidden" ? "위치는 작가에게 문의해 주세요" : "위치 확인 중"}</span>}
           </div><Link className="artist-app__arrow" href={place.detailHref} aria-label={`${place.name} 상세 보기`}>↗</Link>
         </article>)}</div>
         {!visible.length && <div className="artist-app__empty"><strong>{places.length ? "검색 결과가 없습니다." : "작가를 소개할 준비를 하고 있어요."}</strong><p>{places.length ? "다른 이름이나 분야로 찾아보세요." : "등록된 작가가 공개되면 이곳에서 만날 수 있습니다."}</p>{places.length > 0 && <button type="button" onClick={() => { setQuery(""); setCategory("전체"); }}>전체 작가 보기</button>}</div>}

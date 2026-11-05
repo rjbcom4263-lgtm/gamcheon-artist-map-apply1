@@ -6,6 +6,7 @@ import AdminSidebar from "../AdminSidebar";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import ArtistMapFrame, { type MapPlace } from "../../map/ArtistMapFrame";
 import { isLegacyMapPosition, isWithinGamcheon } from "../../lib/geo";
+import { locationPrivacyNote } from "../../lib/location-privacy";
 import "./public-artists.css";
 import { parse } from "../../lib/json";
 
@@ -29,6 +30,7 @@ function details(row: ManagedArtist) {
     studio: typeof values.studioName === "string" && values.studioName.trim() ? values.studioName : "공방명 미입력",
     address: typeof values.address === "string" && values.address.trim() ? values.address.trim() : typeof values.studioAddress === "string" ? values.studioAddress.trim() : "",
     published: values.mapPublished !== false,
+    privacyNote: locationPrivacyNote(values.locationPrivacy),
     longitude: positioned ? longitude : null,
     latitude: positioned ? latitude : null,
     legacyPosition: isLegacyMapPosition(x, y),
@@ -173,6 +175,7 @@ export default function PublicArtistManager({ initial, adminName, initialSelecte
         <div className="dash-card public-map-editor">
           {selected && selectedDetails ? <>
             <div className="public-editor-head"><div><span>{selectedDetails.categories}</span><h2>{selected.artist_name}</h2><p>{selectedDetails.studio}</p></div><label className="publish-switch"><input type="checkbox" disabled={saving} checked={selectedDetails.published} onChange={(event) => updateValues({ mapPublished: event.target.checked })}/><span>{selectedDetails.published ? "지도에 공개" : "지도에서 숨김"}</span></label></div>
+            <p className="coordinate-help" role="note">{selectedDetails.privacyNote}</p>
             <div className="coordinate-fields"><span>경도 {selectedDetails.longitude?.toFixed(6) ?? "미지정"}</span><span>위도 {selectedDetails.latitude?.toFixed(6) ?? "미지정"}</span><button type="button" disabled={saving} onClick={() => { setPlacing(true); setPointMenuOpen(false); }}>{placing ? "지도에서 선택 중" : selectedDetails.longitude === null ? "지도에 배치" : "위치 변경"}</button><button type="button" disabled={saving || selectedDetails.longitude === null} onClick={() => { updateValues({ mapLongitude: null, mapLatitude: null }); setPointMenuOpen(false); setPlacing(false); }}>위치 지우기</button></div>
             <form className="artist-address-search" onSubmit={findAddress}><label>신청서 공방 주소<input value={addressQuery} onChange={(event) => setAddressQueries((current) => ({ ...current, [selected.id]: event.target.value }))} placeholder="예: 부산 사하구 감천로 123"/></label><button type="submit" disabled={searchingAddress || saving || addressQuery.trim().length < 4}>{searchingAddress ? "찾는 중…" : "주소로 위치 제안"}</button></form>
             {addressMessage?.artistId === selected.id && <p className="artist-address-message" role="status">{addressMessage.text}</p>}
