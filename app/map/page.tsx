@@ -1,15 +1,13 @@
 import { env } from "cloudflare:workers";
 import FullArtistMap from "./FullArtistMap";
 import { artistRowsToPlaces } from "./map-artists";
-import type { ArtistRow } from "./map-artists";
+import { listPublicArtists } from "../artists/public-artist-query";
 
 export const dynamic = "force-dynamic";
 
 async function getArtists() {
   try {
-    const result = await env.DB.prepare(`SELECT id, artist_name, payload_json, image_keys_json
-      FROM artist_applications WHERE status = 'approved' ORDER BY created_at DESC LIMIT 100`).all<ArtistRow>();
-    return artistRowsToPlaces(result.results || []);
+    return artistRowsToPlaces(await listPublicArtists(env.DB));
   } catch (error) {
     console.error("artist map data failed", error);
     return [];

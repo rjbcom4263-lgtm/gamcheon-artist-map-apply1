@@ -1,3 +1,4 @@
+import { findPublicArtist } from "../../artists/public-artist-query.ts";
 import type { ApiContext } from "../../lib/api-context";
 import { todayInKorea } from "../../lib/studio-hours.ts";
 import { findPublicGuide } from "../../work-guides/public-guide.ts";
@@ -13,7 +14,7 @@ export async function recordStat(request: Request, context: ApiContext) {
   let ownerId = "";
   let target = "";
   if (body.kind === "view" && /^GA-\d{8}-[A-F0-9]{6}$/.test(id)) {
-    const row = await context.DB.prepare("SELECT account_id FROM artist_applications WHERE id = ? AND status = 'approved'").bind(id).first<{ account_id: string }>();
+    const row = await findPublicArtist(context.DB, id);
     if (!row) return done();
     applicationId = id;
     ownerId = row.account_id;

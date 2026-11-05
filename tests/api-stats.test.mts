@@ -64,6 +64,18 @@ test("승인되지 않은 작가나 공개되지 않은 작품 해설은 세지 
   assert.deepEqual(await server.stats(), []);
 });
 
+test("숨긴 작가나 정지된 계정의 공개 페이지 조회는 세지 않는다", async () => {
+  const hidden = apiServer();
+  await hidden.addApplication(ARTIST, { accountId: "owner", payload: { values: { mapPublished: false } } });
+  await recordStat(send({ kind: "view", id: ARTIST }), hidden.as(null));
+  assert.deepEqual(await hidden.stats(), []);
+
+  const suspended = await withArtist();
+  await suspended.addAccount("owner", "suspended");
+  await recordStat(send({ kind: "view", id: ARTIST }), suspended.as(null));
+  assert.deepEqual(await suspended.stats(), []);
+});
+
 test("숨겨진 해설(반려된 작가, 정지된 계정)은 QR 수로 세지 않는다", async () => {
   const server = await withArtist();
   await server.setApplicationStatus(ARTIST, "rejected");

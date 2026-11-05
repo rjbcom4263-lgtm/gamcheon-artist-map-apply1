@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { env } from "cloudflare:workers";
 import { requireSession } from "../admin/admin-auth";
+import { listPublicArtists } from "../artists/public-artist-query";
 import { news, site } from "./content";
 import { LogoutButton } from "../LogoutButton";
 
@@ -13,8 +14,8 @@ function parse(value: string) {
 }
 
 async function getArtists() {
-  const result = await env.DB.prepare("SELECT id, artist_name, email, payload_json, image_keys_json FROM artist_applications WHERE status = 'approved' ORDER BY created_at DESC").all<ArtistRow>();
-  return result.results || [];
+  const artists: ArtistRow[] = await listPublicArtists(env.DB, 1000);
+  return artists;
 }
 
 function Arrow() { return <span aria-hidden="true">↗</span>; }

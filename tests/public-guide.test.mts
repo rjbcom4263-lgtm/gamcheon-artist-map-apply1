@@ -39,6 +39,14 @@ for (const status of ["suspended", "deleted"]) {
   });
 }
 
+test("지도 공개를 끈 작가의 해설은 숨긴다", async () => {
+  const server = apiServer();
+  await server.addApplication("GA-1", { accountId: "owner", payload: { values: { mapPublished: false } } });
+  await server.addGuide(GUIDE, { applicationId: "GA-1", accountId: "owner" });
+  assert.equal(await findPublicGuide(server.DB as never, GUIDE), null);
+  assert.deepEqual(await listPublicGuides(server.DB as never, "GA-1"), []);
+});
+
 test("다시 승인하거나 계정을 되살리면 같은 해설이 다시 보인다", async () => {
   const server = await published();
   await server.setApplicationStatus("GA-1", "rejected");

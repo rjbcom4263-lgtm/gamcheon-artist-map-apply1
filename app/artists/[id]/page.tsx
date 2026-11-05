@@ -2,7 +2,8 @@ import { env } from "cloudflare:workers";
 import { notFound } from "next/navigation";
 import ArtistDetail, { type GuideLink } from "./ArtistDetail";
 import StatBeacon from "../../StatBeacon";
-import { artistRowToProfile, type PublicArtistRow } from "../public-artist";
+import { artistRowToProfile } from "../public-artist";
+import { findPublicArtist } from "../public-artist-query";
 import { listPublicGuides } from "../../work-guides/public-guide";
 
 export const dynamic = "force-dynamic";
@@ -19,8 +20,7 @@ async function getPublishedGuides(applicationId: string): Promise<GuideLink[]> {
 
 export default async function PublicArtistPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const row = await env.DB.prepare(`SELECT id, artist_name, payload_json, image_keys_json, created_at
-    FROM artist_applications WHERE id = ? AND status = 'approved'`).bind(id).first<PublicArtistRow>();
+  const row = await findPublicArtist(env.DB, id);
   const artist = row ? artistRowToProfile(row) : null;
   if (!artist) notFound();
   const guides = await getPublishedGuides(artist.id);

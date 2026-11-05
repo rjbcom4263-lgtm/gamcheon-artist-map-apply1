@@ -55,7 +55,7 @@ export default function AccountDetail({ account, application }: { account: Accou
   }
 
   async function deleteAccount() {
-    if (!confirm(`${row.display_name || row.login_id} 계정을 삭제할까요?`)) return;
+    if (!confirm(`${row.display_name || row.login_id} 계정을 삭제할까요?\n이 작가의 공개 페이지, 지도, 작품 해설도 함께 내려갑니다.`)) return;
     setSaving(true);
     const response = await fetch(`/api/admin/accounts/${encodeURIComponent(row.id)}`, { method: "DELETE" });
     setSaving(false);
