@@ -7,8 +7,8 @@ export function statusLabel(labels: Record<string, string>, status: string) {
   return labels[status] || status;
 }
 
-/** D1의 CURRENT_TIMESTAMP(UTC, Z 없음)를 한국어 날짜·시간으로 표시합니다. */
+/** D1의 CURRENT_TIMESTAMP(UTC, Z 없음)를 한국어 날짜·시간으로 표시합니다. 서버(UTC)와 브라우저가 같은 글자를 그리도록 시간대를 고정합니다. */
 export function formatDateTime(value: string | null | undefined) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value + (value.endsWith("Z") ? "" : "Z")));
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", dateStyle: "medium", timeStyle: "short" }).format(new Date(value + (value.endsWith("Z") ? "" : "Z")));
 }
