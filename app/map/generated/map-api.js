@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at 6cb2c56 + uncommitted changes.
+// Bundled from https://github.com/InSeok211/art-map at 2517641 + uncommitted changes.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -527,6 +527,7 @@ async function deletePhoto(id, env) {
   await env.MODELS.delete(photoKey(id));
   return json({ ok: true });
 }
+var UNUSED_PHOTO_GRACE_MS = 24 * 60 * 60 * 1e3;
 async function deleteUnusedPhotos(env) {
   if (typeof env.MODELS.list !== "function") return 0;
   const { draft, published } = await readBothVersions(env);
@@ -535,7 +536,10 @@ async function deleteUnusedPhotos(env) {
   let cursor;
   do {
     const page = await env.MODELS.list({ prefix: PREFIX, cursor });
-    for (const object of page.objects) if (!keep.has(object.key.slice(PREFIX.length))) unused.push(object.key);
+    for (const object of page.objects) {
+      const old = Date.now() - object.uploaded.getTime() > UNUSED_PHOTO_GRACE_MS;
+      if (old && !keep.has(object.key.slice(PREFIX.length))) unused.push(object.key);
+    }
     cursor = page.truncated ? page.cursor : void 0;
   } while (cursor);
   if (unused.length) await env.MODELS.delete(unused);
