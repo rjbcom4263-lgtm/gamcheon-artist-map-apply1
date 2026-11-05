@@ -3,18 +3,14 @@ import { notFound } from "next/navigation";
 import ArtistDetail, { type GuideLink } from "./ArtistDetail";
 import StatBeacon from "../../StatBeacon";
 import { artistRowToProfile, type PublicArtistRow } from "../public-artist";
+import { listPublicGuides } from "../../work-guides/public-guide";
 
 export const dynamic = "force-dynamic";
 
-type GuideRow = { id: string; published_title: string };
-
-/** 이 작가의 공개된 작품 해설(/w/[id])만 고릅니다. 공개 조건은 app/w/[id]/page.tsx와 같습니다. */
+/** 이 작가의 공개된 작품 해설(/w/[id])만 고릅니다. 공개 조건은 work-guides/public-guide.ts에 있습니다. */
 async function getPublishedGuides(applicationId: string): Promise<GuideLink[]> {
   try {
-    const result = await env.DB.prepare(`SELECT id, published_title FROM artwork_guides
-      WHERE application_id = ? AND published_title IS NOT NULL AND published_description IS NOT NULL AND published_image_key IS NOT NULL
-      ORDER BY published_at DESC LIMIT 12`).bind(applicationId).all<GuideRow>();
-    return (result.results || []).map((row) => ({ id: row.id, title: row.published_title }));
+    return await listPublicGuides(env.DB, applicationId);
   } catch (error) {
     console.error("artist guides failed", error);
     return [];

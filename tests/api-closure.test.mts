@@ -46,6 +46,29 @@ test("임시 휴무를 해제하면 요일별 시간은 남기고 휴무만 지�
   assert.deepEqual(hours.weekly, defaultStudioHours().weekly);
 });
 
+test("예약된 임시 휴무가 있으면 오늘 휴무로 덮어쓰지 않는다", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-11-05T03:00:00Z") });
+  const closure = { from: "2026-12-01", until: "2026-12-05", note: "전시" };
+  const server = await withHours({ ...defaultStudioHours(), closure });
+  assert.equal((await changeClosure(press("today"), server.as(owner))).status, 303);
+  assert.deepEqual((await hoursOf(server)).closure, closure);
+});
+
+test("지금 진행 중인 긴 임시 휴무도 오늘 하루로 줄이지 않는다", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-11-05T03:00:00Z") });
+  const closure = { from: "2026-11-01", until: "2026-11-30", note: "" };
+  const server = await withHours({ ...defaultStudioHours(), closure });
+  await changeClosure(press("today"), server.as(owner));
+  assert.deepEqual((await hoursOf(server)).closure, closure);
+});
+
+test("이미 끝난 임시 휴무는 오늘 휴무로 바꿀 수 있다", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-11-05T03:00:00Z") });
+  const server = await withHours({ ...defaultStudioHours(), closure: { from: "2026-10-01", until: "2026-11-04", note: "지난 휴무" } });
+  await changeClosure(press("today"), server.as(owner));
+  assert.deepEqual((await hoursOf(server)).closure, { from: "2026-11-05", until: "2026-11-05", note: "" });
+});
+
 test("모르는 동작은 아무것도 바꾸지 않는다", async () => {
   const closure = { from: "2026-11-05", until: "2026-11-05", note: "전시" };
   const server = await withHours({ ...defaultStudioHours(), closure });

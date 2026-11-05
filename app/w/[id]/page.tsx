@@ -1,6 +1,8 @@
+import { env } from "cloudflare:workers";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { getGuide, parseTranslations } from "../../work-guides/db";
+import { parseTranslations } from "../../work-guides/db";
+import { findPublicGuide } from "../../work-guides/public-guide";
 import { GUIDE_LANGUAGES } from "../../work-guides/shared";
 import GuideStory from "./GuideStory";
 import StatBeacon from "../../StatBeacon";
@@ -15,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function WorkGuidePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!/^WG-[0-9a-f-]{36}$/.test(id)) notFound();
-  const guide = await getGuide(id);
+  const guide = await findPublicGuide(env.DB, id);
   if (!guide?.published_title || !guide.published_description || !guide.published_image_key) notFound();
   const translations = parseTranslations(guide.translations_json);
   const preferred = (await headers()).get("accept-language")?.split(",").map((entry) => entry.trim().split(";")[0].split("-")[0].toLowerCase()) || [];

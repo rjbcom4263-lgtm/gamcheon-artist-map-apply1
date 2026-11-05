@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { defaultStudioHours, formatWeekly, placeStatusFields, readStudioHours, refreshPlaceStatuses, sanitizeStudioHours, studioStatus, type LivePlace, type StudioHours } from "../app/lib/studio-hours.ts";
+import { closurePeriod, defaultStudioHours, formatWeekly, pendingClosure, placeStatusFields, readStudioHours, refreshPlaceStatuses, sanitizeStudioHours, studioStatus, type LivePlace, type StudioHours } from "../app/lib/studio-hours.ts";
 
 // 2026-11-04(수) 한국 시간을 UTC로 바꿔 넘깁니다.
 const kst = (time: string, date = "2026-11-04") => new Date(`${date}T${time}:00+09:00`);
@@ -66,6 +66,21 @@ test("지도 상태는 시간이 지나면 다시 계산하고, 바뀐 게 없�
   assert.equal(later[1], noHours);
   // 자정을 넘겨 요일이 바뀐 경우
   assert.equal(refreshPlaceStatuses(places, kst("00:30", "2026-11-09"))[0].status?.state, "dayoff");
+});
+
+test("끝나지 않은 임시 휴무만 남아 있는 휴무로 본다", () => {
+  const withClosure = (from: string, until: string): StudioHours => ({ ...hours(), closure: { from, until, note: "" } });
+  assert.equal(pendingClosure(hours(), kst("12:00")), undefined);
+  assert.equal(pendingClosure(withClosure("2026-11-01", "2026-11-03"), kst("12:00")), undefined);
+  assert.equal(pendingClosure(withClosure("2026-11-04", "2026-11-04"), kst("23:59"))?.until, "2026-11-04");
+  assert.equal(pendingClosure(withClosure("2026-12-01", "2026-12-05"), kst("12:00"))?.from, "2026-12-01");
+  // UTC로는 11/3 15:30이지만 한국은 11/4 00:30
+  assert.equal(pendingClosure(withClosure("2026-11-04", "2026-11-04"), new Date("2026-11-03T15:30:00Z"))?.from, "2026-11-04");
+});
+
+test("임시 휴무 기간을 짧게 쓴다", () => {
+  assert.equal(closurePeriod({ from: "2026-11-20", until: "2026-11-20", note: "" }), "11/20");
+  assert.equal(closurePeriod({ from: "2026-11-20", until: "2026-12-05", note: "" }), "11/20–12/5");
 });
 
 test("같은 시간이 이어지는 요일은 묶어서 보여준다", () => {

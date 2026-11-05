@@ -2,7 +2,7 @@ import type { ApiContext } from "../../../lib/api-context";
 import { EDITABLE_APPLICATION_QUERY } from "../../../artist/profile-editor-controls.ts";
 import { parse } from "../../../lib/json.ts";
 import { forbidden, redirectWithCookies } from "../../../lib/http.ts";
-import { readStudioHours, todayInKorea } from "../../../lib/studio-hours.ts";
+import { pendingClosure, readStudioHours, todayInKorea } from "../../../lib/studio-hours.ts";
 
 type Application = { id: string; payload_json: string };
 
@@ -18,8 +18,11 @@ export async function changeClosure(request: Request, context: ApiContext) {
   const hours = readStudioHours(payload.studioHours);
   if (!application || !hours) return redirectWithCookies("/artist#channels", []);
 
+  // 휴무는 한 건만 저장하므로, 예약되었거나 진행 중인 휴무를 오늘 하루로 덮어쓰지 않습니다. 화면도 이때는 버튼을 보여 주지 않습니다.
+  if (action === "today" && pendingClosure(hours)) return redirectWithCookies("/artist#channels", []);
+
   const today = todayInKorea();
-  const studioHours = action === "today" ? { ...hours, closure: { from: today, until: today, note: hours.closure?.note || "" } } : { weekly: hours.weekly };
+  const studioHours = action === "today" ? { ...hours, closure: { from: today, until: today, note: "" } } : { weekly: hours.weekly };
   await context.DB.prepare("UPDATE artist_applications SET payload_json = ? WHERE id = ? AND account_id = ? AND status = 'approved'")
     .bind(JSON.stringify({ ...payload, studioHours }), application.id, viewer.accountId).run();
   return redirectWithCookies("/artist#channels", []);

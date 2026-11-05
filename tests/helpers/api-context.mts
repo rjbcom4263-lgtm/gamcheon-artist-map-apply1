@@ -68,9 +68,20 @@ export function apiServer() {
     await DB.prepare("INSERT INTO artist_applications (id, account_id, artist_name, phone, email, status, payload_json, image_keys_json) VALUES (?, ?, ?, '', '', ?, ?, ?)")
       .bind(id, values.accountId ?? "owner", values.name ?? "작가", values.status ?? "approved", JSON.stringify(values.payload ?? {}), JSON.stringify(values.images ?? [])).run();
   };
-  const addGuide = async (id: string, values: { applicationId: string; accountId?: string; published?: boolean; artistName?: string; publishedKey?: string; pendingKey?: string }) => {
-    await DB.prepare("INSERT INTO artwork_guides (id, account_id, application_id, artist_name, published_title, published_image_key, pending_image_key) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .bind(id, values.accountId ?? "owner", values.applicationId, values.artistName ?? "작가", values.published === false ? null : "작품", values.publishedKey ?? null, values.pendingKey ?? null).run();
+  const addGuide = async (id: string, values: { applicationId: string; accountId?: string; published?: boolean; artistName?: string; publishedKey?: string; pendingKey?: string; publishedDescription?: string | null; publishedAt?: string }) => {
+    const published = values.published !== false;
+    const description = values.publishedDescription === undefined ? (published ? "설명" : null) : values.publishedDescription;
+    await DB.prepare("INSERT INTO artwork_guides (id, account_id, application_id, artist_name, published_title, published_description, published_image_key, pending_image_key, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(id, values.accountId ?? "owner", values.applicationId, values.artistName ?? "작가", published ? `작품 ${id}` : null, description, values.publishedKey ?? (published ? `work-guides/${id}/image.webp` : null), values.pendingKey ?? null, values.publishedAt ?? null).run();
+  };
+  const addAccount = async (id: string, status = "active") => {
+    await DB.prepare("INSERT INTO accounts (id, login_id, password_hash, role, status) VALUES (?, ?, 'test-only', 'artist', ?)").bind(id, id, status).run();
+  };
+  const setApplicationStatus = async (id: string, status: string) => {
+    await DB.prepare("UPDATE artist_applications SET status = ? WHERE id = ?").bind(status, id).run();
+  };
+  const setAccountStatus = async (id: string, status: string) => {
+    await DB.prepare("UPDATE accounts SET status = ? WHERE id = ?").bind(status, id).run();
   };
   const guideIds = async () => ((await DB.prepare("SELECT id FROM artwork_guides ORDER BY id").all()).results as Array<{ id: string }>).map((row) => row.id);
   const application = (id: string) => DB.prepare("SELECT * FROM artist_applications WHERE id = ?").bind(id).first() as Promise<Record<string, string> | null>;
@@ -78,5 +89,5 @@ export function apiServer() {
   const addStat = async (applicationId: string, kind = "view", target = "", count = 3) => {
     await DB.prepare("INSERT INTO artist_daily_stats (application_id, day, kind, target, count) VALUES (?, '2026-11-05', ?, ?, ?)").bind(applicationId, kind, target, count).run();
   };
-  return { as, DB, BUCKET, addApplication, addGuide, guideIds, addStat, application, stats };
+  return { as, DB, BUCKET, addApplication, addGuide, addAccount, setApplicationStatus, setAccountStatus, guideIds, addStat, application, stats };
 }

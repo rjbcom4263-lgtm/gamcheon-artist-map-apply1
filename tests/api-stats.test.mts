@@ -64,6 +64,18 @@ test("승인되지 않은 작가나 공개되지 않은 작품 해설은 세지 
   assert.deepEqual(await server.stats(), []);
 });
 
+test("숨겨진 해설(반려된 작가, 정지된 계정)은 QR 수로 세지 않는다", async () => {
+  const server = await withArtist();
+  await server.setApplicationStatus(ARTIST, "rejected");
+  await recordStat(send({ kind: "qr", id: GUIDE }), server.as(null));
+  assert.deepEqual(await server.stats(), []);
+
+  await server.setApplicationStatus(ARTIST, "approved");
+  await server.addAccount("owner", "suspended");
+  await recordStat(send({ kind: "qr", id: GUIDE }), server.as(null));
+  assert.deepEqual(await server.stats(), []);
+});
+
 test("번호 형식이 다르면 저장돼 있어도 세지 않는다", async () => {
   const server = apiServer();
   await server.addApplication("GA-1");

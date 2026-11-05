@@ -59,6 +59,16 @@ export function todayInKorea(now = new Date()) { return kst(now).date; }
 
 function shortDate(date: string) { return `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`; }
 
+/** 아직 끝나지 않은 임시 휴무(진행 중이거나 예약된 것). 휴무는 한 건만 저장하므로, 이 값이 있으면 새 휴무로 덮어쓰지 않습니다. */
+export function pendingClosure(hours: StudioHours, now = new Date()) {
+  return hours.closure && hours.closure.until >= kst(now).date ? hours.closure : undefined;
+}
+
+/** 임시 휴무 기간을 "11/20" 또는 "11/20–11/25"처럼 줄여 씁니다. */
+export function closurePeriod(closure: StudioClosure) {
+  return closure.from === closure.until ? shortDate(closure.from) : `${shortDate(closure.from)}–${shortDate(closure.until)}`;
+}
+
 /** 요일별 시간을 "월 휴무 · 화–금 10:00–18:00 · 토–일 11:00–17:00"처럼 줄여 씁니다. */
 export function formatWeekly(hours: StudioHours) {
   const groups: Array<{ days: Day[]; value: string }> = [];

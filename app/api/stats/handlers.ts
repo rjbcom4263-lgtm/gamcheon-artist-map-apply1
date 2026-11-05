@@ -1,5 +1,6 @@
 import type { ApiContext } from "../../lib/api-context";
 import { todayInKorea } from "../../lib/studio-hours.ts";
+import { findPublicGuide } from "../../work-guides/public-guide.ts";
 
 const done = () => new Response(null, { status: 204 });
 
@@ -17,9 +18,8 @@ export async function recordStat(request: Request, context: ApiContext) {
     applicationId = id;
     ownerId = row.account_id;
   } else if (body.kind === "qr" && /^WG-[0-9a-f-]{36}$/.test(id)) {
-    const guide = await context.DB.prepare("SELECT application_id, account_id, published_title FROM artwork_guides WHERE id = ?").bind(id)
-      .first<{ application_id: string; account_id: string; published_title: string | null }>();
-    if (!guide?.published_title) return done();
+    const guide = await findPublicGuide(context.DB, id);
+    if (!guide) return done();
     applicationId = guide.application_id;
     ownerId = guide.account_id;
     target = id;

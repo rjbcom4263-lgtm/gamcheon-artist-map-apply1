@@ -10,7 +10,7 @@ import { EDITABLE_APPLICATION_QUERY, PROFILE_EDITOR_ID, profileEditorControl } f
 import { LogoutButton } from "../LogoutButton";
 import { parse } from "../lib/json";
 import { ARTIST_STATUS_LABELS, formatDateTime } from "../lib/format";
-import { formatWeekly, readStudioHours, studioStatus } from "../lib/studio-hours";
+import { closurePeriod, formatWeekly, pendingClosure, readStudioHours, studioStatus } from "../lib/studio-hours";
 import { StatusBadge } from "../artists/[id]/ArtistDetail";
 import { STAT_WINDOW_DAYS, koreaDay, summarizeStats, type StatRow } from "../lib/artist-stats";
 import StatsCard from "./StatsCard";
@@ -68,6 +68,7 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
   const guideTitles = Object.fromEntries((guideRows?.results || []).map((guide) => [guide.id, guide.published_title || "작품 해설"]));
   const studioHours = readStudioHours(payload.studioHours);
   const studioState = studioHours ? studioStatus(studioHours, String(values.visitType || "")) : null;
+  const upcomingClosure = studioHours ? pendingClosure(studioHours) : undefined;
 
   return <main className="artist-shell">
     <aside className="artist-sidebar">
@@ -137,6 +138,7 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
             {!isAdmin && canEdit && <form className="artist-closure-quick" method="post" action="/api/artist/closure">
               {!studioHours ? <><span>요일별 운영시간을 설정하면 지도에 &lsquo;방문 가능 / 휴무&rsquo;가 표시됩니다.</span><button {...profileEditorControl("show")}>운영시간 설정</button></>
                 : studioState?.state === "closure" ? <><span>지금 임시 휴무로 표시되고 있어요.</span><button type="submit" name="action" value="clear">임시 휴무 해제</button></>
+                : upcomingClosure ? <><span>{closurePeriod(upcomingClosure)} 임시 휴무가 예약되어 있어요. 오늘 쉬려면 수정 화면에서 기간을 바꿔 주세요.</span><button {...profileEditorControl("show")}>기간 수정</button></>
                 : <><span>갑자기 쉬게 되면 한 번에 지도에 알릴 수 있어요.</span><button type="submit" name="action" value="today">오늘 임시 휴무</button></>}
             </form>}
           </section>
