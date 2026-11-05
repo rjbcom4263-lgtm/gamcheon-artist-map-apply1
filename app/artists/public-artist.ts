@@ -3,20 +3,29 @@ import { parse } from "../lib/json";
 import { galleryRecords } from "../lib/studio-gallery";
 import { formatWeekly, readStudioHours, studioStatus, type StudioHours, type StudioStatus } from "../lib/studio-hours";
 
-export type PublicArtistRow = { id: string; artist_name: string; payload_json: string; image_keys_json: string };
+export type PublicArtistRow = { id: string; artist_name: string; payload_json: string; image_keys_json: string; created_at?: string };
 export const SAVED_ARTISTS_KEY = "gamcheon-saved-artists";
 export type PublicWork = { title: string; description: string; status: string; image: string };
 export type PublicPhoto = { key: string; image: string; caption: string };
+/** 큰길에서 작업실 입구까지의 진입 지점 사진. image_keys_json의 type "entrance" 항목에서 읽습니다. */
+export type EntrancePhoto = { image: string; caption: string };
+/** 계단·경사·출입 제한 같은 이동 조건. payload values의 access* 항목(선택)에서 읽습니다. */
+export type AccessInfo = { stairs: string; slope: string; restriction: string; note: string };
 export type PublicArtist = {
   id: string; name: string; categories: string[]; tagline: string; bio: string; studio: string; address: string;
   hours: string; visitType: string; experience: string; experienceDesc: string; experiences: ArtistExperience[]; profile: string;
   instagram: string; website: string; shopUrl: string; works: PublicWork[];
   studioHours?: StudioHours; status?: StudioStatus; gallery: PublicPhoto[];
+  entrances: EntrancePhoto[]; access: AccessInfo;
+  /** 신청서 등록 시각(D1 CURRENT_TIMESTAMP, UTC). */
+  registeredAt: string;
+  /** 운영자가 현장에서 정보를 확인한 날짜(values.verifiedAt, 선택). 없으면 빈 문자열. */
+  verifiedAt: string;
 };
 
 type Work = { title?: unknown; description?: unknown; status?: unknown };
 type Payload = { values?: Record<string, unknown>; categories?: unknown[]; works?: Work[]; experiences?: unknown[]; studioHours?: unknown };
-type ImageRecord = { type?: string; workIndex?: number; key?: string; caption?: string };
+type ImageRecord = { type?: string; workIndex?: number; key?: string; caption?: unknown };
 
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 function publicUrl(value: unknown) { const url = text(value); return /^https?:\/\//i.test(url) ? url : ""; }
@@ -32,6 +41,8 @@ export function artistRowToProfile(row: PublicArtistRow, includeHidden = false):
   const experiences = payload.experiences === undefined && text(values.experience) && text(values.experience) !== "없음"
     ? [{ id: "legacy", title: "체험 프로그램", status: text(values.experience) === "준비 중" ? "준비 중" : "운영 중", description: text(values.experienceDesc) } as ArtistExperience]
     : sanitizeExperiences(payload.experiences).filter((experience) => experience.title);
+  const entrances = images.filter((image) => image.type === "entrance" && image.key).slice(0, 6)
+    .map((image, index) => ({ image: imageUrl(image.key), caption: text(image.caption) || `진입 지점 ${index + 1}` }));
 
   const studioHours = readStudioHours(payload.studioHours);
   const visitType = text(values.visitType) || "방문 전 문의";
@@ -61,5 +72,9 @@ export function artistRowToProfile(row: PublicArtistRow, includeHidden = false):
       status: text(work.status),
       image: imageUrl(images.find((image) => image.type === "work" && image.workIndex === index && image.key)?.key) || (index % 2 ? "/assets/home/artist-goods.webp" : "/assets/home/hero-artist-studio.webp"),
     })),
+    entrances,
+    access: { stairs: text(values.accessStairs), slope: text(values.accessSlope), restriction: text(values.accessRestriction), note: text(values.accessNote) },
+    registeredAt: text(row.created_at),
+    verifiedAt: text(values.verifiedAt),
   };
 }

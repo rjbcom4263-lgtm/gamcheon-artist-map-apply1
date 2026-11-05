@@ -2,6 +2,8 @@ import { env } from "cloudflare:workers";
 import { requireSession } from "../../../../admin/admin-auth";
 import { getGuide } from "../../../../work-guides/db";
 
+import { protectedImage } from "../../../../work-guides/protected-image";
+
 export const runtime = "edge";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,6 +18,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     key = guide.pending_image_key || guide.published_image_key;
   }
   if (!key || !key.startsWith(`work-guides/${id}/`)) return new Response("Not found", { status: 404 });
+  if (!pending) return protectedImage(key, guide.artist_name);
   const object = await env.BUCKET.get(key);
   if (!object) return new Response("Not found", { status: 404 });
   const headers = new Headers();

@@ -21,6 +21,8 @@
     "db:migrate:local": "wrangler d1 migrations apply gamcheon-artist-map-apply-db --local"
   },
   "dependencies": {
+    "@cf-wasm/photon": "^0.4.0",
+    "@cf-wasm/resvg": "^0.4.0",
     "next": "16.2.6",
     "qrcode": "^1.5.4",
     "react": "19.2.6",

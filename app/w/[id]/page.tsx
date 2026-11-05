@@ -6,6 +6,10 @@ import GuideStory from "./GuideStory";
 import StatBeacon from "../../StatBeacon";
 import "./work-guide.css";
 
+export const metadata = {
+  robots: { index: false, follow: false, noarchive: true, noimageindex: true },
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function WorkGuidePage({ params }: { params: Promise<{ id: string }> }) {

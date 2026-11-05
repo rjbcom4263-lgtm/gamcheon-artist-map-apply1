@@ -3,7 +3,7 @@
 
 .work-guide-page{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .work-guide-photo{position:relative}.work-guide-photo img{-webkit-user-drag:none;pointer-events:none}
-.work-guide-watermark{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);align-items:center;gap:18px;overflow:hidden;pointer-events:none}
-.work-guide-watermark span{transform:rotate(-25deg);text-align:center;color:rgba(255,255,255,.55);text-shadow:0 1px 3px rgba(0,0,0,.6);font-size:clamp(10px,1.2vw,16px);overflow-wrap:anywhere}
 .work-guide-protection{margin:20px 0 0;color:#777;font-size:11px;line-height:1.7}
 @media print{.work-guide-article{display:none!important}.work-guide-page::after{content:"작품 보호를 위해 인쇄를 제공하지 않습니다. / Printing is unavailable.";display:block;padding:40px}}
+
+.work-guide-rights{margin-top:18px;border-top:1px solid #d6d6d1;padding-top:16px;color:#555;font-size:12px;line-height:1.8}.work-guide-rights summary{cursor:pointer;font-weight:700}.work-guide-rights a{color:#4159e5}.work-guide-rights p{margin:12px 0}
