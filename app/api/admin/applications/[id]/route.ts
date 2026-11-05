@@ -1,56 +1,12 @@
-import { env } from "cloudflare:workers";
-import { requireAdmin } from "../../../../admin/admin-auth";
-import { forbidden } from "../../../../lib/http";
-import { listApplicationImageKeys } from "../../../../lib/application";
+import { liveApiContext } from "../../../../lib/live-api-context";
+import { deleteApplication, updateApplicationStatus } from "./handlers";
 
 export const runtime = "edge";
-const allowedStatuses = new Set(["received", "reviewing", "approved", "hold", "rejected", "cancelled"]);
-type ImageRecord = { key?: string };
-
-async function authorized() {
-  return !!await requireAdmin();
-}
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await authorized()) return forbidden();
-  const { id } = await context.params;
-  const body = await request.json() as { status?: string; reviewNote?: string };
-  if (!body.status || !allowedStatuses.has(body.status)) return Response.json({ error: "올바르지 않은 상태입니다." }, { status: 400 });
-  const note = typeof body.reviewNote === "string" ? body.reviewNote.trim().slice(0, 2000) : "";
-  if ((body.status === "rejected" || body.status === "cancelled") && !note) return Response.json({ error: "처리 사유를 입력해주세요." }, { status: 400 });
-  const current = await env.DB.prepare("SELECT status, payload_json FROM artist_applications WHERE id = ?").bind(id).first<{ status: string; payload_json: string }>();
-  if (!current) return Response.json({ error: "신청서를 찾을 수 없습니다." }, { status: 404 });
-  let payload: Record<string, unknown> = {};
-  try { payload = JSON.parse(current.payload_json); } catch {}
-  if (body.status === "approved" && current.status !== "approved") {
-    const values = typeof payload.values === "object" && payload.values ? { ...payload.values as Record<string, unknown> } : {};
-    if (values.mapPublished === undefined) values.mapPublished = false;
-    payload.values = values;
-  }
-  payload.adminReview = { status: body.status, note, processedAt: new Date().toISOString() };
-  const payloadJson = JSON.stringify(payload);
-  const result = await env.DB.prepare("UPDATE artist_applications SET status = ?, payload_json = ? WHERE id = ?").bind(body.status, payloadJson, id).run();
-  if (!result.meta.changes) return Response.json({ error: "신청서를 찾을 수 없습니다." }, { status: 404 });
-  return Response.json({ ok: true, status: body.status, payload_json: payloadJson });
+  return updateApplicationStatus(request, (await context.params).id, liveApiContext());
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!await authorized()) return forbidden();
-  const { id } = await context.params;
-  const current = await env.DB.prepare("SELECT image_keys_json FROM artist_applications WHERE id = ?").bind(id).first<{ image_keys_json: string }>();
-  if (!current) return Response.json({ error: "신청서를 찾을 수 없습니다." }, { status: 404 });
-
-  let images: ImageRecord[] = [];
-  try { images = JSON.parse(current.image_keys_json); } catch {}
-  const recordedKeys = images
-    .map((image) => image.key || "")
-    .filter((key) => key.startsWith(`applications/${id}/`) && !key.includes(".."));
-
-  const result = await env.DB.prepare("DELETE FROM artist_applications WHERE id = ?").bind(id).run();
-  if (!result.meta.changes) return Response.json({ error: "신청서를 찾을 수 없습니다." }, { status: 404 });
-  // 신청서에 기록된 키뿐 아니라 접두어 아래 남은 객체(작성 중 다시 고른 사진 등)까지 모두 지웁니다.
-  const imageKeys = new Set(recordedKeys);
-  try { for (const key of await listApplicationImageKeys(env.BUCKET, id)) imageKeys.add(key); } catch (error) { console.error("listing application images failed", id, error); }
-  await Promise.allSettled([...imageKeys].map((key) => env.BUCKET.delete(key)));
-  return Response.json({ ok: true, deletedImages: imageKeys.size });
+  return deleteApplication((await context.params).id, liveApiContext());
 }

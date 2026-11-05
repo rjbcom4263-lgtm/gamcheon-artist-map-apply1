@@ -12,8 +12,12 @@ export const MAX_DRAFT_IMAGE_OBJECTS = 30;
 type ListableBucket = { list(options: { prefix: string; cursor?: string; limit?: number }): Promise<{ objects: Array<{ key: string }>; truncated: boolean; cursor?: string }> };
 
 /** 신청서 접두어(applications/{id}/) 아래의 R2 객체 키를 모두 나열합니다. */
-export async function listApplicationImageKeys(bucket: ListableBucket, applicationId: string) {
-  const prefix = `applications/${applicationId}/`;
+export function listApplicationImageKeys(bucket: ListableBucket, applicationId: string) {
+  return listImageKeys(bucket, `applications/${applicationId}/`);
+}
+
+/** 접두어 아래의 R2 객체 키를 모두 나열합니다. */
+export async function listImageKeys(bucket: ListableBucket, prefix: string) {
   const keys: string[] = [];
   let cursor: string | undefined;
   do {

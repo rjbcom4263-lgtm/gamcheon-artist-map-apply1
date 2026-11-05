@@ -44,7 +44,7 @@ export default function ApplicationDetail({ application }: { application: Applic
   }
 
   async function deleteApplication() {
-    if (!confirm(`${row.artist_name} 신청서를 삭제할까요?\n연결된 이미지 파일도 함께 삭제됩니다.`)) return;
+    if (!confirm(`${row.artist_name} 신청서를 삭제할까요?\n연결된 이미지 파일과 작품 해설도 함께 삭제되며, 되돌릴 수 없습니다.\n이미 배포한 작품 해설 QR은 더 이상 열리지 않습니다.`)) return;
     setSaving(true);
     const response = await fetch(`/api/admin/applications/${encodeURIComponent(row.id)}`, { method: "DELETE" });
     setSaving(false);

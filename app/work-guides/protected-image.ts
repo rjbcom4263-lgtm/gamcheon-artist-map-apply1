@@ -1,13 +1,12 @@
 import { artistWatermark } from "./watermark";
 import { addImageRights } from "./image-rights";
+import { protectedImageKey } from "./protected-image-key";
 import { env } from "cloudflare:workers";
 import { PhotonImage, SamplingFilter, resize, watermark } from "@cf-wasm/photon/workerd";
 
 // Versioned derivatives keep originals private and avoid repeated image processing.
 export async function protectedImage(key: string, artistName: string) {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${key}:${artistName}`));
-  const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
-  const publicKey = `protected-images/v3/${hash}.webp`;
+  const publicKey = await protectedImageKey(key, artistName);
   let object = await env.BUCKET.get(publicKey);
   if (!object) {
     const source = await env.BUCKET.get(key);
