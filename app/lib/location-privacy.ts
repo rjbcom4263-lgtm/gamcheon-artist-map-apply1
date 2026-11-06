@@ -8,6 +8,13 @@ const LATITUDE_STEP = 0.00135;
 
 const cellCenter = (value: number, step: number) => Math.round((Math.floor(value / step) + 0.5) * step * 1e6) / 1e6;
 
+/** 작가가 고르는 범위와, 공개 지도·소개에 실제로 어떻게 보이는지에 대한 설명입니다. 신청 화면과 프로필 수정이 함께 씁니다. */
+export const LOCATION_PRIVACY_CHOICES = [
+  { value: "exact", label: "정확한 공방 위치 공개", description: "지도에 찍은 위치 그대로 핀을 표시하고 주소를 공개합니다." },
+  { value: "nearby", label: "근처 위치만 공개", description: "지도에는 약 150m 단위의 대략적인 위치로 표시하고, 정확한 주소는 숨깁니다." },
+  { value: "reservation", label: "예약 방문객에게만 안내", description: "지도에 핀을 표시하지 않고, 세부 주소는 별도로 안내합니다." },
+] as const;
+
 /** 공개 지도에 내보낼 좌표. 범위 값이 없거나 알 수 없으면 가장 보수적으로 내보내지 않습니다. */
 export function publicMapPosition(privacy: unknown, longitude: number, latitude: number): { mode: LocationMode; position?: { longitude: number; latitude: number } } {
   if (privacy === "exact") return { mode: "exact", position: { longitude, latitude } };

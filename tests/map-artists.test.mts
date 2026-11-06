@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { artistRowsToPlaces } from "../app/map/map-artists.ts";
-import { locationPrivacyNote } from "../app/lib/location-privacy.ts";
+import { LOCATION_PRIVACY_CHOICES, locationPrivacyNote, publicMapPosition } from "../app/lib/location-privacy.ts";
 
 // 일부러 끝자리를 눈에 띄게 둔 좌표입니다. 응답 어디에도 이 값이 나가면 안 되는 경우를 찾기 쉽습니다.
 const LONGITUDE = 129.012345;
@@ -87,6 +87,17 @@ test("감천 밖의 잘못된 좌표는 범위와 관계없이 내보내지 않�
   for (const locationPrivacy of ["exact", "nearby"]) {
     assert.equal(place({ locationPrivacy, mapLongitude: 127, mapLatitude: 37.5 }).geoPosition, undefined);
   }
+});
+
+test("작가가 보는 범위 설명은 실제로 지도에 나가는 방식과 같다", () => {
+  const described = (value: string) => LOCATION_PRIVACY_CHOICES.find((choice) => choice.value === value)!.description;
+  assert.deepEqual(LOCATION_PRIVACY_CHOICES.map((choice) => choice.value), ["exact", "nearby", "reservation"]);
+  assert.equal(publicMapPosition("exact", LONGITUDE, LATITUDE).mode, "exact");
+  assert.match(described("exact"), /찍은 위치 그대로/);
+  assert.equal(publicMapPosition("nearby", LONGITUDE, LATITUDE).mode, "approximate");
+  assert.match(described("nearby"), /150m/);
+  assert.equal(publicMapPosition("reservation", LONGITUDE, LATITUDE).position, undefined);
+  assert.match(described("reservation"), /핀을 표시하지 않/);
 });
 
 test("운영자 화면 안내는 범위마다 공개 지도에 어떻게 나가는지 알려 준다", () => {

@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- authenticated R2 images are rendered from the existing image API. */
 import { FormEvent, useState } from "react";
+import { LOCATION_PRIVACY_CHOICES } from "../lib/location-privacy";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { PublicArtist } from "../artists/public-artist";
@@ -151,7 +152,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
         {panel === "visit" && <>
           <Field label="작업실 이름"><input maxLength={150} value={values.studioName} onChange={(event) => update("studioName", event.target.value)}/></Field>
           <Field label="주소"><input maxLength={300} value={values.address} onChange={(event) => update("address", event.target.value)}/></Field>
-          <Field label="주소 공개 범위"><select value={values.locationPrivacy || "nearby"} onChange={(event) => update("locationPrivacy", event.target.value)}><option value="exact">정확한 주소 공개</option><option value="nearby">감천문화마을 일대로 표시</option><option value="reservation">예약 방문객에게만 안내</option></select></Field>
+          <Field label="위치 공개 범위"><select value={values.locationPrivacy || "nearby"} onChange={(event) => update("locationPrivacy", event.target.value)}>{LOCATION_PRIVACY_CHOICES.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}</select><small>{LOCATION_PRIVACY_CHOICES.find(({ value }) => value === (values.locationPrivacy || "nearby"))?.description}</small></Field>
           <div className="studio-hours-field"><span>운영시간</span><StudioHoursEditor hours={studioHours} onChange={setStudioHours}/></div>
           {!studioHours && <Field label="운영시간 (글자로 적기)"><textarea maxLength={500} rows={3} value={values.hours} onChange={(event) => update("hours", event.target.value)}/></Field>}
           <Field label="방문 방식"><select value={values.visitType} onChange={(event) => update("visitType", event.target.value)}>{["자유 방문 가능", "운영시간 내 방문 가능", "사전 예약 필요", "일반 방문 불가"].map((item) => <option key={item}>{item}</option>)}</select></Field>
