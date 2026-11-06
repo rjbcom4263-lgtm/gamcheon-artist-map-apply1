@@ -7,4 +7,6 @@ type WorkerEnv = typeof import("cloudflare:workers").env;
 export type ApiContext = Pick<WorkerEnv, "DB" | "BUCKET"> & {
   /** 이 요청을 보낸 사람. 로그인하지 않았으면 null. */
   session: () => Promise<SessionUser | null>;
+  /** 로그인·가입에 성공한 사용자의 세션 토큰을 만듭니다. */
+  issueSession: (user: SessionUser) => Promise<string>;
 };

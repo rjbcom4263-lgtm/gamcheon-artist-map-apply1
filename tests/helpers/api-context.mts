@@ -64,7 +64,7 @@ export function apiServer() {
   const DB = sqliteD1();
   const BUCKET = memoryBucket();
   const as = (viewer: SessionUser | null): ApiContext =>
-    ({ DB, BUCKET, session: async () => viewer }) as unknown as ApiContext;
+    ({ DB, BUCKET, session: async () => viewer, issueSession: async (user: SessionUser) => `session-${user.accountId}` }) as unknown as ApiContext;
 
   const addApplication = async (id: string, values: { accountId?: string; status?: string; payload?: object; images?: object[]; name?: string } = {}) => {
     await DB.prepare("INSERT INTO artist_applications (id, account_id, artist_name, phone, email, status, payload_json, image_keys_json) VALUES (?, ?, ?, '', '', ?, ?, ?)")
