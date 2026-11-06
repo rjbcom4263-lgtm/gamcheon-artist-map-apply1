@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit -p .",
     "types": "wrangler types",
     "db:migrate": "wrangler d1 migrations apply gamcheon-artist-map-apply-db --remote",
-    "db:migrate:local": "wrangler d1 migrations apply gamcheon-artist-map-apply-db --local"
+    "db:migrate:local": "node scripts/migrate-local.mjs"
   },
   "dependencies": {
     "@cf-wasm/photon": "^0.4.0",

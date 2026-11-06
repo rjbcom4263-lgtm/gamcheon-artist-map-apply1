@@ -27,7 +27,7 @@ npm run types       # wrangler.jsonc를 바꾼 뒤 worker-configuration.d.ts 다
 테이블은 `migrations/0001_init.sql`에 정의되어 있습니다. 예전에는 각 라우트가 요청마다 `CREATE TABLE IF NOT EXISTS`를 실행했는데, 이제는 코드에서 DDL을 실행하지 않습니다.
 
 ```powershell
-npm run db:migrate:local   # 로컬 개발 DB(.wrangler/state)에 적용. npm run dev 전에 한 번 실행
+npm run db:migrate:local   # 로컬 개발 DB(.wrangler/state)에 적용. npm run dev 전에 한 번 실행(안 하면 첫 화면이 500)
 npm run db:migrate         # 운영 D1에 적용. npm run deploy가 배포 직전에 자동으로 실행
 ```
 
@@ -42,7 +42,7 @@ npm run db:migrate         # 운영 D1에 적용. npm run deploy가 배포 직�
 - **소셜 아이디 보호**: `google_`, `kakao_`, `naver_`로 시작하는 아이디는 일반 가입에서 막습니다(소셜 계정의 login_id 형식).
 - **환경변수 관리자**: `ADMIN_USERNAME`/`ADMIN_PASSWORD_HASH`로 로그인하는 초기 관리자는 DB에 활성 관리자 계정이 하나도 없을 때만 동작합니다. 관리자 화면에서 작가 계정을 관리자로 승격한 뒤에는 이 비밀값을 지워도 됩니다.
 - **신청서 이미지**: 초안 하나당 R2 객체 30개까지 올릴 수 있고, 제출 시 신청서에 기록되지 않은 객체는 지워집니다. 관리자가 신청서를 삭제하면 접두어 아래 객체를 모두 지웁니다.
-- **속도 제한**: 코드에는 없습니다. Cloudflare 대시보드의 WAF → Rate limiting rules에서 `/api/auth/login`, `/api/auth/signup`에 분당 요청 제한을 걸어 두세요.
+- **속도 제한**: 로그인은 10분에 같은 IP·아이디 묶음 5회 실패 또는 같은 IP 20회 실패, 가입은 10분에 같은 IP 10회면 막습니다(`app/lib/auth-attempts.ts`). IP와 아이디는 해시로만 저장합니다. IP를 바꾸는 공격은 막지 못하므로 Cloudflare 대시보드 규칙을 함께 쓰면 좋습니다.
 
 ## 빌드·배포 (Windows)
 
@@ -82,13 +82,27 @@ npm run backup -- -SkipR2 # D1만
 
 ### 로그인 속도 제한 (Cloudflare 대시보드)
 
-코드에는 속도 제한이 없습니다. Cloudflare 대시보드 → artist-map.com → Security → WAF → Rate limiting rules에서 다음 규칙을 추가하세요.
+코드의 시도 제한을 보완합니다. Cloudflare 대시보드 → artist-map.com → Security → WAF → Rate limiting rules에서 다음 규칙을 추가하세요. 만들 수 있는 규칙 수와 기간은 요금제마다 다르니, 안 되면 가능한 범위로 줄여 로그인 규칙부터 두세요.
 
 | 규칙 | 조건 | 제한 |
 | --- | --- | --- |
 | 로그인 | URI Path equals `/api/auth/login`, Method POST | 같은 IP 10회 / 1분 → Block 10분 |
 | 가입 | URI Path equals `/api/auth/signup`, Method POST | 같은 IP 5회 / 10분 → Block 1시간 |
 | 소셜 로그인 시작 | URI Path starts with `/api/auth/` and ends with `/start` | 같은 IP 20회 / 1분 → Block 10분 |
+
+### `npm run dev`가 `std::terminate()`로 죽을 때
+
+`The Workers runtime failed to start`와 함께 죽으면 `.wrangler/state`를 더 새 버전의 런타임이 쓴 경우입니다. 개발 서버는 플러그인 전용의 옛 런타임을 쓰기 때문에 읽지 못합니다. `npx wrangler d1 ... --local`이나 `npx wrangler dev`를 직접 실행하면 이렇게 됩니다.
+
+```powershell
+Rename-Item .wrangler\state state-old   # 로컬 개발 데이터만 들어 있습니다. 운영과 무관합니다.
+npm run db:migrate:local
+npm run dev
+```
+
+로컬 마이그레이션은 위 명령으로만 적용하세요. 플러그인과 같은 런타임을 씁니다.
+
+로컬에서 로그인하면 `Imported HMAC key length (0)` 오류가 날 때는 `.dev.vars`에 `ADMIN_SESSION_SECRET`을 넣으세요. wrangler는 `.dev.vars`가 있으면 `.env.local`을 읽지 않습니다. 운영 값과 다른 로컬 전용 값을 쓰세요.
 
 ### 폴더 이름
 
