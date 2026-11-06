@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at a246c4c + uncommitted changes.
+// Bundled from https://github.com/InSeok211/art-map at 6a5efbf + uncommitted changes.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -15,99 +15,6 @@ async function readJson(request) {
 function fromThisApp(request, url) {
   if (request.method === "GET" || request.method === "HEAD") return true;
   return request.headers.get("origin") === url.origin;
-}
-
-// server/alleys.ts
-var WORK_AREA = { west: 129.006, south: 35.09274, east: 129.0135, north: 35.0992 };
-var MAX_ALLEYS = 500;
-var MAX_LINE_POINTS = 500;
-var MAX_TRAIL_POINTS = 1e4;
-var insideWorkArea = (lng, lat) => lng >= WORK_AREA.west && lng <= WORK_AREA.east && lat >= WORK_AREA.south && lat <= WORK_AREA.north;
-var round7 = (value) => Math.round(value * 1e7) / 1e7;
-function cleanLine(value) {
-  if (!Array.isArray(value) || value.length < 2 || value.length > MAX_LINE_POINTS) return null;
-  const line = [];
-  for (const point of value) {
-    if (!Array.isArray(point) || point.length !== 2 || !point.every((part) => typeof part === "number" && Number.isFinite(part))) return null;
-    if (!insideWorkArea(point[0], point[1])) return null;
-    line.push([round7(point[0]), round7(point[1])]);
-  }
-  return line;
-}
-function cleanAlleys(value) {
-  if (!Array.isArray(value) || value.length > MAX_ALLEYS) return null;
-  const alleys = [];
-  for (const item of value) {
-    const alley = item;
-    if (!alley || typeof alley.id !== "string" || !alley.id || alley.id.length > 80) return null;
-    if (alley.name !== void 0 && (typeof alley.name !== "string" || alley.name.length > 60)) return null;
-    const width = Number(alley.widthMeters);
-    if (!Number.isFinite(width) || width < 1 || width > 8) return null;
-    const coordinates = cleanLine(alley.coordinates);
-    if (!coordinates) return null;
-    alleys.push({ id: alley.id, ...alley.name ? { name: alley.name } : {}, coordinates, widthMeters: width });
-  }
-  return alleys;
-}
-function cleanLines(value) {
-  if (!Array.isArray(value) || value.length > MAX_ALLEYS) return null;
-  const lines = [];
-  for (const item of value) {
-    const line = cleanLine(item);
-    if (!line) return null;
-    lines.push(line);
-  }
-  return lines;
-}
-async function readAlleys(env) {
-  const row = await env.DB.prepare("SELECT alleys_json, dismissed_json, updated_at FROM map_alleys WHERE id = 'active'").first();
-  return {
-    alleys: row ? cleanAlleys(JSON.parse(row.alleys_json)) ?? [] : [],
-    dismissed: row ? cleanLines(JSON.parse(row.dismissed_json)) ?? [] : [],
-    updatedAt: row?.updated_at ?? null
-  };
-}
-async function publicAlleys(env) {
-  const { alleys, updatedAt } = await readAlleys(env);
-  return json({ alleys, updatedAt }, { headers: { "cache-control": "public, max-age=60" } });
-}
-var adminAlleys = async (env) => json(await readAlleys(env));
-async function saveAlleys(request, env) {
-  const body = await readJson(request);
-  const alleys = cleanAlleys(body?.alleys);
-  const dismissed = cleanLines(body?.dismissed ?? []);
-  if (!alleys || !dismissed) return error("\uACE8\uBAA9\uAE38\uC740 \uAC10\uCC9C \uC791\uC5C5 \uBC94\uC704 \uC548\uC5D0\uC11C 2~500\uAC1C \uC810, \uD3ED 1~8m\uB85C \uC9C0\uC815\uD574\uC8FC\uC138\uC694.", 400);
-  await env.DB.prepare(`INSERT INTO map_alleys (id, alleys_json, dismissed_json, updated_at) VALUES ('active', ?, ?, CURRENT_TIMESTAMP)
-    ON CONFLICT(id) DO UPDATE SET alleys_json = excluded.alleys_json, dismissed_json = excluded.dismissed_json, updated_at = CURRENT_TIMESTAMP`).bind(JSON.stringify(alleys), JSON.stringify(dismissed)).run();
-  return json({ alleys, dismissed });
-}
-async function listTrails(env) {
-  const { results } = await env.DB.prepare("SELECT id, started_at, points_json FROM gps_trails ORDER BY started_at").all();
-  return json({ trails: results.map((row) => ({ id: row.id, startedAt: row.started_at, points: JSON.parse(row.points_json) })) });
-}
-async function saveTrail(request, env) {
-  const body = await readJson(request);
-  if (!body || typeof body.id !== "string" || !body.id || body.id.length > 80 || typeof body.startedAt !== "string" || Number.isNaN(Date.parse(body.startedAt)) || !Array.isArray(body.points) || body.points.length > MAX_TRAIL_POINTS) {
-    return error(`\uAE30\uB85D \uD615\uC2DD\uC774 \uB9DE\uC9C0 \uC54A\uAC70\uB098 \uB108\uBB34 \uAE41\uB2C8\uB2E4(\uCD5C\uB300 ${MAX_TRAIL_POINTS}\uC810).`, 400);
-  }
-  const kept = body.points.flatMap((point) => {
-    if (!Array.isArray(point) || point.length !== 4 || !point.every((part) => typeof part === "number" && Number.isFinite(part))) return [];
-    const [lng, lat, accuracy, time] = point;
-    return insideWorkArea(lng, lat) ? [[round7(lng), round7(lat), Math.round(accuracy * 10) / 10, Math.round(time)]] : [];
-  });
-  if (kept.length < 5) return error("\uAC10\uCC9C \uC791\uC5C5 \uBC94\uC704 \uC548\uC5D0\uC11C \uAE30\uB85D\uD55C \uC704\uCE58\uAC00 \uB108\uBB34 \uC801\uC2B5\uB2C8\uB2E4.", 400);
-  const first = Math.min(...kept.map((point) => point[3]));
-  const points2 = kept.map(([lng, lat, accuracy, time]) => [lng, lat, accuracy, time - first]);
-  const startedAt = new Date(body.startedAt).toISOString().slice(0, 10);
-  await env.DB.prepare(`INSERT INTO gps_trails (id, started_at, points_json) VALUES (?, ?, ?)
-    ON CONFLICT(id) DO UPDATE SET points_json = excluded.points_json`).bind(body.id, startedAt, JSON.stringify(points2)).run();
-  return json({ trail: { id: body.id, startedAt, points: points2 } });
-}
-async function deleteTrail(url, env) {
-  const id = url.searchParams.get("id");
-  if (!id) return error("\uC9C0\uC6B8 \uAE30\uB85D\uC744 \uC54C\uB824\uC8FC\uC138\uC694.", 400);
-  await env.DB.prepare("DELETE FROM gps_trails WHERE id = ?").bind(id).run();
-  return json({ ok: true });
 }
 
 // src/data/gamcheon2-boundary.json
@@ -356,6 +263,133 @@ var gamcheonOutsideFeature = {
 };
 function isInsideGamcheonMap(longitude, latitude) {
   return Number.isFinite(longitude) && Number.isFinite(latitude) && longitude >= west && longitude <= east && latitude >= south && latitude <= north;
+}
+
+// src/alleys/alleyRules.ts
+var WORK_AREA = { west: 129.006, south: 35.09274, east: 129.0135, north: 35.0992 };
+var MAX_ALLEYS = 500;
+var MAX_LINE_POINTS = 500;
+var ALLEY_NAME_MAX = 60;
+var ALLEY_ID_MAX = 80;
+var ALLEY_WIDTH_RANGE = { min: 1, max: 8, default: 3 };
+var isInsideWorkArea = (longitude, latitude) => longitude >= WORK_AREA.west && longitude <= WORK_AREA.east && latitude >= WORK_AREA.south && latitude <= WORK_AREA.north;
+function lineProblem(value) {
+  if (!Array.isArray(value) || value.length < 2 || value.length > MAX_LINE_POINTS) return `\uC810\uC740 2~${MAX_LINE_POINTS}\uAC1C\uC5EC\uC57C \uD569\uB2C8\uB2E4.`;
+  for (const point of value) {
+    if (!Array.isArray(point) || point.length !== 2 || !point.every((part) => typeof part === "number" && Number.isFinite(part))) return "\uC88C\uD45C \uD615\uC2DD\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
+    if (!isInsideGamcheonMap(point[0], point[1])) return "\uC9C0\uB3C4 \uBC94\uC704 \uBC16\uC758 \uC810\uC774 \uC788\uC2B5\uB2C8\uB2E4.";
+  }
+  return null;
+}
+function alleyProblem(value) {
+  if (!value || typeof value !== "object") return "\uACE8\uBAA9\uAE38 \uD615\uC2DD\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
+  const alley = value;
+  if (typeof alley.id !== "string" || !alley.id || alley.id.length > ALLEY_ID_MAX) return "\uACE8\uBAA9\uAE38 \uBC88\uD638\uAC00 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.";
+  if (alley.name !== void 0 && (typeof alley.name !== "string" || alley.name.length > ALLEY_NAME_MAX)) return `\uC774\uB984\uC740 ${ALLEY_NAME_MAX}\uC790\uAE4C\uC9C0 \uC4F8 \uC218 \uC788\uC2B5\uB2C8\uB2E4.`;
+  if (typeof alley.widthMeters !== "number" || !Number.isFinite(alley.widthMeters) || alley.widthMeters < ALLEY_WIDTH_RANGE.min || alley.widthMeters > ALLEY_WIDTH_RANGE.max) return `\uD3ED\uC740 ${ALLEY_WIDTH_RANGE.min}~${ALLEY_WIDTH_RANGE.max}m\uC5EC\uC57C \uD569\uB2C8\uB2E4.`;
+  return lineProblem(alley.coordinates);
+}
+
+// server/alleys.ts
+var MAX_TRAIL_POINTS = 1e4;
+var round7 = (value) => Math.round(value * 1e7) / 1e7;
+var cleanLine = (line) => line.map(([lng, lat]) => [round7(lng), round7(lat)]);
+function sortAlleys(items) {
+  const valid = [];
+  const invalid = [];
+  const problems = [];
+  items.forEach((item, index) => {
+    const reason = alleyProblem(item);
+    if (reason === null) {
+      const alley = item;
+      valid.push({ id: alley.id, ...alley.name ? { name: alley.name } : {}, coordinates: cleanLine(alley.coordinates), widthMeters: alley.widthMeters });
+      return;
+    }
+    const { id, name } = item && typeof item === "object" ? item : {};
+    invalid.push(item);
+    problems.push({ index, ...typeof id === "string" && id ? { id } : {}, ...typeof name === "string" && name ? { name } : {}, reason });
+  });
+  return { valid, invalid, problems };
+}
+function readList(text) {
+  try {
+    const value = JSON.parse(text);
+    return Array.isArray(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+async function readAlleys(env) {
+  const row = await env.DB.prepare("SELECT alleys_json, dismissed_json, updated_at FROM map_alleys WHERE id = 'active'").first();
+  const list = row ? readList(row.alleys_json) : [];
+  const { valid, invalid, problems } = sortAlleys(list ?? []);
+  if (!list) console.warn("\uC800\uC7A5\uB41C \uACE8\uBAA9\uAE38 \uBAA9\uB85D\uC744 \uC77D\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4.");
+  if (problems.length) console.warn(`\uC800\uC7A5\uB41C \uACE8\uBAA9\uAE38 ${problems.length}\uAC1C\uAC00 \uADDC\uCE59\uC5D0 \uB9DE\uC9C0 \uC54A\uC544 \uAC74\uB108\uB6F0\uC5C8\uC2B5\uB2C8\uB2E4.`);
+  return {
+    alleys: valid,
+    invalid,
+    skipped: problems,
+    damaged: !list,
+    // 버린 후보는 후보를 다시 보여 줄지만 정하므로, 어긋난 항목은 보존하지 않습니다.
+    dismissed: row ? (readList(row.dismissed_json) ?? []).filter((line) => lineProblem(line) === null).map((line) => cleanLine(line)) : [],
+    updatedAt: row?.updated_at ?? null
+  };
+}
+async function publicAlleys(env) {
+  const { alleys, updatedAt } = await readAlleys(env);
+  return json({ alleys, updatedAt }, { headers: { "cache-control": "public, max-age=60" } });
+}
+async function adminAlleys(env) {
+  const { alleys, skipped, damaged, dismissed, updatedAt } = await readAlleys(env);
+  return json({ alleys, skipped, damaged, dismissed, updatedAt });
+}
+var problemLabel = ({ name, index }) => name || `\uACE8\uBAA9\uAE38 ${index + 1}`;
+async function saveAlleys(request, env) {
+  const body = await readJson(request);
+  if (!Array.isArray(body?.alleys) || body.alleys.length > MAX_ALLEYS) return error(`\uACE8\uBAA9\uAE38\uC740 ${MAX_ALLEYS}\uAC1C\uAE4C\uC9C0 \uC800\uC7A5\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.`, 400);
+  const { valid: alleys, problems } = sortAlleys(body.alleys);
+  if (problems.length) {
+    const [first] = problems;
+    const more = problems.length > 1 ? ` (\uC678 ${problems.length - 1}\uAC1C)` : "";
+    return json({ error: `${problemLabel(first)}: ${first.reason}${more}`, problems }, { status: 400 });
+  }
+  const lines = body.dismissed ?? [];
+  if (!Array.isArray(lines) || lines.length > MAX_ALLEYS || lines.some((line) => lineProblem(line) !== null)) return error("\uBC84\uB9B0 \uD6C4\uBCF4\uC758 \uC88C\uD45C\uAC00 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.", 400);
+  const dismissed = lines.map(cleanLine);
+  const stored = await readAlleys(env);
+  if (stored.damaged) return error("\uC800\uC7A5\uB41C \uACE8\uBAA9\uAE38 \uBAA9\uB85D\uC774 \uC190\uC0C1\uB418\uC5B4, \uC6D0\uBCF8\uC744 \uC9C0\uD0A4\uB824\uACE0 \uC800\uC7A5\uC744 \uB9C9\uC558\uC2B5\uB2C8\uB2E4. \uBCF5\uAD6C\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.", 409);
+  const kept = [...alleys, ...stored.invalid];
+  await env.DB.prepare(`INSERT INTO map_alleys (id, alleys_json, dismissed_json, updated_at) VALUES ('active', ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET alleys_json = excluded.alleys_json, dismissed_json = excluded.dismissed_json, updated_at = CURRENT_TIMESTAMP`).bind(JSON.stringify(kept), JSON.stringify(dismissed)).run();
+  return json({ alleys, dismissed, skipped: sortAlleys(kept).problems });
+}
+async function listTrails(env) {
+  const { results } = await env.DB.prepare("SELECT id, started_at, points_json FROM gps_trails ORDER BY started_at").all();
+  return json({ trails: results.map((row) => ({ id: row.id, startedAt: row.started_at, points: JSON.parse(row.points_json) })) });
+}
+async function saveTrail(request, env) {
+  const body = await readJson(request);
+  if (!body || typeof body.id !== "string" || !body.id || body.id.length > 80 || typeof body.startedAt !== "string" || Number.isNaN(Date.parse(body.startedAt)) || !Array.isArray(body.points) || body.points.length > MAX_TRAIL_POINTS) {
+    return error(`\uAE30\uB85D \uD615\uC2DD\uC774 \uB9DE\uC9C0 \uC54A\uAC70\uB098 \uB108\uBB34 \uAE41\uB2C8\uB2E4(\uCD5C\uB300 ${MAX_TRAIL_POINTS}\uC810).`, 400);
+  }
+  const kept = body.points.flatMap((point) => {
+    if (!Array.isArray(point) || point.length !== 4 || !point.every((part) => typeof part === "number" && Number.isFinite(part))) return [];
+    const [lng, lat, accuracy, time] = point;
+    return isInsideWorkArea(lng, lat) ? [[round7(lng), round7(lat), Math.round(accuracy * 10) / 10, Math.round(time)]] : [];
+  });
+  if (kept.length < 5) return error("\uAC10\uCC9C \uC791\uC5C5 \uBC94\uC704 \uC548\uC5D0\uC11C \uAE30\uB85D\uD55C \uC704\uCE58\uAC00 \uB108\uBB34 \uC801\uC2B5\uB2C8\uB2E4.", 400);
+  const first = Math.min(...kept.map((point) => point[3]));
+  const points2 = kept.map(([lng, lat, accuracy, time]) => [lng, lat, accuracy, time - first]);
+  const startedAt = new Date(body.startedAt).toISOString().slice(0, 10);
+  await env.DB.prepare(`INSERT INTO gps_trails (id, started_at, points_json) VALUES (?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET points_json = excluded.points_json`).bind(body.id, startedAt, JSON.stringify(points2)).run();
+  return json({ trail: { id: body.id, startedAt, points: points2 } });
+}
+async function deleteTrail(url, env) {
+  const id = url.searchParams.get("id");
+  if (!id) return error("\uC9C0\uC6B8 \uAE30\uB85D\uC744 \uC54C\uB824\uC8FC\uC138\uC694.", 400);
+  await env.DB.prepare("DELETE FROM gps_trails WHERE id = ?").bind(id).run();
+  return json({ ok: true });
 }
 
 // src/map/streetCoordinates.ts
