@@ -66,6 +66,8 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 수동으로 할 때는 `npx vinext build` 뒤 `npx wrangler deploy`입니다(한글 경로에서는 위와 같이 드라이브 매핑이 필요합니다).
 
+`@cloudflare/vite-plugin`과 `wrangler`는 함께 올리고, `wrangler`는 플러그인이 의존하는 버전(`npm view @cloudflare/vite-plugin@<버전> dependencies`)과 똑같이 맞추세요. `npm ls workerd`에 버전이 하나만 나와야 합니다. 어긋나면 새 런타임이 쓴 `.wrangler/state`를 옛 런타임이 읽지 못해 개발 서버가 죽을 수 있습니다.
+
 ## 운영 환경
 
 ### 백업
@@ -90,17 +92,7 @@ npm run backup -- -SkipR2 # D1만
 | 가입 | URI Path equals `/api/auth/signup`, Method POST | 같은 IP 5회 / 10분 → Block 1시간 |
 | 소셜 로그인 시작 | URI Path starts with `/api/auth/` and ends with `/start` | 같은 IP 20회 / 1분 → Block 10분 |
 
-### `npm run dev`가 `std::terminate()`로 죽을 때
-
-`The Workers runtime failed to start`와 함께 죽으면 `.wrangler/state`를 더 새 버전의 런타임이 쓴 경우입니다. 개발 서버는 플러그인 전용의 옛 런타임을 쓰기 때문에 읽지 못합니다. `npx wrangler d1 ... --local`이나 `npx wrangler dev`를 직접 실행하면 이렇게 됩니다.
-
-```powershell
-Rename-Item .wrangler\state state-old   # 로컬 개발 데이터만 들어 있습니다. 운영과 무관합니다.
-npm run db:migrate:local
-npm run dev
-```
-
-로컬 마이그레이션은 위 명령으로만 적용하세요. 플러그인과 같은 런타임을 씁니다.
+### 로컬 로그인 오류
 
 로컬에서 로그인하면 `Imported HMAC key length (0)` 오류가 날 때는 `.dev.vars`에 `ADMIN_SESSION_SECRET`을 넣으세요. wrangler는 `.dev.vars`가 있으면 `.env.local`을 읽지 않습니다. 운영 값과 다른 로컬 전용 값을 쓰세요.
 

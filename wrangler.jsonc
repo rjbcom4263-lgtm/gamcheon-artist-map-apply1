@@ -5,6 +5,8 @@
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],
   "no_bundle": true,
+  // 플러그인은 값이 없으면 소스맵을 만들어 배포 때 함께 올립니다. 켤 때는 운영 업로드 내용이 바뀌는 것을 확인하고 켜세요.
+  "upload_source_maps": false,
   "assets": {
     "directory": "dist/client",
     "binding": "ASSETS"
