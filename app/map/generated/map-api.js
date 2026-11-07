@@ -1,5 +1,5 @@
 // 자동 생성 파일입니다. 고치지 말고 art-map 저장소의 server/를 고친 뒤 npm run export:site로 다시 만드세요.
-// Bundled from https://github.com/InSeok211/art-map at 51f077a + uncommitted changes.
+// Bundled from https://github.com/InSeok211/art-map at e7a6919 + uncommitted changes.
 
 // server/http.ts
 var json = (body, init = {}) => Response.json(body, { ...init, headers: { "cache-control": "no-store", ...init.headers } });
@@ -266,13 +266,11 @@ function isInsideGamcheonMap(longitude, latitude) {
 }
 
 // src/alleys/alleyRules.ts
-var WORK_AREA = { west: 129.006, south: 35.09274, east: 129.0135, north: 35.0992 };
-var MAX_ALLEYS = 500;
 var MAX_LINE_POINTS = 500;
 var ALLEY_NAME_MAX = 60;
 var ALLEY_ID_MAX = 80;
 var ALLEY_WIDTH_RANGE = { min: 1, max: 8, default: 3 };
-var isInsideWorkArea = (longitude, latitude) => longitude >= WORK_AREA.west && longitude <= WORK_AREA.east && latitude >= WORK_AREA.south && latitude <= WORK_AREA.north;
+var alleyLabel = ({ name }, index) => name || `\uACE8\uBAA9\uAE38 ${index + 1}`;
 function lineProblem(value) {
   if (!Array.isArray(value) || value.length < 2 || value.length > MAX_LINE_POINTS) return `\uC810\uC740 2~${MAX_LINE_POINTS}\uAC1C\uC5EC\uC57C \uD569\uB2C8\uB2E4.`;
   for (const point of value) {
@@ -291,7 +289,10 @@ function alleyProblem(value) {
 }
 
 // server/alleys.ts
+var WORK_AREA = { west: 129.006, south: 35.09274, east: 129.0135, north: 35.0992 };
+var MAX_ALLEYS = 500;
 var MAX_TRAIL_POINTS = 1e4;
+var insideWorkArea = (lng, lat) => lng >= WORK_AREA.west && lng <= WORK_AREA.east && lat >= WORK_AREA.south && lat <= WORK_AREA.north;
 var round7 = (value) => Math.round(value * 1e7) / 1e7;
 var cleanLine = (line) => line.map(([lng, lat]) => [round7(lng), round7(lat)]);
 function sortAlleys(items) {
@@ -343,7 +344,6 @@ async function adminAlleys(env) {
   const { alleys, skipped, damaged, dismissed, updatedAt } = await readAlleys(env);
   return json({ alleys, skipped, damaged, dismissed, updatedAt });
 }
-var problemLabel = ({ name, index }) => name || `\uACE8\uBAA9\uAE38 ${index + 1}`;
 async function saveAlleys(request, env) {
   const body = await readJson(request);
   if (!Array.isArray(body?.alleys) || body.alleys.length > MAX_ALLEYS) return error(`\uACE8\uBAA9\uAE38\uC740 ${MAX_ALLEYS}\uAC1C\uAE4C\uC9C0 \uC800\uC7A5\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.`, 400);
@@ -351,17 +351,16 @@ async function saveAlleys(request, env) {
   if (problems.length) {
     const [first] = problems;
     const more = problems.length > 1 ? ` (\uC678 ${problems.length - 1}\uAC1C)` : "";
-    return json({ error: `${problemLabel(first)}: ${first.reason}${more}`, problems }, { status: 400 });
+    return json({ error: `${alleyLabel(first, first.index)}: ${first.reason}${more}`, problems }, { status: 400 });
   }
   const lines = body.dismissed ?? [];
   if (!Array.isArray(lines) || lines.length > MAX_ALLEYS || lines.some((line) => lineProblem(line) !== null)) return error("\uBC84\uB9B0 \uD6C4\uBCF4\uC758 \uC88C\uD45C\uAC00 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.", 400);
   const dismissed = lines.map(cleanLine);
   const stored = await readAlleys(env);
   if (stored.damaged) return error("\uC800\uC7A5\uB41C \uACE8\uBAA9\uAE38 \uBAA9\uB85D\uC774 \uC190\uC0C1\uB418\uC5B4, \uC6D0\uBCF8\uC744 \uC9C0\uD0A4\uB824\uACE0 \uC800\uC7A5\uC744 \uB9C9\uC558\uC2B5\uB2C8\uB2E4. \uBCF5\uAD6C\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4.", 409);
-  const kept = [...alleys, ...stored.invalid];
   await env.DB.prepare(`INSERT INTO map_alleys (id, alleys_json, dismissed_json, updated_at) VALUES ('active', ?, ?, CURRENT_TIMESTAMP)
-    ON CONFLICT(id) DO UPDATE SET alleys_json = excluded.alleys_json, dismissed_json = excluded.dismissed_json, updated_at = CURRENT_TIMESTAMP`).bind(JSON.stringify(kept), JSON.stringify(dismissed)).run();
-  return json({ alleys, dismissed, skipped: sortAlleys(kept).problems });
+    ON CONFLICT(id) DO UPDATE SET alleys_json = excluded.alleys_json, dismissed_json = excluded.dismissed_json, updated_at = CURRENT_TIMESTAMP`).bind(JSON.stringify([...alleys, ...stored.invalid]), JSON.stringify(dismissed)).run();
+  return json({ alleys, dismissed });
 }
 async function listTrails(env) {
   const { results } = await env.DB.prepare("SELECT id, started_at, points_json FROM gps_trails ORDER BY started_at").all();
@@ -375,7 +374,7 @@ async function saveTrail(request, env) {
   const kept = body.points.flatMap((point) => {
     if (!Array.isArray(point) || point.length !== 4 || !point.every((part) => typeof part === "number" && Number.isFinite(part))) return [];
     const [lng, lat, accuracy, time] = point;
-    return isInsideWorkArea(lng, lat) ? [[round7(lng), round7(lat), Math.round(accuracy * 10) / 10, Math.round(time)]] : [];
+    return insideWorkArea(lng, lat) ? [[round7(lng), round7(lat), Math.round(accuracy * 10) / 10, Math.round(time)]] : [];
   });
   if (kept.length < 5) return error("\uAC10\uCC9C \uC791\uC5C5 \uBC94\uC704 \uC548\uC5D0\uC11C \uAE30\uB85D\uD55C \uC704\uCE58\uAC00 \uB108\uBB34 \uC801\uC2B5\uB2C8\uB2E4.", 400);
   const first = Math.min(...kept.map((point) => point[3]));
