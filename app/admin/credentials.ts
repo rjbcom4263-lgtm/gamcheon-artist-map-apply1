@@ -8,7 +8,7 @@ import { hashPassword, safeEqual, sha256Hex, verifyPassword } from "./password-h
 // 아이디·비밀번호 확인과 가입입니다. DB를 넘겨받아 Node 테스트에서 그대로 돌릴 수 있습니다.
 type Db = ApiContext["DB"];
 
-const ROLES = new Set(["admin", "artist"]);
+export const ROLES = new Set(["admin", "artist"]);
 /** 환경변수(ADMIN_USERNAME/ADMIN_PASSWORD_HASH)로 로그인한 초기 관리자. DB에 활성 관리자 계정이 생기면 이 경로는 닫힙니다. */
 export const LEGACY_ADMIN_ID = "legacy-admin";
 
@@ -43,7 +43,8 @@ export async function createArtistAccount(db: Db, input: SignupInput) {
       db.prepare("INSERT INTO account_privacy_consents (account_id, version, required_accepted_at, email_accepted_at) VALUES (?, ?, ?, ?)")
         .bind(id, SIGNUP_PRIVACY_VERSION, acceptedAt, input.consentEmail === true ? acceptedAt : null),
     ]);
-    return { account: { id, loginId, role: "artist" as AccountRole, status: "pending", displayName, sessionVersion: 1 } };
+    const account: SessionUser = { accountId: id, loginId, role: "artist", displayName, sessionVersion: 1 };
+    return { account };
   } catch (error) {
     if (String(error).includes("UNIQUE constraint failed: accounts.login_id")) return { error: "이미 사용 중인 아이디입니다.", status: 409 };
     return { error: "회원가입을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.", status: 500 };

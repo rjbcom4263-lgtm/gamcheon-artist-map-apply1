@@ -16,6 +16,11 @@ export function findPublicArtist(db: ApiContext["DB"], id: string) {
   return db.prepare(`SELECT ${COLUMNS} FROM artist_applications a WHERE a.id = ? AND ${PUBLIC_ARTIST}`).bind(id).first<PublicArtistRecord>();
 }
 
+/** 공개 작가의 계정 번호만 읽습니다. 집계처럼 프로필 전체가 필요 없을 때 씁니다. */
+export function findPublicArtistOwner(db: ApiContext["DB"], id: string) {
+  return db.prepare(`SELECT a.account_id FROM artist_applications a WHERE a.id = ? AND ${PUBLIC_ARTIST}`).bind(id).first<{ account_id: string }>();
+}
+
 export async function listPublicArtists(db: ApiContext["DB"], limit = 100) {
   const { results } = await db.prepare(`SELECT ${COLUMNS} FROM artist_applications a WHERE ${PUBLIC_ARTIST} ORDER BY a.created_at DESC LIMIT ?`).bind(limit).all<PublicArtistRecord>();
   return results;
@@ -24,14 +29,12 @@ export async function listPublicArtists(db: ApiContext["DB"], limit = 100) {
 // 홈 통계입니다. 작가는 이메일 → 전화 → 작가명 순, 작업실은 공방명 → 주소 순으로 식별해 소문자로 묶어 셉니다.
 export async function publicArtistCounts(db: ApiContext["DB"]) {
   const row = await db.prepare(`SELECT
-    (SELECT COUNT(DISTINCT lower(COALESCE(NULLIF(trim(a.email), ''), NULLIF(trim(a.phone), ''), NULLIF(trim(a.artist_name), ''))))
-       FROM artist_applications a WHERE ${PUBLIC_ARTIST}) AS artists,
-    (SELECT COALESCE(SUM(CASE WHEN json_valid(a.payload_json) AND json_type(a.payload_json, '$.works') = 'array'
-                              THEN json_array_length(a.payload_json, '$.works') ELSE 0 END), 0)
-       FROM artist_applications a WHERE ${PUBLIC_ARTIST}) AS works,
-    (SELECT COUNT(DISTINCT lower(COALESCE(NULLIF(trim(json_extract(a.payload_json, '$.values.studioName')), ''),
-                                          NULLIF(trim(json_extract(a.payload_json, '$.values.address')), ''))))
-       FROM artist_applications a WHERE ${PUBLIC_ARTIST} AND json_valid(a.payload_json)) AS spaces`)
+    COUNT(DISTINCT lower(COALESCE(NULLIF(trim(a.email), ''), NULLIF(trim(a.phone), ''), NULLIF(trim(a.artist_name), '')))) AS artists,
+    COALESCE(SUM(CASE WHEN json_valid(a.payload_json) AND json_type(a.payload_json, '$.works') = 'array'
+                      THEN json_array_length(a.payload_json, '$.works') ELSE 0 END), 0) AS works,
+    COUNT(DISTINCT CASE WHEN json_valid(a.payload_json) THEN lower(COALESCE(NULLIF(trim(json_extract(a.payload_json, '$.values.studioName')), ''),
+                                                                           NULLIF(trim(json_extract(a.payload_json, '$.values.address')), ''))) END) AS spaces
+    FROM artist_applications a WHERE ${PUBLIC_ARTIST}`)
     .first<{ artists: number; works: number; spaces: number }>();
   return { artists: row?.artists ?? 0, works: row?.works ?? 0, spaces: row?.spaces ?? 0 };
 }

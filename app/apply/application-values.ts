@@ -11,12 +11,12 @@ export const APPLICATION_TEXT_LIMITS: Record<string, number> = {
 };
 const CONSENT_FIELDS = ["consentInfo", "consentImage", "consentPrivacy"];
 
-export type ApplicationValues = Record<string, string | boolean>;
+type ApplicationValues = Record<string, string | boolean> & { artistName: string; phone: string; email: string };
 
 export function sanitizeApplicationValues(input: unknown): ApplicationValues {
   const source = input && typeof input === "object" ? input as Record<string, unknown> : {};
   return {
     ...Object.fromEntries(Object.entries(APPLICATION_TEXT_LIMITS).map(([key, max]) => [key, cleanText(source[key], max)])),
     ...Object.fromEntries(CONSENT_FIELDS.map((key) => [key, source[key] === true])),
-  };
+  } as ApplicationValues;
 }

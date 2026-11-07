@@ -6,6 +6,8 @@ import { signUp } from "../app/api/auth/signup/handlers.ts";
 import { SIGNUP_PRIVACY_VERSION } from "../app/signup/privacy-consent.ts";
 import { apiServer } from "./helpers/api-context.mts";
 
+process.env.ADMIN_SESSION_SECRET ||= "test-only-session-secret";
+
 const IP = "203.0.113.7";
 const PASSWORD = "정확한-비밀번호-1";
 const passwordHash = hashPassword(PASSWORD);
@@ -29,13 +31,19 @@ async function failTimes(server: Server, times: number, loginId: string, ip: str
 }
 const useClock = (t: TestContext, at = "2026-11-06T00:00:00Z") => t.mock.timers.enable({ apis: ["Date"], now: Date.parse(at) });
 const MINUTE = 60_000;
+// 쿠키에 담긴 세션 토큰의 내용입니다.
+const sessionIn = (response: Response) => {
+  const token = /^gamcheon_session=([^;]+);/.exec(response.headers.get("set-cookie") ?? "")?.[1] ?? "";
+  return JSON.parse(atob(token.split(".")[0].replaceAll("-", "+").replaceAll("_", "/"))) as { accountId: string; role: string };
+};
 
 test("맞는 비밀번호로 로그인하면 세션 쿠키를 준다", async () => {
   const server = await serverWithAccounts("artist1");
   const response = await attempt(server, "artist1", PASSWORD);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, role: "artist", redirectTo: "/" });
-  assert.match(response.headers.get("set-cookie")!, /^gamcheon_session=session-ACC-artist1;.*HttpOnly/);
+  assert.match(response.headers.get("set-cookie")!, /HttpOnly/);
+  assert.equal(sessionIn(response).accountId, "ACC-artist1");
 });
 
 test("틀린 비밀번호와 없는 아이디는 같은 응답을 받는다", async () => {
@@ -94,9 +102,7 @@ test("같은 곳에서 한 아이디로 5번 틀리면 맞는 비밀번호도 �
   const blocked = await attempt(server, "artist1", PASSWORD);
   assert.equal(blocked.status, 429);
   assert.equal(blocked.headers.get("retry-after"), "540");
-  const body = await blocked.json() as { error: string; retryAfterSeconds: number };
-  assert.equal(body.retryAfterSeconds, 540);
-  assert.match(body.error, /약 9분 뒤/);
+  assert.match((await blocked.json() as { error: string }).error, /약 9분 뒤/);
   assert.equal(blocked.headers.get("set-cookie"), null);
 });
 
@@ -238,7 +244,9 @@ test("가입하면 계정과 동의 기록을 만들고 세션을 준다", async
   const response = await join(server, signupBody("new1"));
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, role: "artist", redirectTo: "/artist" });
-  assert.match(response.headers.get("set-cookie")!, /^gamcheon_session=session-ACC-/);
+  assert.equal(sessionIn(response).role, "artist");
+  const created = await server.DB.prepare("SELECT id FROM accounts WHERE login_id = 'new1'").first() as { id: string };
+  assert.equal(sessionIn(response).accountId, created.id);
   const row = await server.DB.prepare("SELECT a.status, c.version FROM accounts a JOIN account_privacy_consents c ON c.account_id = a.id WHERE a.login_id = 'new1'").first();
   assert.deepEqual({ ...row }, { status: "pending", version: SIGNUP_PRIVACY_VERSION });
 });

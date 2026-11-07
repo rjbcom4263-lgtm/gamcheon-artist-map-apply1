@@ -57,8 +57,8 @@ export default async function ArtistPage({ searchParams }: { searchParams: Promi
   const imageApi = isAdmin ? "/api/admin/images" : "/api/artist/images";
   const accountUrl = `/admin/accounts/${encodeURIComponent(account.id)}`;
   const editablePayload = editableApplication ? parse<Payload>(editableApplication.payload_json, {}) : {};
-  const publicArtist = editableApplication ? artistRowToProfile(editableApplication, true) : null;
-  const canEdit = !!editableApplication && !!publicArtist;
+  const publicArtist = editableApplication ? artistRowToProfile(editableApplication) : null;
+  const canEdit = !!editableApplication;
   const statsApplicationId = editableApplication?.id || (current?.status === "approved" ? current.id : "");
   const [statRows, guideRows] = statsApplicationId ? await Promise.all([
     env.DB.prepare("SELECT day, kind, target, count FROM artist_daily_stats WHERE application_id = ? AND day >= ?").bind(statsApplicationId, koreaDay(STAT_WINDOW_DAYS - 1)).all<StatRow>(),

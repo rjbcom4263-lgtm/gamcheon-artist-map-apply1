@@ -1,9 +1,8 @@
 import type { ApiContext } from "../../../lib/api-context";
-import { findPublicArtist } from "../../../artists/public-artist-query.ts";
-import { applicationIdFromImageKey } from "../../../image-upload.ts";
+import { PUBLIC_ARTIST } from "../../../artists/public-artist-query.ts";
+import { applicationIdFromImageKey, imageKeysInclude } from "../../../image-upload.ts";
 
-type ImageRecord = { key?: string };
-type Row = { account_id: string; artist_name: string; image_keys_json: string };
+type Row = { account_id: string; artist_name: string; image_keys_json: string; is_public: number };
 type Render = (key: string, artistName: string) => Promise<Response>;
 
 // 작가 이미지. 키 형식이 applications/{신청서 id}/... 이므로 그 신청서 한 행만 보고, 이미지 목록에 있는 키만 내보냅니다.
@@ -13,11 +12,11 @@ export async function serveArtistImage(request: Request, context: ApiContext, re
   const applicationId = applicationIdFromImageKey(key);
   if (!applicationId) return new Response("Bad request", { status: 400 });
 
-  const row = await context.DB.prepare("SELECT account_id, artist_name, image_keys_json FROM artist_applications WHERE id = ? AND status = 'approved'")
+  const row = await context.DB.prepare(`SELECT a.account_id, a.artist_name, a.image_keys_json, (${PUBLIC_ARTIST}) AS is_public FROM artist_applications a WHERE a.id = ? AND a.status = 'approved'`)
     .bind(applicationId).first<Row>();
   if (!row || !imageKeysInclude(row.image_keys_json, key)) return new Response("Not found", { status: 404 });
 
-  if (await findPublicArtist(context.DB, applicationId)) return render(key, row.artist_name);
+  if (row.is_public) return render(key, row.artist_name);
 
   const viewer = await context.session();
   if (viewer?.role !== "admin" && viewer?.accountId !== row.account_id) return new Response("Not found", { status: 404 });
@@ -25,8 +24,4 @@ export async function serveArtistImage(request: Request, context: ApiContext, re
   const headers = new Headers(image.headers);
   headers.set("cache-control", "private, no-store");
   return new Response(image.body, { status: image.status, headers });
-}
-
-function imageKeysInclude(imageKeysJson: string, key: string) {
-  try { return (JSON.parse(imageKeysJson) as ImageRecord[]).some((image) => image.key === key); } catch { return false; }
 }

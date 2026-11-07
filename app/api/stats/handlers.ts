@@ -1,5 +1,6 @@
-import { findPublicArtist } from "../../artists/public-artist-query.ts";
+import { findPublicArtistOwner } from "../../artists/public-artist-query.ts";
 import type { ApiContext } from "../../lib/api-context";
+import { applicationId as validApplicationId } from "../../lib/application.ts";
 import { todayInKorea } from "../../lib/studio-hours.ts";
 import { findPublicGuide } from "../../work-guides/public-guide.ts";
 
@@ -13,8 +14,8 @@ export async function recordStat(request: Request, context: ApiContext) {
   let applicationId = "";
   let ownerId = "";
   let target = "";
-  if (body.kind === "view" && /^GA-\d{8}-[A-F0-9]{6}$/.test(id)) {
-    const row = await findPublicArtist(context.DB, id);
+  if (body.kind === "view" && validApplicationId(id)) {
+    const row = await findPublicArtistOwner(context.DB, id);
     if (!row) return done();
     applicationId = id;
     ownerId = row.account_id;

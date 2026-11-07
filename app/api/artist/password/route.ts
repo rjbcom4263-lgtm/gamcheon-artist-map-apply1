@@ -1,7 +1,9 @@
 import { env } from "cloudflare:workers";
-import { adminCookie, createSession, hashPassword, requireArtist, verifyPassword } from "../../../admin/admin-auth";
+import { requireArtist } from "../../../admin/admin-auth";
+import { hashPassword, verifyPassword } from "../../../admin/password-hash";
+import { createSession, sessionCookie } from "../../../admin/session-token";
 import { passwordProblem } from "../../../lib/account-rules";
-import { cookie, forbidden } from "../../../lib/http";
+import { forbidden } from "../../../lib/http";
 
 export const runtime = "edge";
 
@@ -24,5 +26,5 @@ export async function PATCH(request: Request) {
     .bind(await hashPassword(newPassword), artist.accountId).first<{ session_version: number }>();
   if (!updated) return Response.json({ error: "비밀번호를 바꾸지 못했습니다." }, { status: 500 });
   const session = await createSession({ ...artist, sessionVersion: updated.session_version });
-  return Response.json({ ok: true }, { headers: { "set-cookie": cookie(adminCookie.name, session, adminCookie.maxAge) } });
+  return Response.json({ ok: true }, { headers: { "set-cookie": sessionCookie(session) } });
 }

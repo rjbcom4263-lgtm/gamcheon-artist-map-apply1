@@ -21,25 +21,26 @@ const clientIp = (request: Request) => request.headers.get("cf-connecting-ip") |
 // 원문 IP와 아이디가 저장되지 않게 합니다. 세션 서명 값을 그대로 쓰지 않도록 용도 문자열을 섞습니다.
 const counterKey = (...parts: string[]) => sha256Hex(JSON.stringify(["auth-attempt", process.env.ADMIN_SESSION_SECRET || "", ...parts]));
 
-function attempts(db: Db, counters: Counter[]) {
-  async function guarded<T>(fallback: T, work: () => Promise<T>) {
-    try {
-      return await work();
-    } catch (error) {
-      console.error("auth attempt storage failed", error);
-      return fallback;
-    }
+async function guarded<T>(fallback: T, work: () => Promise<T>) {
+  try {
+    return await work();
+  } catch (error) {
+    console.error("auth attempt storage failed", error);
+    return fallback;
   }
+}
+
+function attempts(db: Db, counters: Counter[]) {
   return {
     /** 지금 막혀 있으면 남은 초를, 아니면 0을 돌려줍니다. */
     blockedFor: () => guarded(0, async () => {
       const at = now();
-      let seconds = 0;
-      for (const { key, limit } of counters) {
-        const row = await db.prepare("SELECT count, window_ends_at FROM auth_attempts WHERE key = ?").bind(key).first<{ count: number; window_ends_at: number }>();
-        if (row && row.count >= limit) seconds = Math.max(seconds, row.window_ends_at - at);
-      }
-      return seconds;
+      const { results } = await db.prepare(`SELECT key, count, window_ends_at FROM auth_attempts WHERE key IN (${counters.map(() => "?").join(", ")})`)
+        .bind(...counters.map(({ key }) => key)).all<{ key: string; count: number; window_ends_at: number }>();
+      return results.reduce((seconds, row) => {
+        const limit = counters.find(({ key }) => key === row.key)?.limit ?? Infinity;
+        return row.count >= limit ? Math.max(seconds, row.window_ends_at - at) : seconds;
+      }, 0);
     }),
     /** 한 번 더 셉니다. SQL 한 문장으로 올려 동시 요청에도 횟수가 어긋나지 않습니다. */
     count: () => guarded(undefined, async () => {
@@ -57,19 +58,12 @@ function attempts(db: Db, counters: Counter[]) {
 export async function loginAttempts(db: Db, request: Request, loginId: string) {
   const ip = clientIp(request);
   const pair = await counterKey("login-pair", ip, loginId);
-  const counters = [{ key: pair, limit: PAIR_LIMIT }, { key: await counterKey("login-ip", ip), limit: IP_LIMIT }];
-  const { blockedFor, count } = attempts(db, counters);
   return {
-    blockedFor,
-    fail: count,
+    ...attempts(db, [{ key: pair, limit: PAIR_LIMIT }, { key: await counterKey("login-ip", ip), limit: IP_LIMIT }]),
     /** 성공하면 묶음 기록만 지웁니다. IP 기록을 남겨, 자기 계정 로그인을 끼워 넣어 횟수를 지우는 우회를 막습니다. */
-    succeed: async () => {
-      try {
-        await db.prepare("DELETE FROM auth_attempts WHERE key = ?").bind(pair).run();
-      } catch (error) {
-        console.error("auth attempt storage failed", error);
-      }
-    },
+    succeed: () => guarded(undefined, async () => {
+      await db.prepare("DELETE FROM auth_attempts WHERE key = ?").bind(pair).run();
+    }),
   };
 }
 
@@ -82,7 +76,7 @@ export async function signupAttempts(db: Db, request: Request) {
 export function tooManyAttempts(seconds: number, action: string) {
   const minutes = Math.max(1, Math.ceil(seconds / 60));
   return Response.json(
-    { error: `${action}을 너무 여러 번 시도했습니다. 약 ${minutes}분 뒤에 다시 시도해 주세요.`, retryAfterSeconds: seconds },
+    { error: `${action}을 너무 여러 번 시도했습니다. 약 ${minutes}분 뒤에 다시 시도해 주세요.` },
     { status: 429, headers: { "retry-after": String(seconds) } },
   );
 }

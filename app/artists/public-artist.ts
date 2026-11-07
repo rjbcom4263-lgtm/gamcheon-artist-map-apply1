@@ -1,4 +1,5 @@
 import { sanitizeExperiences, type ArtistExperience } from "../artist/profile-data";
+import { publicAddress } from "../lib/location-privacy";
 import { parse } from "../lib/json";
 import { galleryRecords } from "../lib/studio-gallery";
 import { formatWeekly, readStudioHours, studioStatus, type StudioHours, type StudioStatus } from "../lib/studio-hours";
@@ -31,12 +32,10 @@ function text(value: unknown) { return typeof value === "string" ? value.trim() 
 function publicUrl(value: unknown) { const url = text(value); return /^https?:\/\//i.test(url) ? url : ""; }
 function imageUrl(key?: string) { return key ? `/api/artists/images?key=${encodeURIComponent(key)}` : ""; }
 
-export function artistRowToProfile(row: PublicArtistRow, includeHidden = false): PublicArtist | null {
+export function artistRowToProfile(row: PublicArtistRow): PublicArtist {
   const payload = parse<Payload>(row.payload_json, {});
   const values = payload.values || {};
-  if (!includeHidden && values.mapPublished === false) return null;
   const images = parse<ImageRecord[]>(row.image_keys_json, []);
-  const exactAddress = text(values.locationPrivacy) === "exact" ? text(values.address || values.studioAddress) : "";
   const works = Array.isArray(payload.works) ? payload.works : [];
   const experiences = payload.experiences === undefined && text(values.experience) && text(values.experience) !== "없음"
     ? [{ id: "legacy", title: "체험 프로그램", status: text(values.experience) === "준비 중" ? "준비 중" : "운영 중", description: text(values.experienceDesc) } as ArtistExperience]
@@ -54,7 +53,7 @@ export function artistRowToProfile(row: PublicArtistRow, includeHidden = false):
     tagline: text(values.tagline) || "감천에서 이어가는 작업과 이야기를 소개합니다.",
     bio: text(values.bio) || "작가의 작업 세계와 감천에서의 이야기를 준비하고 있습니다.",
     studio: text(values.studioName) || "감천 작업실",
-    address: exactAddress || "감천문화마을 일대",
+    address: publicAddress(values),
     hours: studioHours ? formatWeekly(studioHours) : text(values.hours) || "방문 전 운영시간을 확인해주세요.",
     visitType,
     ...(studioHours ? { studioHours, status: studioStatus(studioHours, visitType) } : {}),

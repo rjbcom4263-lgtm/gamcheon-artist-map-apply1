@@ -1,8 +1,8 @@
 import { verifyCredentials } from "../../../admin/credentials.ts";
-import { SESSION_COOKIE } from "../../../admin/session-cookie.ts";
+import { createSession, sessionCookie } from "../../../admin/session-token.ts";
 import type { ApiContext } from "../../../lib/api-context";
 import { loginAttempts, tooManyAttempts } from "../../../lib/auth-attempts.ts";
-import { cookie, jsonError } from "../../../lib/http.ts";
+import { jsonError } from "../../../lib/http.ts";
 
 export async function logIn(request: Request, context: ApiContext) {
   const body = await request.json().catch(() => ({})) as { loginId?: unknown; password?: unknown } | null;
@@ -17,12 +17,9 @@ export async function logIn(request: Request, context: ApiContext) {
 
   const user = await verifyCredentials(context.DB, loginId, password);
   if (!user) {
-    await attempts.fail();
+    await attempts.count();
     return wrong();
   }
   await attempts.succeed();
-  const session = await context.issueSession(user);
-  return new Response(JSON.stringify({ ok: true, role: user.role, redirectTo: "/" }), {
-    headers: { "content-type": "application/json", "set-cookie": cookie(SESSION_COOKIE.name, session, SESSION_COOKIE.maxAge) },
-  });
+  return Response.json({ ok: true, role: user.role, redirectTo: "/" }, { headers: { "set-cookie": sessionCookie(await createSession(user)) } });
 }

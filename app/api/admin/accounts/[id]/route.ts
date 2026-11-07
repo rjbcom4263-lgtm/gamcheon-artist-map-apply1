@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
-import { generateTemporaryPassword, hashPassword, invalidateSessions, requireAdmin } from "../../../../admin/admin-auth";
+import { invalidateSessions, requireAdmin } from "../../../../admin/admin-auth";
+import { generateTemporaryPassword, hashPassword } from "../../../../admin/password-hash";
 import { forbidden } from "../../../../lib/http";
 
 export const runtime = "edge";

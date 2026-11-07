@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- authenticated R2 images are rendered from the existing image API. */
 import { FormEvent, useState } from "react";
-import { LOCATION_PRIVACY_CHOICES } from "../lib/location-privacy";
+import { LOCATION_PRIVACY_CHOICES, publicAddress } from "../lib/location-privacy";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { PublicArtist } from "../artists/public-artist";
@@ -48,7 +48,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
   const update = (key: string, value: string) => setValues((current) => ({ ...current, [key]: value }));
   const workImage = (index: number) => previews[`workImage${index}`] || artist.works[index]?.image || "/assets/home/hero-artist-studio.webp";
   const status = studioHours ? studioStatus(studioHours, values.visitType) : null;
-  const publicAddress = values.locationPrivacy === "exact" && values.address ? values.address : "감천문화마을 일대";
+  const shownAddress = publicAddress(values);
 
   function pickImage(key: string, file?: File) {
     if (!file) return;
@@ -136,7 +136,7 @@ export default function ProfileEditForm({ applicationId, artist, payload, modal 
 
         <section className="artist-visit-section editable-section">
           <div className="artist-detail-heading"><div><span>STUDIO VISIT</span><h2>화실 방문 정보</h2></div></div><button className="inline-edit-button section-edit" type="button" onClick={() => setPanel("visit")}>방문 정보 수정</button>
-          <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{values.studioName || "감천 작업실"}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{publicAddress}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{status && <StatusBadge status={status}/>}{studioHours ? formatWeekly(studioHours) : values.hours || "방문 전 확인"}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{values.visitType || "방문 전 문의"}</dd></div></dl>
+          <dl><div><dt><Icon name="visit"/>작업실</dt><dd>{values.studioName || "감천 작업실"}</dd></div><div><dt><Icon name="pin"/>위치</dt><dd>{shownAddress}</dd></div><div><dt><Icon name="clock"/>운영시간</dt><dd>{status && <StatusBadge status={status}/>}{studioHours ? formatWeekly(studioHours) : values.hours || "방문 전 확인"}</dd></div><div><dt><Icon name="visit"/>방문 방식</dt><dd>{values.visitType || "방문 전 문의"}</dd></div></dl>
           {experiences.map((experience) => <div className="artist-experience" key={experience.id}><span>{experience.title || "체험 프로그램"} · {experience.status}</span><p>{experience.description || "체험 내용을 준비하고 있습니다."}</p></div>)}
         </section>
 

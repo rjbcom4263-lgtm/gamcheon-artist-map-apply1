@@ -6,16 +6,10 @@ import { news, site } from "./content";
 import { LogoutButton } from "../LogoutButton";
 
 type SectionKind = "project" | "artists" | "passport" | "news" | "contact";
-type ArtistRow = { id: string; artist_name: string; email: string; payload_json: string; image_keys_json: string };
 type ImageRecord = { type?: string; key?: string };
 
 function parse(value: string) {
   try { return JSON.parse(value) as { categories?: string[]; values?: Record<string, string | boolean>; works?: unknown[] }; } catch { return {}; }
-}
-
-async function getArtists() {
-  const artists: ArtistRow[] = await listPublicArtists(env.DB, 1000);
-  return artists;
 }
 
 function Arrow() { return <span aria-hidden="true">↗</span>; }
@@ -66,7 +60,7 @@ function ProjectContent() {
 }
 
 async function ArtistsContent() {
-  const artists = await getArtists();
+  const artists = await listPublicArtists(env.DB, 1000);
   return <section className="artist-directory">
     <nav className="artist-directory-tabs" aria-label="작가 소개 분류"><span aria-current="page">참여 작가</span><Link href="/news">전시·프로젝트</Link></nav>
     <div className="artist-directory-intro"><p>ARTIST DIRECTORY</p><h1>감천의 작가와 작품을 소개합니다.</h1><span>감천에서 활동하는 작가의 작업과 이야기를 기록합니다.<br />한 사람의 작품에서 골목의 새로운 경험이 시작됩니다.</span></div>

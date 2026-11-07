@@ -17,6 +17,11 @@ export function applicationIdFromImageKey(key: string) {
   return match && !key.includes("..") ? match[1] : null;
 }
 
+/** 신청서의 이미지 목록(JSON)에 이 키가 있는지 봅니다. 목록에 있는 키만 내보내기 위한 검사입니다. */
+export function imageKeysInclude(imageKeysJson: string, key: string) {
+  try { return (JSON.parse(imageKeysJson) as Array<{ key?: string }>).some((image) => image.key === key); } catch { return false; }
+}
+
 export async function isAllowedImageFile(file: Blob) {
   if (!isAllowedImageType(file.type)) return false;
   return isAllowedImageBytes(file.type, new Uint8Array(await file.slice(0, 12).arrayBuffer()));

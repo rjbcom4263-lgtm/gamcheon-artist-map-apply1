@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { cookies } from "next/headers";
-import { adminCookie, createSession, hashPassword } from "../../admin/admin-auth";
+import { hashPassword } from "../../admin/password-hash";
+import { createSession, sessionCookie } from "../../admin/session-token";
 import { AUTH_NEXT_COOKIE, safeNextCookie, safeNextPath } from "../../auth-next";
 import { clearCookie, cookie, redirectWithCookies } from "../../lib/http";
 
@@ -78,7 +79,7 @@ export async function completeSocialLogin(input: { provider: SocialProvider; pro
   const session = await createSession({ accountId: account.id, loginId: account.login_id, role, displayName: account.display_name || displayName, sessionVersion: account.session_version });
   const location = `${origin}${role === "admin" && nextPath === "/" ? "/admin" : nextPath}`;
   const response = redirectWithCookies(location, [
-    cookie(adminCookie.name, session, adminCookie.maxAge),
+    sessionCookie(session),
     clearCookie(stateCookieName(provider)),
     clearCookie(AUTH_NEXT_COOKIE),
   ]);

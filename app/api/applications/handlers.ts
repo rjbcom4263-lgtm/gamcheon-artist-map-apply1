@@ -1,101 +1,96 @@
 import { sanitizeApplicationValues } from "../../apply/application-values.ts";
-import { sanitizeExperiences } from "../../artist/profile-data.ts";
+import { experiencesInvalid, sanitizeCategories, sanitizeExperiences, sanitizeWorks } from "../../artist/profile-data.ts";
 import { isAllowedImageFile, isAllowedImageType } from "../../image-upload.ts";
 import type { ApiContext } from "../../lib/api-context";
-import { MAX_IMAGE_BYTES, REQUIRED_WORK_COUNT, applicationId, cleanText, listApplicationImageKeys, safeFileName } from "../../lib/application.ts";
-import { forbidden } from "../../lib/http.ts";
+import { MAX_IMAGE_BYTES, MAX_IMAGE_LABEL, REQUIRED_WORK_COUNT, applicationId, cleanText, listApplicationImageKeys, safeFileName } from "../../lib/application.ts";
+import { badRequest, forbidden, jsonError } from "../../lib/http.ts";
+import { parse } from "../../lib/json.ts";
 import { APPLY_CONSENT_VERSION } from "../../signup/privacy-consent.ts";
 
 type Payload = {
   applicationId?: string;
   values?: unknown;
-  categories?: string[];
-  works?: Array<{ id?: string; title?: string; status?: string; description?: string } | null>;
-  experiences?: unknown[];
+  categories?: unknown;
+  works?: unknown;
+  experiences?: unknown;
   expectedImages?: { profile?: boolean; works?: boolean[] };
   uploadedImages?: Array<{ type?: string; workIndex?: number; key?: string; name?: string; contentType?: string } | null>;
 };
+type ImageRecord = { type: string; workIndex?: number; key: string; name: string; contentType: string };
 
 function readPayload(raw: string): Payload | null {
-  try {
-    const value: unknown = JSON.parse(raw);
-    return value && typeof value === "object" ? value as Payload : null;
-  } catch {
-    return null;
-  }
+  const value = parse<unknown>(raw, null);
+  return value && typeof value === "object" ? value as Payload : null;
 }
+const slotOf = (type: string, workIndex?: number) => type === "profile" ? "profile" : `work:${workIndex}`;
 
 export async function submitApplication(request: Request, context: ApiContext) {
   const uploaded: string[] = [];
+  const discardUploads = () => Promise.allSettled(uploaded.map((key) => context.BUCKET.delete(key)));
   const rejectAfterUpload = async (error: string, status = 400) => {
-    await Promise.allSettled(uploaded.map((key) => context.BUCKET.delete(key)));
-    uploaded.length = 0;
-    return Response.json({ error }, { status });
+    await discardUploads();
+    return jsonError(error, status);
   };
   try {
     const user = await context.session();
     if (user?.role !== "artist") return forbidden("회원가입 또는 로그인 후 신청해주세요.");
     const form = await request.formData();
     const raw = form.get("payload");
-    if (typeof raw !== "string" || raw.length > 150_000) return Response.json({ error: "신청서 내용이 너무 큽니다." }, { status: 400 });
+    if (typeof raw !== "string" || raw.length > 150_000) return badRequest("신청서 내용이 너무 큽니다.");
     const payload = readPayload(raw);
-    if (!payload) return Response.json({ error: "신청서 내용을 읽지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해주세요." }, { status: 400 });
+    if (!payload) return badRequest("신청서 내용을 읽지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해주세요.");
     const values = sanitizeApplicationValues(payload.values);
-    const artistName = String(values.artistName);
-    const phone = String(values.phone);
-    const email = String(values.email);
-    const categories = Array.isArray(payload.categories) ? payload.categories.slice(0, 12).map((x) => cleanText(x, 30)).filter(Boolean) : [];
-    const works = Array.isArray(payload.works) ? payload.works.slice(0, REQUIRED_WORK_COUNT).map((w) => ({ id: cleanText(w?.id, 80), title: cleanText(w?.title, 150), status: cleanText(w?.status, 40), description: cleanText(w?.description, 1200) })) : [];
+    const { artistName, phone, email } = values;
+    const categories = sanitizeCategories(payload.categories);
+    const works = sanitizeWorks(payload.works);
     const experiences = sanitizeExperiences(payload.experiences);
-    if (!artistName || !phone || !categories.length || works.length !== REQUIRED_WORK_COUNT || works.some((work) => !work.title)) return Response.json({ error: "대표 작품 5점의 필수 정보를 모두 입력해주세요." }, { status: 400 });
-    if (payload.experiences !== undefined && (!Array.isArray(payload.experiences) || payload.experiences.length > 20 || experiences.some((experience) => !experience.title))) return Response.json({ error: "체험 프로그램 이름을 확인해주세요." }, { status: 400 });
-    if (!values.consentInfo || !values.consentImage || !values.consentPrivacy) return Response.json({ error: "필수 동의가 필요합니다." }, { status: 400 });
+    if (!artistName || !phone || !categories.length || works.length !== REQUIRED_WORK_COUNT || works.some((work) => !work.title)) return badRequest(`대표 작품 ${REQUIRED_WORK_COUNT}점의 필수 정보를 모두 입력해주세요.`);
+    if (experiencesInvalid(payload.experiences, experiences)) return badRequest("체험 프로그램 이름을 확인해주세요.");
+    if (!values.consentInfo || !values.consentImage || !values.consentPrivacy) return badRequest("필수 동의가 필요합니다.");
     // 동의 문구가 바뀐 뒤 옛 화면에서 보낸 신청은 받지 않습니다. 어떤 문구에 동의했는지는 values.consentVersion으로 남습니다.
-    if (values.consentVersion !== APPLY_CONSENT_VERSION) return Response.json({ error: "동의 안내가 바뀌었습니다. 페이지를 새로고침한 뒤 동의 항목을 다시 확인해 주세요." }, { status: 400 });
+    if (values.consentVersion !== APPLY_CONSENT_VERSION) return badRequest("동의 안내가 바뀌었습니다. 페이지를 새로고침한 뒤 동의 항목을 다시 확인해 주세요.");
 
     const id = applicationId(payload.applicationId);
-    if (!id) return Response.json({ error: "신청 번호를 다시 확인해주세요." }, { status: 400 });
+    if (!id) return badRequest("신청 번호를 다시 확인해주세요.");
     const draft = await context.DB.prepare("SELECT id FROM artist_applications WHERE id = ? AND account_id = ? AND status = 'draft'")
       .bind(id, user.accountId).first<{ id: string }>();
     if (!draft) return forbidden("이 계정의 신청서가 아니거나 이미 제출된 신청서입니다.");
-    const imageRecords: Array<{ type: string; workIndex?: number; key: string; name: string; contentType: string }> = [];
-    const imageSlots = new Set<string>();
-    if (Array.isArray(payload.uploadedImages)) {
-      for (const image of payload.uploadedImages) {
-        const type = image?.type === "profile" || image?.type === "work" ? image.type : "";
-        const workIndex = Number.isInteger(image?.workIndex) ? image?.workIndex : undefined;
-        const key = cleanText(image?.key, 260);
-        const contentType = cleanText(image?.contentType, 80);
-        if (!type || !key.startsWith(`applications/${id}/`) || !contentType.startsWith("image/")) continue;
-        if (type === "work" && (typeof workIndex !== "number" || workIndex < 0 || workIndex >= REQUIRED_WORK_COUNT)) continue;
-        const slot = type === "profile" ? "profile" : `work:${workIndex}`;
-        if (imageSlots.has(slot)) return Response.json({ error: "같은 위치의 이미지가 중복되었습니다." }, { status: 400 });
-        const stored = await context.BUCKET.head(key);
-        const storedType = stored?.httpMetadata?.contentType || "";
-        if (!stored || stored.customMetadata?.applicationId !== id || !isAllowedImageType(storedType)) return Response.json({ error: "저장된 이미지 정보를 확인하지 못했습니다. 다시 올려주세요." }, { status: 400 });
-        imageSlots.add(slot);
-        imageRecords.push({ type, workIndex, key, name: cleanText(image?.name, 180), contentType: storedType });
-      }
+
+    // 자리(프로필, 작품 번호)마다 이미지 하나입니다.
+    const images = new Map<string, ImageRecord>();
+    for (const image of Array.isArray(payload.uploadedImages) ? payload.uploadedImages : []) {
+      if (!image) continue;
+      const type = image.type === "profile" || image.type === "work" ? image.type : "";
+      const workIndex = Number.isInteger(image.workIndex) ? image.workIndex : undefined;
+      const key = cleanText(image.key, 260);
+      const contentType = cleanText(image.contentType, 80);
+      if (!type || !key.startsWith(`applications/${id}/`) || !contentType.startsWith("image/")) continue;
+      if (type === "work" && (typeof workIndex !== "number" || workIndex < 0 || workIndex >= REQUIRED_WORK_COUNT)) continue;
+      const slot = slotOf(type, workIndex);
+      if (images.has(slot)) return badRequest("같은 위치의 이미지가 중복되었습니다.");
+      const stored = await context.BUCKET.head(key);
+      const storedType = stored?.httpMetadata?.contentType || "";
+      if (!stored || stored.customMetadata?.applicationId !== id || !isAllowedImageType(storedType)) return badRequest("저장된 이미지 정보를 확인하지 못했습니다. 다시 올려주세요.");
+      images.set(slot, { type, workIndex, key, name: cleanText(image.name, 180), contentType: storedType });
     }
     const candidates: Array<{ key: string; type: string; workIndex?: number }> = [{ key: "profileImage", type: "profile" }, ...works.map((_, i) => ({ key: `workImage${i}`, type: "work", workIndex: i }))];
     for (const candidate of candidates) {
       const item = form.get(candidate.key);
-      if (!item || typeof item === "string" || typeof item.size !== "number" || !item.size) continue;
-      if (item.size > MAX_IMAGE_BYTES || !(await isAllowedImageFile(item))) return rejectAfterUpload("JPG, PNG, WebP 이미지만 장당 2MB 이하로 올려주세요.");
-      const slot = candidate.type === "profile" ? "profile" : `work:${candidate.workIndex}`;
-      if (imageSlots.has(slot)) return rejectAfterUpload("같은 위치의 이미지가 중복되었습니다.");
+      if (!item || typeof item === "string" || !item.size) continue;
+      if (item.size > MAX_IMAGE_BYTES || !(await isAllowedImageFile(item))) return rejectAfterUpload(`JPG, PNG, WebP 이미지만 장당 ${MAX_IMAGE_LABEL} 이하로 올려주세요.`);
+      const slot = slotOf(candidate.type, candidate.workIndex);
+      if (images.has(slot)) return rejectAfterUpload("같은 위치의 이미지가 중복되었습니다.");
       const key = `applications/${id}/${safeFileName(item)}`;
       await context.BUCKET.put(key, item.stream(), { httpMetadata: { contentType: item.type }, customMetadata: { applicationId: id, originalName: item.name.slice(0, 180) } });
       uploaded.push(key);
-      imageSlots.add(slot);
-      imageRecords.push({ type: candidate.type, workIndex: candidate.workIndex, key, name: item.name.slice(0, 180), contentType: item.type });
+      images.set(slot, { type: candidate.type, workIndex: candidate.workIndex, key, name: item.name.slice(0, 180), contentType: item.type });
     }
 
+    const imageRecords = [...images.values()];
     const expectedWorks = Array.isArray(payload.expectedImages?.works) ? payload.expectedImages.works : [];
     const expectedCount = (payload.expectedImages?.profile ? 1 : 0) + expectedWorks.filter(Boolean).length;
     if (expectedCount !== imageRecords.length) return rejectAfterUpload("선택한 사진이 모두 저장되지 않았습니다. 사진을 다시 선택해주세요.");
-    const workImageCount = imageRecords.filter((image) => image.type === "work").length;
-    if (workImageCount !== REQUIRED_WORK_COUNT) return rejectAfterUpload("대표 작품 5점의 이미지를 모두 올려주세요.");
+    if (imageRecords.filter((image) => image.type === "work").length !== REQUIRED_WORK_COUNT) return rejectAfterUpload(`대표 작품 ${REQUIRED_WORK_COUNT}점의 이미지를 모두 올려주세요.`);
 
     const safePayload = { values, categories, works, experiences };
     const saved = await context.DB.prepare("UPDATE artist_applications SET artist_name = ?, phone = ?, email = ?, status = 'received', payload_json = ?, image_keys_json = ? WHERE id = ? AND account_id = ? AND status = 'draft'")
@@ -111,8 +106,8 @@ export async function submitApplication(request: Request, context: ApiContext) {
     }
     return Response.json({ id }, { status: 201 });
   } catch (error) {
-    await Promise.allSettled(uploaded.map((key) => context.BUCKET.delete(key)));
+    await discardUploads();
     console.error("application submission failed", error);
-    return Response.json({ error: "접수가 완료되지 않았습니다. 잠시 뒤 다시 시도해주세요." }, { status: 500 });
+    return jsonError("접수가 완료되지 않았습니다. 잠시 뒤 다시 시도해주세요.", 500);
   }
 }

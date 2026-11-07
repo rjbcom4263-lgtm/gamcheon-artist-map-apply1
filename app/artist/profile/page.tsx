@@ -17,7 +17,5 @@ export default async function ArtistProfileEditPage() {
     WHERE status = 'approved' AND account_id = ? ORDER BY created_at DESC LIMIT 1`)
     .bind(viewer.accountId).first<ArtistRow>();
   if (!row) redirect("/artist");
-  const artist = artistRowToProfile(row, true);
-  if (!artist) redirect("/artist");
-  return <ProfileEditForm applicationId={row.id} artist={artist} payload={parse<Payload>(row.payload_json, {})}/>;
+  return <ProfileEditForm applicationId={row.id} artist={artistRowToProfile(row)} payload={parse<Payload>(row.payload_json, {})}/>;
 }

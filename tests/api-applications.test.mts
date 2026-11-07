@@ -236,8 +236,31 @@ test("같은 자리에 이미지를 두 번 넣으면 받지 않는다", async (
   const server = await draftServer();
   const images = uploadedImages();
   images[2] = { ...images[2], workIndex: 0 };
-  assert.equal((await submitApplication(send(formPayload({ uploadedImages: images })), server.as(owner))).status, 400);
+  const response = await submitApplication(send(formPayload({ uploadedImages: images })), server.as(owner));
+  assert.equal(response.status, 400);
+  assert.match((await response.json() as { error: string }).error, /중복/);
   assert.equal((await server.application(ID))!.status, "draft");
+});
+
+test("이미 올린 자리에 사진을 또 담아 보내면 받지 않고 방금 올린 것을 남기지 않는다", async () => {
+  const server = await draftServer();
+  const before = server.BUCKET.keys();
+  const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])], "내 사진.png", { type: "image/png" });
+  const response = await submitApplication(send(formPayload(), { profileImage: file }), server.as(owner));
+  assert.equal(response.status, 400);
+  assert.match((await response.json() as { error: string }).error, /중복/);
+  assert.deepEqual(server.BUCKET.keys(), before);
+});
+
+test("작품은 5점까지만 저장하고 체험은 20개를 넘으면 받지 않는다", async () => {
+  const works = Array.from({ length: 6 }, (_, index) => ({ id: `w${index}`, title: `작품 ${index}`, status: "문의 필요", description: "" }));
+  const accepted = await draftServer();
+  assert.equal((await submitApplication(send(formPayload({ works })), accepted.as(owner))).status, 201);
+  assert.equal((await stored(accepted)).works.length, 5);
+
+  const experiences = Array.from({ length: 21 }, (_, index) => ({ id: `e${index}`, title: "체험", status: "운영 중", description: "" }));
+  const rejected = await draftServer();
+  assert.equal((await submitApplication(send(formPayload({ experiences })), rejected.as(owner))).status, 400);
 });
 
 test("작품 이미지가 5점이 아니면 받지 않는다", async () => {

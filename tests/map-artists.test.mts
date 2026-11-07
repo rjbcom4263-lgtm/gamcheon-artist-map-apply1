@@ -16,7 +16,6 @@ function place(values: Record<string, unknown>) {
 test("정확한 위치 공개에 동의한 작가만 정확한 핀과 주소가 나간다", () => {
   const result = place({ locationPrivacy: "exact" });
   assert.deepEqual(result.geoPosition, { longitude: LONGITUDE, latitude: LATITUDE });
-  assert.deepEqual(result.position, { x: 41.5, y: 62.5 });
   assert.equal(result.locationMode, "exact");
   assert.equal(result.address, "감천동 1-2");
 });
@@ -57,7 +56,6 @@ for (const [name, values] of [
     assert.ok(!text.includes("감천동 1-2"));
     assert.ok(!text.includes("41.5"));
     assert.ok(!text.includes("62.5"));
-    assert.equal(place(values).position, undefined);
   });
 }
 
