@@ -14,8 +14,9 @@ function parse(value: string) {
 
 function Arrow() { return <span aria-hidden="true">↗</span>; }
 
-export function Header({ user, activeHref }: { user: { role: "admin" | "artist" } | null; activeHref?: string }) {
-  return <header className="agency-header section-header">
+// className: 소개 페이지는 붙박이 헤더(section-header), 작가 지도는 지도 화면에 맞춘 헤더(map-site-header)를 씁니다.
+export function Header({ user, activeHref, className = "section-header" }: { user: { role: "admin" | "artist" } | null; activeHref?: string; className?: string }) {
+  return <header className={`agency-header ${className}`}>
     <Link className="agency-brand" href="/"><b>{site.brand}</b><small>{site.subBrand}</small></Link>
     <nav className="agency-desktop-nav" aria-label="주요 메뉴">{site.nav.map(([label, href]) => <Link className={href === activeHref ? "is-active" : undefined} key={label} href={href}>{label}</Link>)}</nav>
     <div className="agency-utility">{user ? <><Link href={user.role === "admin" ? "/admin" : "/artist"}>내 정보</Link><LogoutButton admin={user.role === "admin"}/></> : <><Link href="/login">로그인</Link><Link href="/signup">회원가입</Link></>}<button aria-label="검색">⌕</button></div>
