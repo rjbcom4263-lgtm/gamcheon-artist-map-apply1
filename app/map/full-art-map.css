@@ -7,8 +7,9 @@
 .artist-app button { cursor:pointer; }
 .artist-app button:focus-visible,.artist-app a:focus-visible { outline:2px solid #4a5fd9; outline-offset:3px; }
 
-/* 넓은 화면: 홈페이지 헤더 */
-.artist-app .map-site-header { flex:none; position:relative; z-index:50; }
+/* 넓은 화면: 홈페이지 헤더. 홈페이지는 내용을 가운데 1440px 안에 두지만, 지도는 화면을 꽉 채우므로
+   로고와 로그인을 화면 양 끝에 붙여 왼쪽 목록 패널의 글자 줄(28px)과 맞춥니다. */
+.artist-app .map-site-header { flex:none; position:relative; z-index:50; padding:0 28px; }
 .artist-app__header { display:none; }
 
 .artist-app__body { flex:1; min-height:0; position:relative; }
