@@ -23,13 +23,15 @@ function useLivePlaces(initialPlaces: ArtistPlace[]) {
 
 // 지도에 넘길 작가 공방. 목록·상세는 지도(art-map)가 그리므로 공방·분야·운영 상태·사진·작가 페이지를 함께 보냅니다.
 // 운영시간을 등록하지 않은 작가는 방문 방식(예: 방문 전 문의)을 운영 안내 뒤에 붙입니다.
+// 지도는 가운뎃점 대신 쉼표로 이어 씁니다. 운영 안내 문구(studio-hours)는 작가 페이지와 함께 쓰므로 여기서만 바꿉니다.
+const withCommas = (text: string) => text.replaceAll(" · ", ", ");
 export function toMapPlace(place: ArtistPlace): MapPlace {
   return {
     id: place.id, name: place.name, category: "attraction", ...place.geoPosition!,
     address: place.address,
     studio: place.studio,
     tags: place.categories,
-    hours: place.status ? place.hours : `${place.hours} · ${place.visitType}`,
+    hours: withCommas(place.status ? place.hours : `${place.hours}, ${place.visitType}`),
     ...(place.status ? { status: place.status } : {}),
     photo: place.image,
     href: place.detailHref,
@@ -80,10 +82,10 @@ export default function FullArtistMap({ initialPlaces, initialArtistId, siteHead
         <p className="artist-app__results" aria-live="polite">{visible.length}명의 작가</p>
         <div className="artist-app__list">{visible.map(place => <article className="artist-app__artist" key={place.id}>
           <Link className="artist-app__photo" href={place.detailHref} aria-label={`${place.name} 작가 소개`}><img src={place.image} alt={`${place.name} 작가`} loading="lazy"/></Link>
-          <div className="artist-app__artist-info"><Link href={place.detailHref}><h2>{place.name}</h2></Link><p>{place.categories.join(" · ") || "감천 참여 작가"}</p><small>{place.studio}</small>
+          <div className="artist-app__artist-info"><Link href={place.detailHref}><h2>{place.name}</h2></Link><p>{place.categories.join(", ") || "감천 참여 작가"}</p><small>{place.studio}</small>
             {place.status && <span className={`studio-badge studio-badge--${place.status.state}`}><b>{place.status.label}</b></span>}
-            {place.geoPosition ? <button type="button" onClick={() => { select(place.id); setView("home"); }}>지도에서 보기 ↗</button> : <span className="artist-app__pending">{place.locationMode === "hidden" ? "위치는 작가에게 문의해 주세요" : "위치 확인 중"}</span>}
-          </div><Link className="artist-app__arrow" href={place.detailHref} aria-label={`${place.name} 상세 보기`}>↗</Link>
+            {place.geoPosition ? <button type="button" onClick={() => { select(place.id); setView("home"); }}>지도에서 보기</button> : <span className="artist-app__pending">{place.locationMode === "hidden" ? "위치는 작가에게 문의해 주세요" : "위치 확인 중"}</span>}
+          </div>
         </article>)}</div>
         {!visible.length && <div className="artist-app__empty"><strong>{places.length ? "검색 결과가 없어요" : "작가를 소개할 준비를 하고 있어요"}</strong><p>{places.length ? "다른 이름이나 분야로 찾아보세요." : "등록된 작가가 공개되면 이곳에서 만날 수 있습니다."}</p>{places.length > 0 && <button type="button" onClick={() => { setQuery(""); setCategory("전체"); }}>전체 작가 보기</button>}</div>}
       </section>}
